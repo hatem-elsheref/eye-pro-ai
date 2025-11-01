@@ -82,6 +82,11 @@ Route::middleware(['auth'])->group(function () {
     // PUT    /matches/{id}         -> matches.update    (Update match)
     // DELETE /matches/{id}         -> matches.destroy   (Delete match)
     
+    // Chunked upload routes
+    Route::post('/matches/upload/chunk', [MatchController::class, 'uploadChunk'])->name('matches.upload.chunk');
+    Route::post('/matches/upload/finalize', [MatchController::class, 'finalizeUpload'])->name('matches.upload.finalize');
+    Route::get('/matches/upload/status/{uploadId}', [MatchController::class, 'getUploadStatus'])->name('matches.upload.status');
+    
     /*
     |--------------------------------------------------------------------------
     | Profile Routes

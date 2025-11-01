@@ -10,6 +10,34 @@ use Yajra\DataTables\Facades\DataTables;
 class AdminController extends Controller
 {
     /**
+     * Generate unique gradient colors for user avatar based on ID
+     */
+    private function getAvatarColor($userId)
+    {
+        // Color palette - various gradient combinations
+        $colors = [
+            ['#60a5fa', '#818cf8'], // Blue to Indigo
+            ['#f59e0b', '#ea580c'], // Amber to Orange
+            ['#10b981', '#059669'], // Green to Emerald
+            ['#ef4444', '#dc2626'], // Red
+            ['#8b5cf6', '#7c3aed'], // Purple to Violet
+            ['#ec4899', '#db2777'], // Pink to Rose
+            ['#06b6d4', '#0891b2'], // Cyan
+            ['#f97316', '#ea580c'], // Orange
+            ['#14b8a6', '#0d9488'], // Teal
+            ['#6366f1', '#4f46e5'], // Indigo
+            ['#d946ef', '#c026d3'], // Fuchsia
+            ['#3b82f6', '#2563eb'], // Blue
+            ['#84cc16', '#65a30d'], // Lime
+            ['#a855f7', '#9333ea'], // Purple
+        ];
+        
+        // Use user ID to pick a consistent color
+        $colorIndex = abs($userId) % count($colors);
+        return $colors[$colorIndex];
+    }
+
+    /**
      * Display the admin dashboard
      */
     public function index(Request $request)
@@ -69,7 +97,8 @@ class AdminController extends Controller
         return DataTables::of($query)
             ->addColumn('avatar', function ($user) {
                 $initials = strtoupper(substr($user->name, 0, 2));
-                return '<div class="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg text-xs" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">' . $initials . '</div>';
+                $colors = $this->getAvatarColor($user->id);
+                return '<div class="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg text-xs" style="background: linear-gradient(135deg, ' . $colors[0] . ' 0%, ' . $colors[1] . ' 100%);">' . $initials . '</div>';
             })
             ->addColumn('status_badge', function ($user) {
                 if ($user->status === 'approved') {

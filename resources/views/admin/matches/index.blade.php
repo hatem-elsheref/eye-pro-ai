@@ -4,7 +4,7 @@
 @section('page-title', 'Matches')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-6" x-data="{ view: 'cards' }">
+<div class="max-w-7xl mx-auto space-y-6">
     
     <!-- Matches Header -->
     <div class="relative overflow-hidden rounded-2xl p-6 shadow-lg border border-blue-200" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
@@ -15,9 +15,9 @@
                 <h1 class="text-2xl font-bold text-white mb-1">Your Matches</h1>
                 <p class="text-sm text-blue-50 font-medium">Manage and analyze your uploaded videos</p>
             </div>
-            <a href="{{ route('matches.create') }}" class="flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
-                <i class="fas fa-plus text-base"></i>
-                <span>Upload Match</span>
+            <a href="{{ route('matches.create') }}" class="flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-plus text-base pointer-events-none"></i>
+                <span class="pointer-events-none">Upload Match</span>
             </a>
         </div>
     </div>
@@ -38,24 +38,23 @@
     </div>
     @endif
     
-    <!-- View Toggle & Filter -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-3 sm:space-y-0 gap-3">
-        <div class="bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-            <button @click="view = 'cards'" :class="view === 'cards' ? 'text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5" :style="view === 'cards' ? 'background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);' : ''">
-                <i class="fas fa-th-large text-xs"></i>
-                <span>Cards</span>
+    <!-- Search Filter -->
+    <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center space-y-3 sm:space-y-0 gap-3">
+        <form action="{{ route('matches.index') }}" method="GET" class="relative" id="searchForm">
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ request('search') }}" 
+                placeholder="Search matches..." 
+                class="pl-8 pr-8 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all w-56"
+                id="searchInput"
+                autocomplete="off"
+            >
+            <button type="submit" class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-search"></i>
             </button>
-            <button @click="view = 'table'" :class="view === 'table' ? 'text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 flex items-center space-x-1.5" :style="view === 'table' ? 'background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);' : ''">
-                <i class="fas fa-list text-xs"></i>
-                <span>Table</span>
-            </button>
-        </div>
-        
-        <form action="{{ route('matches.index') }}" method="GET" class="relative">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search matches..." class="pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all w-56">
-            <i class="fas fa-search absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
             @if(request('search'))
-                <a href="{{ route('matches.index') }}" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+                <a href="{{ route('matches.index') }}" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs" title="Clear search">
                     <i class="fas fa-times"></i>
                 </a>
             @endif
@@ -65,7 +64,7 @@
     @if(isset($matches) && count($matches) > 0)
     
     <!-- Cards View -->
-    <div x-show="view === 'cards'" x-transition class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($matches as $match)
         <a href="{{ route('matches.show', $match->id) }}" class="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 overflow-hidden border border-gray-200 hover:border-blue-300">
             <!-- Compact Header -->
@@ -118,73 +117,50 @@
         @endforeach
     </div>
     
-    <!-- Table View -->
-    <div x-show="view === 'table'" x-transition class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Match Name</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($matches as $match)
-                    <tr class="hover:bg-blue-50/50 transition-colors group">
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="h-7 w-7 rounded-md flex items-center justify-center text-white text-xs shadow-sm" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
-                                    <i class="fas fa-video text-xs"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-900">{{ $match->name }}</span>
-                            </div>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap">
-                            @if($match->status === 'completed')
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                                <span class="h-1 w-1 rounded-full bg-green-600 mr-1.5"></span>
-                                Done
-                            </span>
-                            @elseif($match->status === 'processing')
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                                <span class="h-1 w-1 rounded-full bg-amber-600 mr-1.5 animate-pulse"></span>
-                                Processing
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                                {{ ucfirst($match->status) }}
-                            </span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                            <i class="fas {{ $match->type === 'url' ? 'fa-link' : 'fa-file-video' }} text-gray-400 mr-1.5 text-xs"></i>
-                            {{ ucfirst($match->type) }}
-                        </td>
-                        <td class="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                            <i class="fas fa-calendar text-gray-400 mr-1.5 text-xs"></i>
-                            {{ $match->created_at->format('M d, Y') }}
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-right">
-                            <a href="{{ route('matches.show', $match->id) }}" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-semibold text-white shadow-sm hover:shadow transition-all" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
-                                <i class="fas fa-eye text-xs"></i>
-                                <span>View</span>
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+    <!-- Pagination Controls -->
+    @if(method_exists($matches, 'links'))
+    <div class="matches-cards-pagination mt-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+            <div class="text-sm text-gray-600 font-medium">
+                Showing {{ $matches->firstItem() ?? 0 }} to {{ $matches->lastItem() ?? 0 }} of {{ $matches->total() }} results
+            </div>
+            <div class="flex items-center gap-2">
+                @php
+                    $currentPage = $matches->currentPage();
+                    $lastPage = $matches->lastPage();
+                    $hasPrevious = $currentPage > 1;
+                    $hasNext = $currentPage < $lastPage;
+                @endphp
+                
+                {{-- Previous Button --}}
+                @if($hasPrevious && $matches->previousPageUrl())
+                    <a href="{{ $matches->previousPageUrl() }}" style="background: linear-gradient(to right, #9333ea, #ec4899);" class="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
+                        <i class="fas fa-chevron-left mr-2"></i>
+                        Previous
+                    </a>
+                @else
+                    <button type="button" disabled style="background-color: #d1d5db;" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 border border-gray-400 cursor-not-allowed opacity-60">
+                        <i class="fas fa-chevron-left mr-2"></i>
+                        Previous
+                    </button>
+                @endif
+                
+                {{-- Next Button --}}
+                @if($hasNext && $matches->nextPageUrl())
+                    <a href="{{ $matches->nextPageUrl() }}" style="background: linear-gradient(to right, #9333ea, #ec4899);" class="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
+                        Next
+                        <i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                @else
+                    <button type="button" disabled style="background-color: #d1d5db;" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 border border-gray-400 cursor-not-allowed opacity-60">
+                        Next
+                        <i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                @endif
+            </div>
         </div>
-        
-        @if(method_exists($matches, 'links'))
-        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-            {{ $matches->links() }}
-        </div>
-        @endif
     </div>
+    @endif
     
     @else
     <!-- Empty State -->
@@ -208,11 +184,11 @@
             </p>
             
             @if(!isset($accountPending) || !$accountPending)
-            <a href="{{ route('matches.create') }}" class="inline-flex items-center justify-center space-x-3 px-10 py-5 rounded-2xl font-extrabold text-lg text-white shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-110 hover:-translate-y-2" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);">
-                <div class="h-12 w-12 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                    <i class="fas fa-plus text-2xl"></i>
+            <a href="{{ route('matches.create') }}" class="upload-match-btn inline-flex items-center justify-center space-x-3 px-10 py-5 rounded-2xl font-extrabold text-lg text-white shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-110 hover:-translate-y-2 cursor-pointer relative z-20" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); display: inline-flex; position: relative; z-index: 20;">
+                <div class="h-12 w-12 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+                    <i class="fas fa-plus text-2xl pointer-events-none"></i>
                 </div>
-                <span>Upload Your First Match</span>
+                <span class="pointer-events-none">Upload Your First Match</span>
             </a>
             @endif
         </div>
@@ -220,3 +196,322 @@
     @endif
 </div>
 @endsection
+
+@push('styles')
+<style>
+    /* Ensure orange button is fully clickable */
+    .upload-match-btn {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        position: relative !important;
+        z-index: 999 !important;
+    }
+    
+    .upload-match-btn * {
+        pointer-events: none !important;
+    }
+    
+    .upload-match-btn:hover {
+        pointer-events: auto !important;
+    }
+    
+    /* Ensure no parent element blocks clicks */
+    .upload-match-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        pointer-events: none;
+    }
+    
+    /* Enhanced Table Wrapper */
+    .matches-table-wrapper {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        position: relative;
+    }
+    
+    .matches-table-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #60a5fa 0%, #818cf8 50%, #a78bfa 100%);
+        z-index: 1;
+    }
+    
+    /* Enhanced Table Container */
+    .matches-table-container {
+        background: white;
+        border-collapse: separate;
+        border-spacing: 0;
+        position: relative;
+    }
+    
+    .matches-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        background: white;
+    }
+    
+    /* Enhanced Table Header */
+    .matches-table-header {
+        padding: 1.25rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4338ca;
+        background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #e0e7ff 100%);
+        border-bottom: 3px solid #c7d2fe;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .matches-table-header:hover {
+        background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 50%, #ede9fe 100%);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    }
+    
+    .matches-table-header:first-child {
+        border-top-left-radius: 0.875rem;
+    }
+    
+    .matches-table-header:last-child {
+        border-top-right-radius: 0.875rem;
+    }
+    
+    /* Enhanced Table Rows */
+    .matches-table-row {
+        background-color: #ffffff;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid #e5e7eb;
+        position: relative;
+    }
+    
+    .matches-table-row::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: transparent;
+        transition: all 0.25s ease;
+    }
+    
+    .matches-table-row:nth-child(odd) {
+        background-color: #ffffff;
+    }
+    
+    .matches-table-row:nth-child(even) {
+        background-color: #f8fafc;
+    }
+    
+    .matches-table-row:hover {
+        background: linear-gradient(90deg, #f0f9ff 0%, #eff6ff 50%, #f0f9ff 100%) !important;
+        transform: translateX(2px);
+        box-shadow: -4px 0 12px rgba(96, 165, 250, 0.15), 0 2px 8px rgba(96, 165, 250, 0.1);
+        border-left: 3px solid #60a5fa;
+    }
+    
+    .matches-table-row:hover::before {
+        background: linear-gradient(180deg, #60a5fa 0%, #818cf8 100%);
+    }
+    
+    /* Enhanced Table Cells */
+    .matches-table-cell {
+        padding: 1.25rem 1.5rem;
+        font-size: 0.875rem;
+        color: #374151;
+        vertical-align: middle;
+        border-right: 1px solid #f1f5f9;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .matches-table-row:hover .matches-table-cell {
+        color: #1e293b;
+    }
+    
+    .matches-table-row .matches-table-cell:last-child {
+        border-right: none;
+    }
+    
+    .matches-table-row:last-child {
+        border-bottom: none;
+    }
+    
+    .matches-table-row:last-child .matches-table-cell {
+        border-bottom: none;
+    }
+    
+    /* Enhanced icon containers in cells */
+    .matches-table-cell .flex.items-center > div[style*="gradient"] {
+        box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .matches-table-row:hover .matches-table-cell .flex.items-center > div[style*="gradient"] {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+    }
+    
+    /* Enhanced action buttons */
+    .matches-table-cell a[style*="gradient"] {
+        box-shadow: 0 2px 6px rgba(96, 165, 250, 0.25);
+        transition: all 0.25s ease;
+    }
+    
+    .matches-table-cell a[style*="gradient"]:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 16px rgba(96, 165, 250, 0.4);
+    }
+    
+    /* Enhanced Pagination Styling */
+    .matches-pagination-container {
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border-top: 2px solid #e5e7eb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .matches-pagination-container nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .matches-pagination-container .pagination {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .matches-pagination-container .pagination li {
+        margin: 0;
+    }
+    
+    .matches-pagination-container .pagination a,
+    .matches-pagination-container .pagination span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.75rem;
+        min-width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #4b5563;
+        background-color: #ffffff;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    .matches-pagination-container .pagination a:hover:not(.disabled) {
+        background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+        color: #ffffff;
+        border-color: #60a5fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(96, 165, 250, 0.3);
+    }
+    
+    .matches-pagination-container .pagination .active span {
+        background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
+        color: #ffffff;
+        border-color: #60a5fa;
+        box-shadow: 0 2px 4px rgba(96, 165, 250, 0.3);
+    }
+    
+    .matches-pagination-container .pagination .disabled span,
+    .matches-pagination-container .pagination .disabled a {
+        background-color: #f3f4f6;
+        color: #9ca3af;
+        border-color: #e5e7eb;
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    
+    .matches-pagination-container .pagination .disabled span:hover,
+    .matches-pagination-container .pagination .disabled a:hover {
+        transform: none;
+        box-shadow: none;
+        background-color: #f3f4f6;
+        color: #9ca3af;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure orange upload button is fully clickable
+        const uploadBtn = document.querySelector('.upload-match-btn');
+        if (uploadBtn) {
+            // Make the entire button clickable
+            uploadBtn.style.pointerEvents = 'auto';
+            uploadBtn.style.cursor = 'pointer';
+            
+            // Add click handler to entire button area
+            uploadBtn.addEventListener('click', function(e) {
+                // Allow the default link behavior
+                // Don't prevent default - let the anchor work normally
+            }, true);
+            
+            // Ensure all child elements don't block clicks
+            const children = uploadBtn.querySelectorAll('*');
+            children.forEach(function(child) {
+                child.style.pointerEvents = 'none';
+            });
+        }
+        
+        // Ensure search form submits properly
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        
+        if (searchForm && searchInput) {
+            // Submit form when Enter key is pressed
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchForm.submit();
+                }
+            });
+            
+            // Ensure form submission works
+            searchForm.addEventListener('submit', function(e) {
+                // Allow normal form submission
+                return true;
+            });
+        }
+    });
+</script>
+@endpush

@@ -16,84 +16,99 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <!-- Total Users -->
-        <div class="group bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-2 border-gray-100 hover:border-blue-200 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+        <div class="group bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 hover:border-blue-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-blue-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center justify-center h-16 w-16 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
-                        <i class="fas fa-users text-3xl text-white"></i>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
+                        <i class="fas fa-users text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Total Users</h3>
-                <p class="text-5xl font-black text-blue-700 mb-2">{{ $totalUsers ?? 0 }}</p>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Total Users</h3>
+                <p class="text-3xl font-black text-blue-700 mb-1">{{ $totalUsers ?? 0 }}</p>
                 <p class="text-xs text-gray-400 font-medium">Registered users</p>
             </div>
         </div>
 
         <!-- Pending Approvals -->
-        <div class="group bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-2 border-gray-100 hover:border-amber-200 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+        <div class="group bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 hover:border-amber-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-amber-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center justify-center h-16 w-16 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                        <i class="fas fa-clock text-3xl text-white"></i>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i class="fas fa-clock text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Pending Approvals</h3>
-                <p class="text-5xl font-black text-amber-700 mb-2">{{ $pendingUsers ?? 0 }}</p>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Pending Approvals</h3>
+                <p class="text-3xl font-black text-amber-700 mb-1">{{ $pendingUsers ?? 0 }}</p>
                 <p class="text-xs text-gray-400 font-medium">Users awaiting approval</p>
             </div>
         </div>
-        
+
         <!-- Approved Users -->
-        <div class="group bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-2 border-gray-100 hover:border-green-200 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-green-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+        <div class="group bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 hover:border-green-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-green-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center justify-center h-16 w-16 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                        <i class="fas fa-check-circle text-3xl text-white"></i>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-check-circle text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Approved Users</h3>
-                <p class="text-5xl font-black text-green-700 mb-2">{{ $approvedUsers ?? 0 }}</p>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Approved Users</h3>
+                <p class="text-3xl font-black text-green-700 mb-1">{{ $approvedUsers ?? 0 }}</p>
                 <p class="text-xs text-gray-400 font-medium">Active users</p>
             </div>
         </div>
 
         <!-- Rejected Users -->
-        <div class="group bg-white rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 border-2 border-gray-100 hover:border-red-200 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-red-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+        <div class="group bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100 hover:border-red-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-20 h-20 bg-red-100 rounded-full -mr-10 -mt-10 opacity-50"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center justify-center h-16 w-16 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-110" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-                        <i class="fas fa-ban text-3xl text-white"></i>
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center justify-center h-12 w-12 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                        <i class="fas fa-ban text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Rejected Users</h3>
-                <p class="text-5xl font-black text-red-700 mb-2">{{ $rejectedUsers ?? 0 }}</p>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Rejected Users</h3>
+                <p class="text-3xl font-black text-red-700 mb-1">{{ $rejectedUsers ?? 0 }}</p>
                 <p class="text-xs text-gray-400 font-medium">Rejected accounts</p>
             </div>
         </div>
     </div>
 
     <!-- Users Management Table -->
-    <div class="bg-white rounded-3xl shadow-xl border-2 border-gray-200 overflow-hidden">
-        <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-200">
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mt-4">
+        <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                 <div class="flex items-center space-x-3">
-                    <div class="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
-                        <i class="fas fa-users text-white text-xl"></i>
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
+                        <i class="fas fa-users text-white text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="text-2xl font-extrabold text-gray-900">All Users</h2>
-                        <p class="text-sm text-gray-500">Manage all non-admin users</p>
+                        <h2 class="text-xl font-bold text-gray-900">All Users</h2>
+                        <p class="text-xs text-gray-500">Manage all non-admin users</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-3">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+                    <!-- Search Box -->
+                    <div class="relative flex-1 md:flex-initial" style="min-width: 280px;">
+                        <label class="relative block">
+                            <input 
+                                type="text" 
+                                id="customSearchInput" 
+                                placeholder="Search users..." 
+                                class="w-full pl-10 pr-10 py-2.5 border-2 border-white rounded-lg text-sm font-medium focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm hover:shadow-md"
+                            >
+                            <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-blue-500 text-sm"></i>
+                            <button type="button" id="clearSearchBtn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors hidden">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </label>
+                    </div>
                     <!-- Status Filter -->
-                    <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                    <select id="statusFilter" class="px-3 py-2.5 border-2 border-white rounded-lg text-sm font-semibold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 bg-white shadow-sm transition-all hover:shadow-md w-full sm:w-auto">
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
@@ -102,9 +117,9 @@
                 </div>
             </div>
         </div>
-        
-        <div class="p-6 bg-white">
-            <div class="overflow-hidden rounded-xl border-2 border-gray-300 shadow-lg bg-white">
+
+        <div class="p-5 bg-white">
+            <div id="usersTableContainer" class="overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white">
                 <table id="usersTable" class="min-w-full bg-white" style="width:100%">
                     <thead>
                         <tr class="bg-gradient-to-r from-gray-50 via-gray-50 to-gray-100 border-b-2 border-gray-300">
@@ -131,152 +146,297 @@
     #usersTable_wrapper {
         padding: 0;
     }
-    
-    /* Search Input */
+
+    /* Hide default DataTables search since we have custom one */
     #usersTable_wrapper .dataTables_filter {
-        margin-bottom: 1.5rem;
+        display: none !important;
+        visibility: hidden !important;
     }
     
+    /* Custom Search Box Styling */
+    #customSearchInput {
+        transition: all 0.2s ease;
+    }
+    
+    #customSearchInput:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+    }
+    
+    #clearSearchBtn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+    
+    #clearSearchBtn:hover {
+        color: #ef4444 !important;
+    }
+
+    #usersTable_wrapper .dataTables_filter label {
+        position: relative;
+        display: flex !important;
+        align-items: center;
+        margin: 0 !important;
+        float: none !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
     #usersTable_wrapper .dataTables_filter input {
-        padding: 0.625rem 1rem;
-        padding-left: 2.5rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        transition: all 0.2s;
-        background: white;
-        width: 280px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        padding: 0.75rem 1rem !important;
+        padding-left: 3rem !important;
+        padding-right: 3rem !important;
+        border: 2px solid #e5e7eb !important;
+        border-radius: 1rem !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease;
+        background: linear-gradient(to bottom, #ffffff, #f9fafb) !important;
+        width: 320px !important;
+        max-width: 100% !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05) !important;
+        color: #374151 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin: 0 !important;
     }
-    
+
+    #usersTable_wrapper .dataTables_filter input::placeholder {
+        color: #9ca3af;
+        font-weight: 400;
+    }
+
     #usersTable_wrapper .dataTables_filter input:focus {
         outline: none;
         border-color: #60a5fa;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15), 0 4px 12px rgba(96, 165, 250, 0.2);
+        background: #ffffff;
+        transform: translateY(-1px);
     }
-    
-    #usersTable_wrapper .dataTables_filter label {
-        position: relative;
-    }
-    
+
     #usersTable_wrapper .dataTables_filter label::before {
         content: '\f002';
         font-family: 'Font Awesome 6 Free';
         font-weight: 900;
         position: absolute;
-        left: 0.875rem;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #60a5fa;
+        z-index: 2;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    #usersTable_wrapper .dataTables_filter input:focus + label::before,
+    #usersTable_wrapper .dataTables_filter input:focus ~ label::before {
+        color: #3b82f6;
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    /* Clear search button when typing */
+    #usersTable_wrapper .dataTables_filter label::after {
+        content: '\f00d';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 1rem;
         top: 50%;
         transform: translateY(-50%);
         color: #9ca3af;
-        z-index: 1;
+        z-index: 2;
+        font-size: 0.75rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
     }
-    
-    /* Length Select */
+
+    #usersTable_wrapper .dataTables_filter input:not(:placeholder-shown) ~ label::after,
+    #usersTable_wrapper .dataTables_filter input:valid ~ label::after {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    #usersTable_wrapper .dataTables_filter label::after:hover {
+        color: #ef4444;
+        transform: translateY(-50%) scale(1.2);
+    }
+
+    /* Length Select - Smaller */
     #usersTable_wrapper .dataTables_length {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0;
+        margin-right: 1rem;
+        margin-left: 0.5rem;
+        padding: 0.5rem 0;
+        padding-left: 1rem;
     }
-    
+
+    #usersTable_wrapper .dataTables_length label {
+        margin-bottom: 0;
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+        padding-top: 0.75rem;
+        padding-left: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
     #usersTable_wrapper .dataTables_length select {
-        padding: 0.625rem 2.5rem 0.625rem 0.75rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
+        padding: 0.375rem 1.75rem 0.375rem 0.625rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
         font-weight: 600;
         background: white;
         cursor: pointer;
         transition: all 0.2s;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        margin-left: 0 !important;
+        height: auto;
+        min-height: 32px;
     }
-    
+
     #usersTable_wrapper .dataTables_length select:focus {
         outline: none;
         border-color: #60a5fa;
-        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
     }
-    
-    /* Table Styling - Professional with Borders */
+
+    /* Table Styling - Professional with Enhanced Borders */
     #usersTable {
         border-collapse: separate;
         border-spacing: 0;
+        width: 100% !important;
     }
-    
+
     #usersTable tbody tr {
-        transition: all 0.2s;
+        transition: all 0.2s ease;
         border-bottom: 1px solid #e5e7eb;
     }
-    
+
     #usersTable tbody tr:last-child {
         border-bottom: none;
     }
-    
+
     #usersTable tbody tr:hover {
-        background-color: #f8fafc;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        background-color: #f1f5f9 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transform: scale(1.01);
     }
-    
-    #usersTable tbody td {
-        padding: 1.25rem 1.5rem;
+
+    #usersTable tbody tr td {
+        padding: 1rem 1.5rem;
         vertical-align: middle;
         border-right: 1px solid #e5e7eb;
         font-size: 0.875rem;
         color: #374151;
+        font-weight: 500;
     }
-    
-    #usersTable tbody td:last-child {
+
+    #usersTable tbody tr td:last-child {
         border-right: none;
     }
-    
+
     #usersTable thead th {
-        padding: 1rem 1.5rem;
+        padding: 1.25rem 1.5rem;
         font-weight: 700;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #d1d5db;
+        border-bottom: 3px solid #d1d5db;
         border-right: 1px solid #e5e7eb;
         background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
         position: relative;
+        text-transform: uppercase;
+        font-size: 0.75rem;
     }
-    
+
     #usersTable thead th:last-child {
         border-right: none;
     }
-    
+
     #usersTable thead th:first-child {
         border-top-left-radius: 0.75rem;
     }
-    
+
     #usersTable thead th:last-child {
         border-top-right-radius: 0.75rem;
     }
-    
+
+    /* Professional alternating rows with distinct split colors */
+    #usersTable tbody tr:nth-child(odd) {
+        background-color: #ffffff;
+    }
+
+    #usersTable tbody tr:nth-child(odd) td {
+        background-color: #ffffff;
+    }
+
+    #usersTable tbody tr:nth-child(even) {
+        background-color: #f1f5f9;
+    }
+
+    #usersTable tbody tr:nth-child(even) td {
+        background-color: #f1f5f9;
+    }
+
+    /* Hover states for alternating rows */
+    #usersTable tbody tr:nth-child(odd):hover {
+        background-color: #f8fafc !important;
+    }
+
+    #usersTable tbody tr:nth-child(odd):hover td {
+        background-color: #f8fafc !important;
+    }
+
+    #usersTable tbody tr:nth-child(even):hover {
+        background-color: #e2e8f0 !important;
+    }
+
+    #usersTable tbody tr:nth-child(even):hover td {
+        background-color: #e2e8f0 !important;
+    }
+
     /* Enhanced table container */
     #usersTable_wrapper {
         background: white;
+        padding: 0;
     }
-    
+
     #usersTable_wrapper .dataTables_scrollBody {
         border: 1px solid #e5e7eb !important;
     }
-    
+
     /* Table wrapper borders */
     #usersTable_wrapper .dataTables_scroll {
         border: 2px solid #e5e7eb;
         border-radius: 0.75rem;
         overflow: hidden;
     }
-    
-    /* Better cell alignment and spacing */
-    #usersTable tbody td {
-        background-color: white;
+
+    /* Pagination wrapper styling */
+    #usersTable_wrapper .dataTables_wrapper {
+        border-top: 2px solid #e5e7eb;
+        padding-top: 1.5rem;
+        margin-top: 1rem;
+        background: white;
     }
-    
-    #usersTable tbody tr.even td {
-        background-color: #fafbfc;
+
+    #usersTable_wrapper > .dataTables_wrapper > .row {
+        margin: 0;
     }
-    
-    #usersTable tbody tr.odd td {
-        background-color: white;
+
+    #usersTable_wrapper > .dataTables_wrapper > .row:last-child {
+        padding: 1rem 1.5rem !important;
+        border-top: 2px solid #e5e7eb;
+        margin-top: 1rem;
+        gap: 1rem;
     }
-    
+
     /* Action buttons styling */
     #usersTable .action-btn {
         display: inline-flex;
@@ -289,57 +449,97 @@
         transition: all 0.2s;
         border: 1px solid transparent;
     }
-    
+
     #usersTable .action-btn:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
-    /* Pagination */
+
+    /* Pagination - Enhanced and Always Visible */
     #usersTable_wrapper .dataTables_paginate {
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-        border-top: 2px solid #f3f4f6;
+        margin-top: 0 !important;
+        margin-left: 1rem !important;
+        padding-top: 0 !important;
+        padding-left: 1rem !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem !important;
+        flex-wrap: wrap;
+        min-height: 40px;
     }
-    
+
+    /* Pagination container visibility */
+    #usersTable_wrapper > .dataTables_wrapper > .row:last-child {
+        display: flex !important;
+        visibility: visible !important;
+    }
+
     #usersTable_wrapper .dataTables_paginate .paginate_button {
-        padding: 0.5rem 0.875rem;
-        margin: 0 0.25rem;
+        padding: 0.5rem 0.75rem !important;
+        margin: 0 !important;
         border-radius: 0.5rem;
-        border: 2px solid #e5e7eb;
-        font-size: 0.875rem;
+        border: 1.5px solid #e5e7eb;
+        font-size: 0.75rem !important;
         font-weight: 600;
         transition: all 0.2s;
         background: white;
+        color: #374151 !important;
+        min-width: 36px;
+        text-align: center;
+        cursor: pointer;
     }
-    
-    #usersTable_wrapper .dataTables_paginate .paginate_button:hover {
-        background: #f9fafb;
+
+    #usersTable_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+        background: #f3f4f6;
         border-color: #60a5fa;
         color: #60a5fa !important;
         transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
+
     #usersTable_wrapper .dataTables_paginate .paginate_button.current {
         background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
         color: white !important;
         border: none;
         box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        font-weight: 700;
     }
-    
+
     #usersTable_wrapper .dataTables_paginate .paginate_button.disabled {
         opacity: 0.4;
         cursor: not-allowed;
+        pointer-events: none;
     }
-    
-    /* Info Text */
+
+    #usersTable_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        transform: none;
+        background: white;
+        border-color: #e5e7eb;
+    }
+
+    /* Info Text - Enhanced */
     #usersTable_wrapper .dataTables_info {
-        padding-top: 1rem;
-        font-size: 0.875rem;
+        padding-top: 0.75rem !important;
+        padding-right: 1rem !important;
+        padding-left: 1rem !important;
+        padding-bottom: 0 !important;
+        margin-right: 0.5rem !important;
+        margin-left: 0.5rem !important;
+        margin-top: 0 !important;
+        font-size: 0.75rem !important;
         color: #6b7280;
         font-weight: 500;
+        display: block !important;
     }
-    
+
+    /* Ensure pagination container is visible */
+    #usersTable_wrapper .dataTables_wrapper .dataTables_paginate {
+        display: flex !important;
+    }
+
     /* Processing Indicator */
     #usersTable_processing {
         background: rgba(255, 255, 255, 0.95);
@@ -368,7 +568,7 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { 
+            {
                 data: null,
                 render: function(data, type, row) {
                     return '<div class="flex items-center space-x-3">' + row.avatar + '<span class="text-sm font-semibold text-gray-900">' + row.name + '</span></div>';
@@ -401,20 +601,131 @@ $(document).ready(function() {
             },
             emptyTable: "No users available"
         },
-        dom: '<"flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"<"flex items-center gap-4"<"text-sm text-gray-600 font-semibold">l>f>>rt<"flex flex-col md:flex-row justify-between items-center gap-4 mt-6 pt-6 border-t-2 border-gray-200"ip>',
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        // Hide default search since we have custom one
         processing: true,
         drawCallback: function() {
             // Ensure pagination is visible
-            $('.dataTables_paginate').css('display', 'flex');
-            $('.dataTables_info').css('display', 'block');
+            $('.dataTables_paginate').css({
+                'display': 'flex !important',
+                'visibility': 'visible !important',
+                'opacity': '1 !important'
+            });
+            $('.dataTables_info').css({
+                'display': 'block !important',
+                'visibility': 'visible !important'
+            });
+            
+            // Ensure search is visible
+            $('.dataTables_filter').css({
+                'display': 'flex !important',
+                'visibility': 'visible !important',
+                'opacity': '1 !important'
+            });
+            $('.dataTables_filter input').css({
+                'display': 'block !important',
+                'visibility': 'visible !important',
+                'opacity': '1 !important'
+            });
+            
+            // Add clear button to search
+            addClearButton();
+        },
+        initComplete: function() {
+            // Ensure pagination is visible on init
+            setTimeout(function() {
+                $('.dataTables_paginate').css('display', 'flex');
+                $('.dataTables_info').css('display', 'block');
+                
+                // Ensure search is visible
+                $('.dataTables_filter').css({
+                    'display': 'flex !important',
+                    'visibility': 'visible !important',
+                    'opacity': '1 !important'
+                });
+                $('.dataTables_filter input').css({
+                    'display': 'block !important',
+                    'visibility': 'visible !important',
+                    'opacity': '1 !important'
+                });
+                
+                addClearButton();
+            }, 100);
+        }
+    });
+
+    // Function to add clear button to search input
+    function addClearButton() {
+        var searchInput = $('.dataTables_filter input');
+        var searchLabel = $('.dataTables_filter label');
+        
+        // Remove existing clear button if any
+        searchLabel.find('.search-clear-btn').remove();
+        
+        // Add clear button
+        if (searchInput.val()) {
+            var clearBtn = $('<i class="fas fa-times search-clear-btn" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af; cursor: pointer; z-index: 3; font-size: 0.75rem; transition: all 0.3s ease;"></i>');
+            clearBtn.hover(function() {
+                $(this).css({ color: '#ef4444', transform: 'translateY(-50%) scale(1.2)' });
+            }, function() {
+                $(this).css({ color: '#9ca3af', transform: 'translateY(-50%) scale(1)' });
+            });
+            clearBtn.on('click', function(e) {
+                e.stopPropagation();
+                searchInput.val('').focus();
+                table.search('').draw();
+            });
+            searchLabel.append(clearBtn);
+        }
+        
+        // Show/hide clear button on input
+        searchInput.on('input', function() {
+            if ($(this).val()) {
+                if (!searchLabel.find('.search-clear-btn').length) {
+                    var clearBtn = $('<i class="fas fa-times search-clear-btn" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af; cursor: pointer; z-index: 3; font-size: 0.75rem; transition: all 0.3s ease;"></i>');
+                    clearBtn.hover(function() {
+                        $(this).css({ color: '#ef4444', transform: 'translateY(-50%) scale(1.2)' });
+                    }, function() {
+                        $(this).css({ color: '#9ca3af', transform: 'translateY(-50%) scale(1)' });
+                    });
+                    clearBtn.on('click', function(e) {
+                        e.stopPropagation();
+                        searchInput.val('').focus();
+                        table.search('').draw();
+                    });
+                    searchLabel.append(clearBtn);
+                }
+            } else {
+                searchLabel.find('.search-clear-btn').remove();
+            }
+        });
+    }
+
+    // Custom search handler
+    $('#customSearchInput').on('keyup', function() {
+        table.search($(this).val()).draw();
+        
+        // Show/hide clear button
+        if ($(this).val().length > 0) {
+            $('#clearSearchBtn').removeClass('hidden');
+        } else {
+            $('#clearSearchBtn').addClass('hidden');
         }
     });
     
+    // Clear search handler
+    $('#clearSearchBtn').on('click', function(e) {
+        e.preventDefault();
+        $('#customSearchInput').val('').focus();
+        table.search('').draw();
+        $(this).addClass('hidden');
+    });
+
     // Status filter change handler
     $('#statusFilter').on('change', function() {
         table.ajax.reload();
     });
-    
+
     // Handle approve/reject forms
     $(document).on('submit', 'form[action*="approve"], form[action*="reject"]', function(e) {
         e.preventDefault();
@@ -422,27 +733,57 @@ $(document).ready(function() {
         var url = form.attr('action');
         var method = form.find('input[name="_method"]').val() || 'POST';
         var action = url.includes('approve') ? 'approve' : 'reject';
-        
-        if (action === 'reject' && !confirm('Are you sure you want to reject this user?')) {
-            return false;
-        }
-        
-        $.ajax({
-            url: url,
-            type: method,
-            data: form.serialize(),
-            success: function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    table.ajax.reload();
+
+        var submitForm = function() {
+            $.ajax({
+                url: url,
+                type: method,
+                data: form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response.message,
+                            confirmButtonColor: '#60a5fa',
+                            timer: 2000,
+                            showConfirmButton: true
+                        }).then(() => {
+                            table.ajax.reload();
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var message = xhr.responseJSON?.message || 'An error occurred';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: message,
+                        confirmButtonColor: '#ef4444'
+                    });
                 }
-            },
-            error: function(xhr) {
-                var message = xhr.responseJSON?.message || 'An error occurred';
-                alert(message);
-            }
-        });
-        
+            });
+        };
+
+        if (action === 'reject') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Are you sure?',
+                text: 'Are you sure you want to reject this user?',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, reject user',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitForm();
+                }
+            });
+        } else {
+            submitForm();
+        }
+
         return false;
     });
 });

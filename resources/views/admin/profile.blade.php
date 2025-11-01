@@ -210,7 +210,7 @@
             <h3 class="text-lg font-bold text-red-900 mb-2">Delete Account</h3>
             <p class="text-sm text-red-700 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
             
-            <form action="{{ route('profile.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+            <form id="deleteAccountForm" action="{{ route('profile.delete') }}" method="POST">
                 @csrf
                 @method('DELETE')
                 
@@ -222,4 +222,34 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForm = document.getElementById('deleteAccountForm');
+    
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Are you sure?',
+                html: '<strong>Are you sure you want to delete your account?</strong><br><br>This action cannot be undone.',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete my account',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteForm.submit();
+                }
+            });
+        });
+    }
+});
+</script>
+@endpush
 @endsection

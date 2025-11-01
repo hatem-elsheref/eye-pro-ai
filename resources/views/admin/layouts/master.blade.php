@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>@yield('title', 'Eye Pro - Match Analysis Platform')</title>
-    
+
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,11 +24,11 @@
         }
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     @stack('styles')
 </head>
 <body class="h-full bg-gray-50 font-cairo @yield('body-class', '')" x-data="{ sidebarOpen: false }">
-    
+
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <aside class="hidden lg:flex lg:flex-shrink-0">
@@ -37,62 +37,74 @@
                     <!-- Logo -->
                     <div class="flex h-16 flex-shrink-0 items-center px-6 bg-black">
                         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 group">
-                            <img src="{{ asset('logo.jpeg') }}" alt="Eye Pro" class="h-12 w-12 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 object-contain bg-transparent">
-                            <span class="text-xl font-bold text-white">Eye Pro</span>
+                            <img src="{{ asset('logo.png') }}" alt="Eye Pro" class="h-24 w-32 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 object-contain bg-transparent">
+                            <span class="text-xl font-bold text-white"></span>
                         </a>
                     </div>
-                    
+
                     <!-- Navigation -->
                     <nav class="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
                         <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Main Menu</p>
-                        
+
                         <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                             <i class="fas fa-th-large text-lg"></i>
                             <span>Dashboard</span>
                         </a>
-                        
-                        <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.*') ? 'active' : '' }}">
+
+                        <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.index') || (request()->routeIs('matches.*') && !request()->routeIs('matches.create')) ? 'active' : '' }}">
                             <i class="fas fa-video text-lg"></i>
                             <span>Matches</span>
                         </a>
-                        
-                        <a href="{{ route('matches.create') }}" class="sidebar-link">
+
+                        <a href="{{ route('matches.create') }}" class="sidebar-link {{ request()->routeIs('matches.create') ? 'active' : '' }}">
                             <i class="fas fa-plus-circle text-lg"></i>
                             <span>Add Match</span>
                         </a>
-                        
+
                         <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Support</p>
-                        
+
                         <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
                             <i class="fas fa-bell text-lg"></i>
                             <span>Notifications</span>
                         </a>
-                        
+
                         <a href="{{ route('support') }}" class="sidebar-link {{ request()->routeIs('support') ? 'active' : '' }}">
                             <i class="fas fa-life-ring text-lg"></i>
                             <span>User Guide</span>
                         </a>
-                        
+
                         @if(Auth::user()->is_admin ?? false)
                         <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Admin</p>
-                        
+
                         <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-users text-lg"></i>
                             <span>Users</span>
                         </a>
-                        
+
                         <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-cog text-lg"></i>
                             <span>Settings</span>
                         </a>
                         @endif
                     </nav>
-                    
+
                     <!-- User Profile -->
                     <div class="flex flex-shrink-0 border-t border-gray-800 p-4">
                         <a href="{{ route('profile') }}" class="group flex w-full items-center">
                             <div class="flex items-center space-x-3 flex-1">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                                @php
+                                    $userId = Auth::user()->id ?? 0;
+                                    $avatarColors = [
+                                        ['#60a5fa', '#818cf8'], ['#f59e0b', '#ea580c'], ['#10b981', '#059669'],
+                                        ['#ef4444', '#dc2626'], ['#8b5cf6', '#7c3aed'], ['#ec4899', '#db2777'],
+                                        ['#06b6d4', '#0891b2'], ['#f97316', '#ea580c'], ['#14b8a6', '#0d9488'],
+                                        ['#6366f1', '#4f46e5'], ['#d946ef', '#c026d3'], ['#3b82f6', '#2563eb'],
+                                        ['#84cc16', '#65a30d'], ['#a855f7', '#9333ea']
+                                    ];
+                                    $colorIndex = abs($userId) % count($avatarColors);
+                                    $userColors = $avatarColors[$colorIndex];
+                                @endphp
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold group-hover:scale-110 transition-transform duration-300 shadow-lg" style="background: linear-gradient(135deg, {{ $userColors[0] }} 0%, {{ $userColors[1] }} 100%);">
                                     {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -111,9 +123,9 @@
                 </div>
             </div>
         </aside>
-        
+
         <!-- Mobile sidebar -->
-        <div x-show="sidebarOpen" 
+        <div x-show="sidebarOpen"
              @click="sidebarOpen = false"
              x-transition:enter="transition-opacity ease-linear duration-300"
              x-transition:enter-start="opacity-0"
@@ -123,7 +135,7 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
              style="display: none;"></div>
-        
+
         <aside x-show="sidebarOpen"
                x-transition:enter="transition ease-in-out duration-300 transform"
                x-transition:enter-start="-translate-x-full"
@@ -143,33 +155,33 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <nav class="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
                 <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Main Menu</p>
-                
+
                 <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-th-large text-lg"></i>
                     <span>Dashboard</span>
                 </a>
-                
-                <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.*') ? 'active' : '' }}">
+
+                <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.index') || (request()->routeIs('matches.*') && !request()->routeIs('matches.create')) ? 'active' : '' }}">
                     <i class="fas fa-video text-lg"></i>
                     <span>Matches</span>
                 </a>
-                
-                <a href="{{ route('matches.create') }}" class="sidebar-link">
+
+                <a href="{{ route('matches.create') }}" class="sidebar-link {{ request()->routeIs('matches.create') ? 'active' : '' }}">
                     <i class="fas fa-plus-circle text-lg"></i>
                     <span>Add Match</span>
                 </a>
-                
+
                 @if(Auth::user()->is_admin ?? false)
                 <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Admin</p>
-                
+
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-users text-lg"></i>
                     <span>Users</span>
                 </a>
-                
+
                 <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-cog text-lg"></i>
                     <span>Settings</span>
@@ -177,7 +189,7 @@
                 @endif
             </nav>
         </aside>
-        
+
         <!-- Main content -->
         <div class="flex flex-1 flex-col overflow-hidden">
             <!-- Top bar -->
@@ -185,7 +197,7 @@
                 <button @click="sidebarOpen = true" class="px-4 text-gray-500 focus:outline-none lg:hidden">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                
+
                 <div class="flex flex-1 justify-between px-6">
                     <div class="flex flex-1 items-center">
                         <h2 class="text-2xl font-bold text-gray-900">@yield('page-title', 'Dashboard')</h2>
@@ -200,9 +212,9 @@
                                     <span class="relative inline-flex rounded-full h-5 w-5 text-white text-[10px] items-center justify-center font-bold shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">3</span>
                                 </span>
                             </button>
-                            
+
                             <!-- Notifications Dropdown -->
-                            <div x-show="open" 
+                            <div x-show="open"
                                  @click.away="open = false"
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-95 translate-y-2"
@@ -284,19 +296,29 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- User Menu Dropdown -->
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" class="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-blue-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200">
                                 @php
                                     $name = Auth::user()->name ?? 'User';
                                     $nameParts = explode(' ', $name);
-                                    $initials = count($nameParts) >= 2 
+                                    $initials = count($nameParts) >= 2
                                         ? strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1))
                                         : strtoupper(substr($name, 0, 2));
+                                    $userId = Auth::user()->id ?? 0;
+                                    $avatarColors = [
+                                        ['#60a5fa', '#818cf8'], ['#f59e0b', '#ea580c'], ['#10b981', '#059669'],
+                                        ['#ef4444', '#dc2626'], ['#8b5cf6', '#7c3aed'], ['#ec4899', '#db2777'],
+                                        ['#06b6d4', '#0891b2'], ['#f97316', '#ea580c'], ['#14b8a6', '#0d9488'],
+                                        ['#6366f1', '#4f46e5'], ['#d946ef', '#c026d3'], ['#3b82f6', '#2563eb'],
+                                        ['#84cc16', '#65a30d'], ['#a855f7', '#9333ea']
+                                    ];
+                                    $colorIndex = abs($userId) % count($avatarColors);
+                                    $userColors = $avatarColors[$colorIndex];
                                 @endphp
-                                
-                                <div class="h-11 w-11 rounded-xl flex items-center justify-center text-white font-extrabold text-base shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
+
+                                <div class="h-11 w-11 rounded-xl flex items-center justify-center text-white font-extrabold text-base shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300" style="background: linear-gradient(135deg, {{ $userColors[0] }} 0%, {{ $userColors[1] }} 100%);">
                                     {{ $initials }}
                                 </div>
                                 <div class="hidden lg:block text-left">
@@ -305,9 +327,9 @@
                                 </div>
                                 <i class="fas fa-chevron-down text-gray-400 group-hover:text-blue-600 text-sm transition-all duration-300" :class="{ 'rotate-180': open }"></i>
                             </button>
-                            
+
                             <!-- User Dropdown Menu -->
-                            <div x-show="open" 
+                            <div x-show="open"
                                  @click.away="open = false"
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-95 translate-y-2"
@@ -320,7 +342,7 @@
                                 <!-- User Info Header -->
                                 <div class="p-5 border-b-2 border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
                                     <div class="flex items-center space-x-3">
-                                        <div class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-xl" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
+                                        <div class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-extrabold text-lg shadow-xl" style="background: linear-gradient(135deg, {{ $userColors[0] }} 0%, {{ $userColors[1] }} 100%);">
                                             {{ $initials }}
                                         </div>
                                         <div class="flex-1 min-w-0">
@@ -329,7 +351,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Menu Items -->
                                 <div class="p-3">
                                     <a href="{{ route('profile') }}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition-all duration-200 group">
@@ -353,7 +375,7 @@
                                     </a>
                                     @endif
                                 </div>
-                                
+
                                 <!-- Logout -->
                                 <div class="p-3 border-t-2 border-gray-100">
                                     <form action="{{ route('logout') }}" method="POST">
@@ -371,19 +393,20 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Page content -->
             <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
                 @include('admin._shared._alerts')
-                
+
                 @yield('content')
             </main>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @stack('scripts')
-    
+
     <style>
         /* Sidebar Links - No Animation */
         .sidebar-link {
@@ -398,18 +421,18 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .sidebar-link:hover {
             background: #374151;
             color: white;
         }
-        
+
         .sidebar-link.active {
             background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
             color: white;
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
         }
-        
+
         .sidebar-link.active::before {
             content: '';
             position: absolute;
@@ -420,12 +443,12 @@
             background: white;
             border-radius: 0 4px 4px 0;
         }
-        
+
         .sidebar-link i {
             width: 20px;
             text-align: center;
         }
-        
+
         /* Custom Animations */
         @keyframes slideIn {
             from {
@@ -437,12 +460,12 @@
                 transform: translateY(0);
             }
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
+
         @keyframes scaleIn {
             from {
                 opacity: 0;

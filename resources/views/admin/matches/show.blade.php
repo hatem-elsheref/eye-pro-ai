@@ -24,7 +24,7 @@
             Edit
         </a>
         
-        <form action="{{ route('matches.destroy', $match->id ?? 1) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this match?');">
+        <form id="deleteMatchForm" action="{{ route('matches.destroy', $match->id ?? 1) }}" method="POST" style="margin: 0;">
             @csrf
             @method('DELETE')
             <button type="submit" class="btn" style="background: var(--danger-color); color: white;">
@@ -152,6 +152,35 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForm = document.getElementById('deleteMatchForm');
+    
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Are you sure?',
+                text: 'Are you sure you want to delete this match?',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteForm.submit();
+                }
+            });
+        });
+    }
+});
+</script>
+@endpush
 @endsection
 
 

@@ -72,3 +72,4 @@
 **Summary:** Use **transparent PNG or SVG** with **white/cyan colors**, sized at **48px × 48px** for sidebar, **64px × 64px** for auth pages.
 
 
+

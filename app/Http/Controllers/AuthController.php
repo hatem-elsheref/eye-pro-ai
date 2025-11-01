@@ -33,7 +33,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             
-            return redirect()->intended('dashboard')->with('success', 'Welcome back!');
+            return redirect()->intended('dashboard');
         }
 
         return back()->withErrors([
@@ -68,7 +68,7 @@ class AuthController extends Controller
             'is_admin' => false,
         ]);
 
-        return redirect()->route('login')->with('success', 'Account created successfully! Please wait for admin approval.');
+        return redirect()->route('login');
     }
 
     /**
