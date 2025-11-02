@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MatchVideo extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The table associated with the model.
@@ -33,6 +34,7 @@ class MatchVideo extends Model
         'duration',
         'file_size',
         'analysis',
+        'storage_disk',
     ];
 
     /**
@@ -43,6 +45,7 @@ class MatchVideo extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -53,6 +56,7 @@ class MatchVideo extends Model
         return $this->belongsTo(User::class);
     }
 }
+
 
 
 

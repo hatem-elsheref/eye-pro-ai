@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SupportService;
 use Illuminate\Http\Request;
 
 class SupportController extends Controller
 {
-    /**
-     * Display the support page
-     */
+    protected $supportService;
+
+    public function __construct(SupportService $supportService)
+    {
+        $this->supportService = $supportService;
+    }
+
     public function index()
     {
         return view('admin.support');
     }
 
-    /**
-     * Submit a support ticket
-     */
     public function submit(Request $request)
     {
         $validated = $request->validate([
@@ -26,21 +28,8 @@ class SupportController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        // Here you can:
-        // 1. Store in database (create a SupportTicket model and migration)
-        // 2. Send email to support team
-        // 3. Create a notification for admins
-        
-        // For now, we'll just return a success message
-        // You can implement actual storage/email later
-        
-        // Example: Send email to support
-        // Mail::to('support@example.com')->send(new SupportTicketMail($validated));
-        
+        $this->supportService->submitTicket($validated);
+
         return back()->with('success', 'Your support ticket has been submitted successfully! We will get back to you soon.');
     }
 }
-
-
-
-

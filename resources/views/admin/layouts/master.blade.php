@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Eye Pro - Match Analysis Platform')</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -204,13 +205,25 @@
                     </div>
                     <div class="ml-4 flex items-center space-x-4">
                         <!-- Notifications Dropdown -->
+                        @php
+                            $user = auth()->user();
+                            $notifications = $user->unreadNotifications->take(5);
+                            $unreadCount = $user->unreadNotifications->count();
+                        @endphp
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" class="relative p-3 rounded-xl transition-all duration-300 hover:bg-blue-50 group">
                                 <i class="fas fa-bell text-2xl text-gray-600 group-hover:text-blue-600 transition-colors duration-300"></i>
-                                <span class="absolute top-1 right-1 flex h-5 w-5">
+                                @if($unreadCount > 0)
+                                <span class="notification-badge absolute top-1 right-1 flex h-5 w-5">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-5 w-5 text-white text-[10px] items-center justify-center font-bold shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">3</span>
+                                    <span class="relative inline-flex rounded-full h-5 w-5 text-white text-[10px] items-center justify-center font-bold shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
                                 </span>
+                                @else
+                                <span class="notification-badge absolute top-1 right-1 flex h-5 w-5" style="display: none;">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-5 w-5 text-white text-[10px] items-center justify-center font-bold shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">0</span>
+                                </span>
+                                @endif
                             </button>
 
                             <!-- Notifications Dropdown -->
@@ -232,61 +245,65 @@
                                             </div>
                                             <h3 class="text-xl font-extrabold text-gray-900">Notifications</h3>
                                         </div>
-                                        <span class="relative inline-flex items-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                        <span id="notificationHeaderBadge" class="relative inline-flex items-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
                                             <span class="absolute -top-1 -right-1 flex h-3 w-3">
                                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                                 <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
                                             </span>
-                                            3 New
+                                            <span id="notificationHeaderCount">{{ $unreadCount }}</span> New
                                         </span>
                                     </div>
                                 </div>
-                                <div class="max-h-96 overflow-y-auto">
-                                    <a href="#" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 group">
-                                        <div class="flex-shrink-0">
-                                            <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                <div id="notificationsList" class="max-h-96 overflow-y-auto">
+                                    @forelse($notifications as $notification)
+                                        @php
+                                            $notifType = $notification->data['type'] ?? $notification->type;
+                                            $title = $notification->data['title'] ?? 'Notification';
+                                            $message = $notification->data['message'] ?? '';
+                                        @endphp
+                                        <a href="{{ route('notifications.index') }}" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 {{ !$loop->last ? 'border-b border-gray-100' : '' }} group {{ $notification->read_at ? 'opacity-60' : '' }}">
+                                            <div class="flex-shrink-0">
+                                                @if($notifType === 'account_approved')
+                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-user-check text-blue-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'account_rejected')
+                                                <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-user-times text-red-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_analysis_complete')
+                                                <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_upload_processing')
+                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-upload text-blue-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_failed')
+                                                <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                                </div>
+                                                @else
+                                                <div class="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-bell text-gray-600 text-xl"></i>
+                                                </div>
+                                                @endif
                                             </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-gray-900">Match analysis completed</p>
-                                            <p class="text-xs text-gray-600 mt-1">Your match "Championship Final" has been analyzed</p>
-                                            <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
-                                                <i class="fas fa-clock"></i>
-                                                <span>2 hours ago</span>
-                                            </p>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 border-b border-gray-100 group">
-                                        <div class="flex-shrink-0">
-                                            <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                <i class="fas fa-upload text-blue-600 text-xl"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-bold text-gray-900">{{ $title }}</p>
+                                                <p class="text-xs text-gray-600 mt-1">{{ $message }}</p>
+                                                <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ $notification->created_at->diffForHumans() }}</span>
+                                                </p>
                                             </div>
+                                        </a>
+                                    @empty
+                                        <div class="p-8 text-center">
+                                            <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
+                                            <p class="text-sm text-gray-500">No new notifications</p>
                                         </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-gray-900">Upload successful</p>
-                                            <p class="text-xs text-gray-600 mt-1">Your video has been uploaded successfully</p>
-                                            <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
-                                                <i class="fas fa-clock"></i>
-                                                <span>5 hours ago</span>
-                                            </p>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 group">
-                                        <div class="flex-shrink-0">
-                                            <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                <i class="fas fa-user-check text-blue-600 text-xl"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-gray-900">Account approved</p>
-                                            <p class="text-xs text-gray-600 mt-1">Your account has been approved by admin</p>
-                                            <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
-                                                <i class="fas fa-clock"></i>
-                                                <span>1 day ago</span>
-                                            </p>
-                                        </div>
-                                    </a>
+                                    @endforelse
                                 </div>
                                 <div class="p-4 border-t-2 border-gray-100 bg-gray-50">
                                     <a href="{{ route('notifications.index') }}" class="flex items-center justify-center space-x-2 text-sm font-bold text-blue-600 hover:text-blue-700 py-2 transition-colors">
@@ -476,6 +493,411 @@
                 transform: scale(1);
             }
         }
+
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            min-width: 320px;
+            max-width: 420px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            animation: slideInRight 0.3s ease-out;
+            border-left: 4px solid #60a5fa;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .toast.info {
+            border-left-color: #60a5fa;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 12px;
+            color: #6b7280;
+        }
     </style>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- WebSocket Notification Handler -->
+    <script>
+        (function() {
+            @auth
+            const userId = {{ auth()->id() }};
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = '{{ env("WEBSOCKET_HOST", "localhost:3001") }}';
+            const wsUrl = `${wsProtocol}//${wsHost}/ws`;
+            
+            let notificationWs = null;
+            let reconnectAttempts = 0;
+            const maxReconnectAttempts = 10;
+            let reconnectTimeout = null;
+
+            // Create audio context for notification sound
+            let audioContext = null;
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.warn('Audio context not supported:', e);
+            }
+
+            // Function to play notification sound
+            function playNotificationSound() {
+                if (!audioContext) return;
+
+                try {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    // Pleasant notification sound (two-tone chime)
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (e) {
+                    console.warn('Could not play sound:', e);
+                }
+            }
+
+            // Function to show toast notification
+            function showToast(notification) {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+
+                const title = notification.title || 'Notification';
+                const message = notification.message || '';
+                const type = notification.type || 'info';
+
+                // Determine icon and color based on type
+                let iconClass = 'fas fa-bell';
+                let bgClass = 'bg-blue-100';
+                let textClass = 'text-blue-600';
+                let toastClass = 'info';
+
+                if (type === 'account_approved') {
+                    iconClass = 'fas fa-user-check';
+                    bgClass = 'bg-green-100';
+                    textClass = 'text-green-600';
+                    toastClass = 'success';
+                } else if (type === 'account_rejected') {
+                    iconClass = 'fas fa-user-times';
+                    bgClass = 'bg-red-100';
+                    textClass = 'text-red-600';
+                    toastClass = 'error';
+                } else if (type === 'match_analysis_complete') {
+                    iconClass = 'fas fa-check-circle';
+                    bgClass = 'bg-green-100';
+                    textClass = 'text-green-600';
+                    toastClass = 'success';
+                } else if (type === 'match_upload_processing') {
+                    iconClass = 'fas fa-upload';
+                    bgClass = 'bg-blue-100';
+                    textClass = 'text-blue-600';
+                    toastClass = 'info';
+                } else if (type === 'match_processing_failed') {
+                    iconClass = 'fas fa-exclamation-circle';
+                    bgClass = 'bg-red-100';
+                    textClass = 'text-red-600';
+                    toastClass = 'error';
+                }
+
+                const toast = document.createElement('div');
+                toast.className = `toast ${toastClass}`;
+                toast.innerHTML = `
+                    <div class="toast-icon ${bgClass}">
+                        <i class="${iconClass} ${textClass}"></i>
+                    </div>
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-message">${message}</div>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+
+                container.appendChild(toast);
+
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                }, 5000);
+            }
+
+            // Helper function to escape HTML
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Function to refresh notification list
+            function refreshNotifications() {
+                // Fetch updated notification list and count via AJAX
+                fetch('/notifications/list', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.unreadCount || 0;
+                    const notifications = data.notifications || [];
+                    
+                    // Update notification badge count on button
+                    const badge = document.querySelector('.notification-badge');
+                    if (badge) {
+                        const countSpan = badge.querySelector('span:last-child');
+                        if (countSpan) {
+                            countSpan.textContent = count > 99 ? '99+' : count;
+                        }
+                        if (count > 0) {
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                    
+                    // Update header badge count
+                    const headerBadge = document.getElementById('notificationHeaderBadge');
+                    const headerCount = document.getElementById('notificationHeaderCount');
+                    if (headerBadge && headerCount) {
+                        headerCount.textContent = count;
+                        if (count > 0) {
+                            headerBadge.style.display = 'inline-flex';
+                        } else {
+                            headerBadge.style.display = 'none';
+                        }
+                    }
+                    
+                    // Update notification list in dropdown
+                    const listContainer = document.getElementById('notificationsList');
+                    if (listContainer) {
+                        if (notifications.length === 0) {
+                            listContainer.innerHTML = `
+                                <div class="p-8 text-center">
+                                    <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
+                                    <p class="text-sm text-gray-500">No new notifications</p>
+                                </div>
+                            `;
+                        } else {
+                            listContainer.innerHTML = notifications.map((notif, index) => `
+                                <a href="/notifications" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 ${index < notifications.length - 1 ? 'border-b border-gray-100' : ''} group ${notif.read_at ? 'opacity-60' : ''}">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-12 w-12 rounded-xl ${notif.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <i class="fas ${notif.icon} ${notif.iconColor} text-xl"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-bold text-gray-900">${escapeHtml(notif.title)}</p>
+                                        <p class="text-xs text-gray-600 mt-1">${escapeHtml(notif.message)}</p>
+                                        <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
+                                            <i class="fas fa-clock"></i>
+                                            <span>${escapeHtml(notif.created_at)}</span>
+                                        </p>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                    
+                    // Dispatch event for other components to react
+                    window.dispatchEvent(new CustomEvent('notifications-updated', { 
+                        detail: { count: count, notifications: notifications } 
+                    }));
+                    
+                    // If on notifications page, reload to show new notification
+                    if (window.location.pathname === '/notifications' || window.location.pathname.includes('/notifications')) {
+                        // Small delay to allow toast to be visible
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing notifications:', error);
+                    // Fallback: reload page if AJAX fails
+                    if (window.location.pathname === '/notifications' || window.location.pathname.includes('/notifications')) {
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                });
+            }
+
+            // Function to connect to WebSocket
+            function connectWebSocket() {
+                if (notificationWs && notificationWs.readyState === WebSocket.OPEN) {
+                    return; // Already connected
+                }
+
+                try {
+                    notificationWs = new WebSocket(wsUrl);
+
+                    notificationWs.onopen = function() {
+                        console.log('Notification WebSocket connected');
+                        reconnectAttempts = 0;
+
+                        // Subscribe to notifications channel
+                        notificationWs.send(JSON.stringify({
+                            type: 'subscribe',
+                            userId: userId,
+                            subscribeType: 'notifications'
+                        }));
+                    };
+
+                    notificationWs.onmessage = function(event) {
+                        try {
+                            const data = JSON.parse(event.data);
+
+                            if (data.type === 'subscribed') {
+                                console.log('Subscribed to notifications channel:', data.channel);
+                            } else if (data.type === 'notification') {
+                                console.log('Received notification:', data.notification);
+
+                                // Play sound
+                                playNotificationSound();
+
+                                // Show toast
+                                showToast(data.notification);
+
+                                // Refresh notification list
+                                refreshNotifications();
+                            }
+                        } catch (error) {
+                            console.error('Error parsing WebSocket message:', error);
+                        }
+                    };
+
+                    notificationWs.onerror = function(error) {
+                        console.error('Notification WebSocket error:', error);
+                    };
+
+                    notificationWs.onclose = function(event) {
+                        console.log('Notification WebSocket closed');
+                        notificationWs = null;
+
+                        // Reconnect with exponential backoff
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                            reconnectAttempts++;
+                            console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                            
+                            reconnectTimeout = setTimeout(() => {
+                                connectWebSocket();
+                            }, delay);
+                        } else {
+                            console.warn('Max reconnection attempts reached');
+                        }
+                    };
+
+                } catch (error) {
+                    console.error('Error connecting to WebSocket:', error);
+                    
+                    // Retry connection
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                        reconnectAttempts++;
+                        reconnectTimeout = setTimeout(() => {
+                            connectWebSocket();
+                        }, delay);
+                    }
+                }
+            }
+
+            // Connect when page loads
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', connectWebSocket);
+            } else {
+                connectWebSocket();
+            }
+
+            // Reconnect when page becomes visible (user switched tabs back)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && (!notificationWs || notificationWs.readyState !== WebSocket.OPEN)) {
+                    clearTimeout(reconnectTimeout);
+                    connectWebSocket();
+                }
+            });
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function() {
+                if (reconnectTimeout) {
+                    clearTimeout(reconnectTimeout);
+                }
+                if (notificationWs) {
+                    notificationWs.close();
+                }
+            });
+            @endauth
+        })();
+    </script>
 </body>
 </html>

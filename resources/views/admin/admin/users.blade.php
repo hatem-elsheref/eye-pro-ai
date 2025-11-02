@@ -124,7 +124,6 @@
                     <thead>
                         <tr class="bg-gradient-to-r from-gray-50 via-gray-50 to-gray-100 border-b-2 border-gray-300">
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">User</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Email</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Status</th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Registered</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
@@ -571,17 +570,21 @@ $(document).ready(function() {
             {
                 data: null,
                 render: function(data, type, row) {
-                    return '<div class="flex items-center space-x-3">' + row.avatar + '<span class="text-sm font-semibold text-gray-900">' + row.name + '</span></div>';
+                    return '<div class="flex items-center space-x-3">' + 
+                           row.avatar + 
+                           '<div class="flex flex-col">' +
+                           '<span class="text-sm font-semibold text-gray-900">' + row.name + '</span>' +
+                           '<span class="text-xs text-gray-500">' + row.email + '</span>' +
+                           '</div></div>';
                 },
                 name: 'name',
                 orderable: true
             },
-            { data: 'email', name: 'email' },
             { data: 'status_badge', name: 'status', orderable: true },
             { data: 'created_at', name: 'created_at', searchable: false, orderable: true },
             { data: 'actions', name: 'actions', orderable: false, searchable: false }
         ],
-        order: [[3, 'desc']],
+        order: [[2, 'desc']],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {

@@ -2,103 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Services\AdminService;
 use App\Models\User;
-use App\Models\MatchVideo;
+use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
-    /**
-     * Generate unique gradient colors for user avatar based on ID
-     */
-    private function getAvatarColor($userId)
+    protected $adminService;
+
+    public function __construct(AdminService $adminService)
     {
-        // Color palette - various gradient combinations
-        $colors = [
-            ['#60a5fa', '#818cf8'], // Blue to Indigo
-            ['#f59e0b', '#ea580c'], // Amber to Orange
-            ['#10b981', '#059669'], // Green to Emerald
-            ['#ef4444', '#dc2626'], // Red
-            ['#8b5cf6', '#7c3aed'], // Purple to Violet
-            ['#ec4899', '#db2777'], // Pink to Rose
-            ['#06b6d4', '#0891b2'], // Cyan
-            ['#f97316', '#ea580c'], // Orange
-            ['#14b8a6', '#0d9488'], // Teal
-            ['#6366f1', '#4f46e5'], // Indigo
-            ['#d946ef', '#c026d3'], // Fuchsia
-            ['#3b82f6', '#2563eb'], // Blue
-            ['#84cc16', '#65a30d'], // Lime
-            ['#a855f7', '#9333ea'], // Purple
-        ];
-        
-        // Use user ID to pick a consistent color
-        $colorIndex = abs($userId) % count($colors);
-        return $colors[$colorIndex];
+        $this->adminService = $adminService;
     }
 
-    /**
-     * Display the admin dashboard
-     */
-    public function index(Request $request)
+    public function index()
     {
-        // Get statistics
-        $totalUsers = User::where('is_admin', false)->count();
-        $pendingUsers = User::where('is_admin', false)->where('status', 'pending')->count();
-        $approvedUsers = User::where('is_admin', false)->where('status', 'approved')->count();
-        $rejectedUsers = User::where('is_admin', false)->where('status', 'rejected')->count();
-        $totalMatches = MatchVideo::count();
+        $stats = $this->adminService->getDashboardStats();
 
-        return view('admin.admin.index', [
-            'totalUsers' => $totalUsers,
-            'pendingUsers' => $pendingUsers,
-            'approvedUsers' => $approvedUsers,
-            'rejectedUsers' => $rejectedUsers,
-            'totalMatches' => $totalMatches,
+        return view('admin.admin.index', array_merge($stats, [
             'settings' => [
                 'require_approval' => true,
                 'allow_uploads' => true,
             ],
-        ]);
+        ]));
     }
 
-    /**
-     * Display users management page
-     */
-    public function users(Request $request)
+    public function users()
     {
-        // Get statistics
-        $totalUsers = User::where('is_admin', false)->count();
-        $pendingUsers = User::where('is_admin', false)->where('status', 'pending')->count();
-        $approvedUsers = User::where('is_admin', false)->where('status', 'approved')->count();
-        $rejectedUsers = User::where('is_admin', false)->where('status', 'rejected')->count();
-
-        return view('admin.admin.users', [
-            'totalUsers' => $totalUsers,
-            'pendingUsers' => $pendingUsers,
-            'approvedUsers' => $approvedUsers,
-            'rejectedUsers' => $rejectedUsers,
-        ]);
+        $stats = $this->adminService->getUsersStats();
+        return view('admin.admin.users', $stats);
     }
 
-    /**
-     * Get users data for DataTables
-     */
     public function getUsers(Request $request)
     {
-        $query = User::where('is_admin', false)
-            ->select(['id', 'name', 'email', 'status', 'created_at']);
-        
-        // Filter by status
-        if ($request->filled('status_filter') && $request->status_filter !== 'all') {
-            $query->where('status', $request->status_filter);
-        }
-        
+        $query = $this->adminService->getUsersQuery($request->status_filter);
+
         return DataTables::of($query)
             ->addColumn('avatar', function ($user) {
                 $initials = strtoupper(substr($user->name, 0, 2));
-                $colors = $this->getAvatarColor($user->id);
-                return '<div class="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg text-xs" style="background: linear-gradient(135deg, ' . $colors[0] . ' 0%, ' . $colors[1] . ' 100%);">' . $initials . '</div>';
+                $colors = $this->adminService->getAvatarColor($user->id);
+                return '<div class="h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg text-sm border-2 border-white hover:scale-110 transition-transform duration-200" style="background: linear-gradient(135deg, ' . $colors[0] . ' 0%, ' . $colors[1] . ' 100%);">' . $initials . '</div>';
             })
             ->addColumn('status_badge', function ($user) {
                 if ($user->status === 'approved') {
@@ -120,7 +64,7 @@ class AdminController extends Controller
             })
             ->addColumn('actions', function ($user) {
                 $html = '<div class="flex items-center justify-end space-x-2">';
-                
+
                 if ($user->status === 'pending') {
                     $html .= '<form action="' . route('admin.users.approve', $user->id) . '" method="POST" class="inline-block approve-form">
                         ' . csrf_field() . '
@@ -129,7 +73,7 @@ class AdminController extends Controller
                             <span>Approve</span>
                         </button>
                     </form>';
-                    
+
                     $html .= '<form action="' . route('admin.users.reject', $user->id) . '" method="POST" class="inline-block reject-form">
                         ' . csrf_field() . '
                         ' . method_field('DELETE') . '
@@ -149,7 +93,7 @@ class AdminController extends Controller
                         Rejected
                     </span>';
                 }
-                
+
                 $html .= '</div>';
                 return $html;
             })
@@ -163,20 +107,10 @@ class AdminController extends Controller
             ->make(true);
     }
 
-    /**
-     * Approve a user
-     */
     public function approveUser($id)
     {
         $user = User::findOrFail($id);
-        
-        $user->update([
-            'is_approved' => true,
-            'status' => 'approved',
-        ]);
-
-        // You can send a notification email here
-        // Mail::to($user->email)->send(new AccountApprovedMail());
+        $this->adminService->approveUser($user);
 
         return response()->json([
             'success' => true,
@@ -184,25 +118,18 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Reject a user
-     */
     public function rejectUser($id)
     {
         $user = User::findOrFail($id);
-        
-        // Prevent rejecting yourself
+
         if ($user->id === auth()->id()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You cannot reject your own account!'
             ], 403);
         }
-        
-        $user->update([
-            'status' => 'rejected',
-            'is_approved' => false,
-        ]);
+
+        $this->adminService->rejectUser($user);
 
         return response()->json([
             'success' => true,
@@ -210,21 +137,16 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Update system settings
-     */
     public function updateSettings(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'require_approval' => 'nullable|boolean',
             'allow_uploads' => 'nullable|boolean',
         ]);
 
         // Here you would typically store these in a settings table or config
         // For now, we'll just return success
-        // You can implement a Settings model or use Laravel's config system
-        
+
         return back()->with('success', 'System settings updated successfully!');
     }
 }
-

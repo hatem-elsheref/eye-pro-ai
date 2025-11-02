@@ -24,7 +24,9 @@ return new class extends Migration
             $table->string('duration')->nullable();
             $table->string('file_size')->nullable();
             $table->text('analysis')->nullable();
+            $table->string('storage_disk')->default('public'); // Store which disk was used for storage (public, s3, etc.)
             $table->timestamps();
+            $table->softDeletes(); // Add soft delete support
         });
     }
 

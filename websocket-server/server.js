@@ -25,6 +25,11 @@ function createChannelName(userId, matchId) {
     return `private-user-${userId}-match-${matchId}`;
 }
 
+// Helper function to create notification channel name
+function createNotificationChannelName(userId) {
+    return `notifications-user-${userId}`;
+}
+
 // WebSocket connection handling
 wss.on('connection', (ws, req) => {
     console.log('New WebSocket connection');
@@ -35,24 +40,45 @@ wss.on('connection', (ws, req) => {
         try {
             const data = JSON.parse(message);
             
-            if (data.type === 'subscribe' && data.userId && data.matchId) {
-                // Subscribe to private channel
-                channel = createChannelName(data.userId, data.matchId);
-                
-                if (!connections.has(channel)) {
-                    connections.set(channel, new Set());
+            if (data.type === 'subscribe') {
+                if (data.userId && data.subscribeType === 'notifications') {
+                    // Subscribe to notifications channel
+                    channel = createNotificationChannelName(data.userId);
+                    
+                    if (!connections.has(channel)) {
+                        connections.set(channel, new Set());
+                    }
+                    
+                    connections.get(channel).add(ws);
+                    ws.channel = channel;
+                    ws.subscriptionType = 'notifications';
+                    
+                    console.log(`Client subscribed to notifications channel: ${channel}`);
+                    
+                    ws.send(JSON.stringify({
+                        type: 'subscribed',
+                        channel: channel,
+                        subscriptionType: 'notifications'
+                    }));
+                } else if (data.userId && data.matchId) {
+                    // Subscribe to match channel
+                    channel = createChannelName(data.userId, data.matchId);
+                    
+                    if (!connections.has(channel)) {
+                        connections.set(channel, new Set());
+                    }
+                    
+                    connections.get(channel).add(ws);
+                    ws.channel = channel;
+                    ws.subscriptionType = 'match';
+                    
+                    console.log(`Client subscribed to match channel: ${channel}`);
+                    
+                    ws.send(JSON.stringify({
+                        type: 'subscribed',
+                        channel: channel
+                    }));
                 }
-                
-                connections.get(channel).add(ws);
-                ws.channel = channel;
-                
-                console.log(`Client subscribed to channel: ${channel}`);
-                
-                // Send confirmation
-                ws.send(JSON.stringify({
-                    type: 'subscribed',
-                    channel: channel
-                }));
             }
         } catch (error) {
             console.error('Error parsing WebSocket message:', error);
@@ -71,9 +97,96 @@ wss.on('connection', (ws, req) => {
         console.log(`Client disconnected from channel: ${channel || 'unknown'}`);
     });
     
+    // Store user ID if provided for notifications
+    if (req.url && req.url.includes('userId=')) {
+        const urlParams = new URLSearchParams(req.url.split('?')[1]);
+        const userId = urlParams.get('userId');
+        if (userId) {
+            ws.userId = parseInt(userId);
+        }
+    }
+    
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);
     });
+});
+
+// POST endpoint to send notification to user
+app.post('/api/notification', (req, res) => {
+    try {
+        const { userId, notification } = req.body;
+        
+        // Validate required fields
+        if (!userId || !notification) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: userId and notification'
+            });
+        }
+        
+        // Create notification channel name
+        const channel = createNotificationChannelName(userId);
+        
+        // Get connections for this channel
+        const channelConnections = connections.get(channel);
+        
+        if (!channelConnections || channelConnections.size === 0) {
+            console.log(`No active connections for notification channel: ${channel}`);
+            return res.status(200).json({
+                success: true,
+                message: 'Notification received but no active listeners',
+                channel: channel
+            });
+        }
+        
+        // Prepare message
+        const message = JSON.stringify({
+            type: 'notification',
+            userId: userId,
+            notification: notification,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Send to all connected clients in this channel
+        let sentCount = 0;
+        const clientsToRemove = [];
+        
+        channelConnections.forEach((ws) => {
+            if (ws.readyState === WebSocket.OPEN) {
+                try {
+                    ws.send(message);
+                    sentCount++;
+                } catch (error) {
+                    console.error('Error sending notification:', error);
+                    clientsToRemove.push(ws);
+                }
+            } else {
+                clientsToRemove.push(ws);
+            }
+        });
+        
+        // Clean up closed connections
+        clientsToRemove.forEach(ws => {
+            channelConnections.delete(ws);
+        });
+        
+        console.log(`Sent notification to ${sentCount} client(s) in channel: ${channel}`);
+        
+        res.json({
+            success: true,
+            message: `Notification sent to ${sentCount} client(s)`,
+            channel: channel,
+            sentCount: sentCount
+        });
+        
+    } catch (error) {
+        console.error('Error processing notification:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
 });
 
 // POST endpoint to receive analysis results
@@ -198,4 +311,5 @@ process.on('SIGTERM', () => {
         });
     });
 });
+
 

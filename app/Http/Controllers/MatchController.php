@@ -2,22 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Services\MatchService;
+use App\Services\AIModelService;
+use App\Services\NotificationService;
 use App\Models\MatchVideo;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class MatchController extends Controller
 {
-    /**
-     * Display a listing of matches
-     */
+    protected $matchService;
+    protected $aiModelService;
+    protected $notificationService;
+
+    public function __construct(
+        MatchService $matchService,
+        AIModelService $aiModelService,
+        NotificationService $notificationService
+    ) {
+        $this->matchService = $matchService;
+        $this->aiModelService = $aiModelService;
+        $this->notificationService = $notificationService;
+    }
+
     public function index(Request $request)
     {
         $query = MatchVideo::where('user_id', auth()->id());
 
-        // Handle search
         if ($request->filled('search')) {
             $search = trim($request->get('search'));
             if (!empty($search)) {
@@ -33,12 +44,8 @@ class MatchController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new match
-     */
     public function create()
     {
-        // Check if user is approved
         if (!auth()->user()->is_approved) {
             return redirect()->route('matches.index')
                 ->with('warning', 'Your account must be approved before you can upload matches.');
@@ -47,12 +54,8 @@ class MatchController extends Controller
         return view('admin.matches.create');
     }
 
-    /**
-     * Store a newly created match
-     */
     public function store(Request $request)
     {
-        // Check if user is approved
         if (!auth()->user()->is_approved) {
             return redirect()->route('matches.index')
                 ->with('error', 'Your account must be approved before you can upload matches.');
@@ -60,64 +63,58 @@ class MatchController extends Controller
 
         $validated = $request->validate([
             'match_name' => 'required|string|max:255',
-            'video_file' => 'nullable|file|mimes:mp4,avi,mov,mkv,webm|max:2048000', // 2GB max
+            'video_file' => 'nullable|file|mimes:mp4,avi,mov,mkv,webm|max:2048000',
             'video_url' => 'nullable|url|max:500',
         ]);
 
-        // Determine if it's a file upload or URL
-        $type = 'url';
-        $videoPath = null;
-        $videoUrl = $validated['video_url'] ?? null;
-        $fileSize = null;
+        try {
+            $user = auth()->user();
 
-        if ($request->hasFile('video_file')) {
-            $type = 'file';
-            $file = $request->file('video_file');
+            if ($request->hasFile('video_file')) {
+                $match = $this->matchService->createFromFile(
+                    $user,
+                    $validated['match_name'],
+                    $request->file('video_file')
+                );
+            } elseif (!empty($validated['video_url'])) {
+                $match = $this->matchService->createFromUrl(
+                    $user,
+                    $validated['match_name'],
+                    $validated['video_url']
+                );
+            } else {
+                return back()->with('error', 'Please provide either a video file or URL.');
+            }
 
-            // Store the file
-            $videoPath = $file->store('matches', 'public');
-            $videoUrl = Storage::url($videoPath);
-            $fileSize = $this->formatBytes($file->getSize());
+            // Send notification and start AI processing
+            $this->notificationService->notifyUploadProcessing($match);
+            $this->aiModelService->startProcessing($match->id);
+
+            return redirect()->route('matches.show', $match->id)
+                ->with('success', 'Match uploaded successfully!');
+        } catch (\Exception $e) {
+            Log::error('Failed to create match', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to upload match: ' . $e->getMessage());
         }
-
-        // Create the match
-        $match = MatchVideo::create([
-            'user_id' => auth()->id(),
-            'name' => $validated['match_name'],
-            'type' => $type,
-            'status' => 'processing',
-            'video_url' => $videoUrl,
-            'video_path' => $videoPath,
-            'file_size' => $fileSize,
-        ]);
-
-        return redirect()->route('matches.show', $match->id)
-            ->with('success', 'Match uploaded successfully!');
     }
 
-    /**
-     * Display the specified match
-     */
     public function show($id)
     {
-        $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+        $match = MatchVideo::with('user')
+            ->where('user_id', auth()->id())
+            ->findOrFail($id);
 
-        return view('admin.matches.show', compact('match'));
+        $usedDisk = ucfirst($match->storage_disk ?? 'public');
+
+        return view('admin.matches.show', compact('match', 'usedDisk'));
     }
 
-    /**
-     * Show the form for editing the specified match
-     */
     public function edit($id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
-
         return view('admin.matches.edit', compact('match'));
     }
 
-    /**
-     * Update the specified match
-     */
     public function update(Request $request, $id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
@@ -128,206 +125,87 @@ class MatchController extends Controller
             'tags' => 'nullable|string|max:255',
         ]);
 
-        $match->update([
-            'name' => $validated['match_name'],
-            'description' => $validated['description'] ?? null,
-            'tags' => $validated['tags'] ?? null,
-        ]);
+        $match->update($validated);
 
         return redirect()->route('matches.show', $match->id)
             ->with('success', 'Match updated successfully!');
     }
 
-    /**
-     * Remove the specified match
-     */
     public function destroy($id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
-
-        // Delete the video file if it exists
-        if ($match->video_path && Storage::disk('public')->exists($match->video_path)) {
-            Storage::disk('public')->delete($match->video_path);
-        }
-
         $match->delete();
 
         return redirect()->route('matches.index')
             ->with('success', 'Match deleted successfully!');
     }
 
-    /**
-     * Upload a chunk of the video file
-     */
     public function uploadChunk(Request $request)
     {
-        $validated = $request->validate([
-            'uploadId' => 'required|string',
-            'chunkIndex' => 'required|integer|min:0',
-            'totalChunks' => 'required|integer|min:1',
-            'chunk' => 'required|file',
-            'fileName' => 'required|string',
-            'fileSize' => 'required|integer',
-        ]);
+        try {
+            $validated = $request->validate([
+                'uploadId' => 'required|string',
+                'chunkIndex' => 'required|integer|min:0',
+                'totalChunks' => 'required|integer|min:1',
+                'chunk' => 'required|file',
+                'fileName' => 'required|string',
+                'fileSize' => 'required|integer',
+            ]);
 
-        $uploadId = $validated['uploadId'];
-        $chunkIndex = $validated['chunkIndex'];
-        $totalChunks = $validated['totalChunks'];
-        $chunk = $validated['chunk'];
-        $fileName = $validated['fileName'];
-        $fileSize = $validated['fileSize'];
+            $result = $this->matchService->storeChunk(auth()->user(), $validated);
 
-        // Create directory for this upload if it doesn't exist
-        $chunkDir = 'chunks/' . $uploadId;
-        if (!Storage::disk('public')->exists($chunkDir)) {
-            Storage::disk('public')->makeDirectory($chunkDir);
-        }
-
-        // Store the chunk
-        $chunkPath = $chunkDir . '/' . $chunkIndex;
-        $chunk->storeAs('public/' . $chunkDir, $chunkIndex);
-
-        // Update upload status in cache
-        $uploadKey = 'upload_' . $uploadId;
-        $uploadStatus = Cache::get($uploadKey, [
-            'fileName' => $fileName,
-            'fileSize' => $fileSize,
-            'totalChunks' => $totalChunks,
-            'uploadedChunks' => [],
-            'created_at' => now()->toIso8601String(),
-        ]);
-
-        $uploadStatus['uploadedChunks'][] = $chunkIndex;
-        $uploadStatus['uploadedChunks'] = array_unique($uploadStatus['uploadedChunks']);
-        sort($uploadStatus['uploadedChunks']);
-
-        // Store for 24 hours
-        Cache::put($uploadKey, $uploadStatus, now()->addHours(24));
-
-        return response()->json([
-            'success' => true,
-            'chunkIndex' => $chunkIndex,
-            'uploadedChunks' => $uploadStatus['uploadedChunks'],
-            'totalChunks' => $totalChunks,
-            'progress' => (count($uploadStatus['uploadedChunks']) / $totalChunks) * 100,
-        ]);
-    }
-
-    /**
-     * Finalize upload by assembling all chunks
-     */
-    public function finalizeUpload(Request $request)
-    {
-        $validated = $request->validate([
-            'uploadId' => 'required|string',
-            'match_name' => 'required|string|max:255',
-        ]);
-
-        $uploadId = $validated['uploadId'];
-        $uploadKey = 'upload_' . $uploadId;
-        $uploadStatus = Cache::get($uploadKey);
-
-        if (!$uploadStatus) {
+            return response()->json($result);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Upload session not found. Please start over.',
-            ], 404);
-        }
-
-        $totalChunks = $uploadStatus['totalChunks'];
-        $uploadedChunks = $uploadStatus['uploadedChunks'];
-
-        // Check if all chunks are uploaded
-        if (count($uploadedChunks) !== $totalChunks) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Not all chunks have been uploaded. Missing chunks: ' . implode(', ', array_diff(range(0, $totalChunks - 1), $uploadedChunks)),
-                'uploadedChunks' => $uploadedChunks,
-                'totalChunks' => $totalChunks,
+                'message' => $e->getMessage()
             ], 400);
         }
-
-        $chunkDir = 'chunks/' . $uploadId;
-        $finalFileName = $uploadStatus['fileName'];
-        $finalPath = 'matches/' . $uploadId . '_' . $finalFileName;
-
-        // Assemble chunks
-        $finalFile = fopen(Storage::disk('public')->path($finalPath), 'wb');
-
-        for ($i = 0; $i < $totalChunks; $i++) {
-            $chunkPath = $chunkDir . '/' . $i;
-            if (Storage::disk('public')->exists($chunkPath)) {
-                $chunkContent = Storage::disk('public')->get($chunkPath);
-                fwrite($finalFile, $chunkContent);
-            } else {
-                fclose($finalFile);
-                Storage::disk('public')->delete($finalPath);
-                return response()->json([
-                    'success' => false,
-                    'message' => "Chunk {$i} is missing.",
-                ], 400);
-            }
-        }
-
-        fclose($finalFile);
-
-        // Clean up chunks
-        Storage::disk('public')->deleteDirectory($chunkDir);
-        Cache::forget($uploadKey);
-
-        // Create the match record
-        $match = MatchVideo::create([
-            'user_id' => auth()->id(),
-            'name' => $validated['match_name'],
-            'type' => 'file',
-            'status' => 'processing',
-            'video_url' => Storage::url($finalPath),
-            'video_path' => $finalPath,
-            'file_size' => $this->formatBytes($uploadStatus['fileSize']),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Upload completed successfully!',
-            'matchId' => $match->id,
-            'redirectUrl' => route('matches.show', $match->id),
-        ]);
     }
 
-    /**
-     * Get upload status (for resuming uploads)
-     */
-    public function getUploadStatus($uploadId)
+    public function finalizeUpload(Request $request)
     {
-        $uploadKey = 'upload_' . $uploadId;
-        $uploadStatus = Cache::get($uploadKey);
+        try {
+            $validated = $request->validate([
+                'uploadId' => 'required|string',
+                'match_name' => 'required|string|max:255',
+            ]);
 
-        if (!$uploadStatus) {
+            $match = $this->matchService->finalizeUpload(
+                auth()->user(),
+                $validated['uploadId'],
+                $validated['match_name']
+            );
+
+            // Send notification and start AI processing
+            $this->notificationService->notifyUploadProcessing($match);
+            $this->aiModelService->startProcessing($match->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Upload completed successfully!',
+                'matchId' => $match->id,
+                'redirectUrl' => route('matches.show', $match->id),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to finalize upload', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
-                'message' => 'Upload session not found.',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function getUploadStatus($uploadId)
+    {
+        try {
+            $result = $this->matchService->getUploadStatus(auth()->user(), $uploadId);
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
             ], 404);
         }
-
-        return response()->json([
-            'success' => true,
-            'uploadStatus' => $uploadStatus,
-            'progress' => (count($uploadStatus['uploadedChunks']) / $uploadStatus['totalChunks']) * 100,
-        ]);
-    }
-
-    /**
-     * Format bytes to human readable format
-     */
-    private function formatBytes($bytes, $precision = 2)
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-
-        for ($i = 0; $bytes > 1024; $i++) {
-            $bytes /= 1024;
-        }
-
-        return round($bytes, $precision) . ' ' . $units[$i];
     }
 }
-

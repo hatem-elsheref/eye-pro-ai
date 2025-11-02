@@ -72,7 +72,10 @@
                     <i class="fas fa-file-video text-orange-500 text-xs"></i>
                     <span>Video File</span>
                 </label>
-                <div onclick="document.getElementById('video_file').click()" class="group relative border-4 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-orange-500 transition-all duration-300 cursor-pointer bg-gradient-to-br from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100">
+                <div 
+                    id="dropzone"
+                    class="group relative border-4 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-orange-500 transition-all duration-300 cursor-pointer bg-gradient-to-br from-orange-50 to-amber-50 hover:from-orange-100 hover:to-amber-100"
+                >
                     <div class="space-y-4">
                         <div class="flex justify-center">
                             <div class="h-20 w-20 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
@@ -98,6 +101,7 @@
                     accept="video/*"
                     class="hidden"
                     onchange="handleFileSelect(this)"
+                    multiple="false"
                 >
                 
                 <!-- Upload Progress -->
@@ -130,6 +134,10 @@
                             <div id="chunkInfo" class="flex items-center space-x-1.5 px-2 py-1.5 bg-white rounded-lg font-semibold text-gray-700 shadow-sm">
                                 <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
                                 <span>0/0 chunks</span>
+                            </div>
+                            <div id="connectionStatus" class="flex items-center space-x-1.5 px-2 py-1.5 bg-white rounded-lg font-semibold text-gray-700 shadow-sm hidden">
+                                <i class="fas fa-wifi text-green-500 text-xs"></i>
+                                <span>Connected</span>
                             </div>
                         </div>
                     </div>
@@ -191,6 +199,32 @@
 
 @push('scripts')
 <script>
+let uploadId = null;
+let uploadedChunks = [];
+let currentUpload = null;
+let isOnline = navigator.onLine;
+
+// Monitor connection status
+window.addEventListener('online', () => {
+    isOnline = true;
+    const connStatus = document.getElementById('connectionStatus');
+    if (connStatus) {
+        connStatus.classList.remove('hidden', 'bg-red-50', 'text-red-700');
+        connStatus.classList.add('bg-green-50', 'text-green-700');
+        connStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>Connected</span>';
+    }
+});
+
+window.addEventListener('offline', () => {
+    isOnline = false;
+    const connStatus = document.getElementById('connectionStatus');
+    if (connStatus) {
+        connStatus.classList.remove('hidden', 'bg-green-50', 'text-green-700');
+        connStatus.classList.add('bg-red-50', 'text-red-700');
+        connStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>No Connection</span>';
+    }
+});
+
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -203,77 +237,427 @@ function formatSpeed(bytesPerSecond) {
     return formatBytes(bytesPerSecond) + '/s';
 }
 
-function handleFileSelect(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const fileSize = file.size;
-        
-        document.getElementById('fileName').innerHTML = `
-            <strong class="text-orange-700">${file.name}</strong><br>
-            <small class="text-gray-500">${formatBytes(fileSize)}</small>
-        `;
-        
-        // Calculate chunks (5MB per chunk)
-        const chunkSize = 5 * 1024 * 1024;
-        const totalChunks = Math.ceil(fileSize / chunkSize);
-        
-        // Show progress
-        const progressDiv = document.getElementById('uploadProgress');
-        const progressFill = document.getElementById('progressFill');
-        const progressPercent = document.getElementById('progressPercent');
-        const submitBtn = document.getElementById('submitBtn');
-        
-        progressDiv.classList.remove('hidden');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>Uploading...</span>';
-        
-        // Simulate chunked upload
-        let progress = 0;
-        let uploadedChunks = 0;
-        const startTime = Date.now();
-        let lastUpdate = startTime;
-        let uploadedBytes = 0;
-        
-        const interval = setInterval(() => {
-            const currentTime = Date.now();
-            const timeDiff = (currentTime - lastUpdate) / 1000;
-            
-            const chunkProgress = Math.random() * 7 + 3;
-            progress += chunkProgress;
-            
-            const newUploadedBytes = Math.min((progress / 100) * fileSize, fileSize);
-            const bytesThisInterval = newUploadedBytes - uploadedBytes;
-            uploadedBytes = newUploadedBytes;
-            
-            const speed = bytesThisInterval / timeDiff;
-            lastUpdate = currentTime;
-            
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                submitBtn.disabled = false;
-                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-                submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-check-circle text-base"></i></div> <span>Upload Complete - Continue</span>';
-                
-                uploadedChunks = totalChunks;
-                document.getElementById('chunkInfo').innerHTML = `
-                    <i class="fas fa-check-circle text-green-600"></i>
-                    <span>${totalChunks}/${totalChunks} chunks uploaded</span>
-                `;
-            } else {
-                uploadedChunks = Math.floor((progress / 100) * totalChunks);
+function generateUploadId() {
+    const userId = {{ auth()->id() ?? 0 }};
+    return 'upload_user_' + userId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, fileSize, totalChunks, retries = 3) {
+    const formData = new FormData();
+    formData.append('uploadId', uploadId);
+    formData.append('chunkIndex', chunkIndex);
+    formData.append('totalChunks', totalChunks);
+    formData.append('chunk', chunkBlob, `chunk_${chunkIndex}`);
+    formData.append('fileName', fileName);
+    formData.append('fileSize', fileSize);
+
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            const response = await fetch('{{ route("matches.upload.chunk") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const result = await response.json();
+            if (result.success) {
+                return result;
+            } else {
+                // Handle concurrent upload error (409)
+                if (response.status === 409) {
+                    throw new Error(result.message || 'Another upload is in progress');
+                }
+                // Handle unauthorized access (403)
+                if (response.status === 403) {
+                    throw new Error(result.message || 'Unauthorized access to upload session');
+                }
+                throw new Error(result.message || 'Upload failed');
+            }
+        } catch (error) {
+            console.error(`Chunk ${chunkIndex} upload attempt ${attempt + 1} failed:`, error);
+            // Don't retry on 403 or 409 errors
+            if (error.message.includes('Another upload') || error.message.includes('Unauthorized')) {
+                throw error;
+            }
+            if (attempt === retries - 1) {
+                throw error;
+            }
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+    }
+}
+
+async function handleFileSelect(input) {
+    if (!input.files || input.files.length === 0) return;
+
+    // Only allow one file
+    if (input.files.length > 1) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Multiple Files',
+            text: 'Please upload only one file at a time. Only the first file will be used.',
+            confirmButtonColor: '#60a5fa'
+        });
+    }
+
+    const file = input.files[0];
+    
+    // Reset input to ensure only one file
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+    const fileSize = file.size;
+    
+    document.getElementById('fileName').innerHTML = `
+        <strong class="text-orange-700">${file.name}</strong><br>
+        <small class="text-gray-500">${formatBytes(fileSize)}</small>
+    `;
+    
+    // Calculate chunks (5MB per chunk)
+    const chunkSize = 5 * 1024 * 1024;
+    const totalChunks = Math.ceil(fileSize / chunkSize);
+    
+    // Check for existing upload ID in localStorage (user-specific)
+    const userId = {{ auth()->id() ?? 0 }};
+    const storageKey = 'upload_user_' + userId + '_' + file.name + '_' + fileSize;
+    const savedUpload = localStorage.getItem(storageKey);
+    
+    if (savedUpload) {
+        try {
+            const saved = JSON.parse(savedUpload);
+            uploadId = saved.uploadId;
+            uploadedChunks = saved.uploadedChunks || [];
+            
+            // Verify upload still exists on server
+            try {
+                const statusResponse = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    if (statusData.success) {
+                        uploadedChunks = statusData.uploadStatus.uploadedChunks || [];
+                    }
+                }
+            } catch (error) {
+                console.log('Upload session expired, starting fresh');
+                uploadId = generateUploadId();
+                uploadedChunks = [];
+            }
+        } catch (error) {
+            uploadId = generateUploadId();
+            uploadedChunks = [];
+        }
+    } else {
+        uploadId = generateUploadId();
+        uploadedChunks = [];
+    }
+    
+    // Save upload info to localStorage
+    localStorage.setItem(storageKey, JSON.stringify({
+        uploadId: uploadId,
+        fileName: file.name,
+        fileSize: fileSize,
+        uploadedChunks: uploadedChunks
+    }));
+    
+    // Show progress
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const submitBtn = document.getElementById('submitBtn');
+    const chunkInfo = document.getElementById('chunkInfo');
+    const uploadSpeed = document.getElementById('uploadSpeed');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    progressDiv.classList.remove('hidden');
+    connectionStatus.classList.remove('hidden');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>Uploading...</span>';
+    
+    // Update connection status
+    if (isOnline) {
+        connectionStatus.classList.add('bg-green-50', 'text-green-700');
+        connectionStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>Connected</span>';
+    } else {
+        connectionStatus.classList.add('bg-red-50', 'text-red-700');
+        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>No Connection</span>';
+    }
+    
+    const startTime = Date.now();
+    let uploadedBytes = uploadedChunks.length * chunkSize;
+    
+    // Upload chunks sequentially
+    try {
+        for (let i = 0; i < totalChunks; i++) {
+            // Skip if already uploaded
+            if (uploadedChunks.includes(i)) {
+                continue;
+            }
+            
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, fileSize);
+            const chunkBlob = file.slice(start, end);
+            
+            // Wait for connection if offline
+            while (!isOnline) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            const result = await uploadChunk(file, i, chunkBlob, uploadId, file.name, fileSize, totalChunks);
+            
+            uploadedChunks.push(i);
+            uploadedBytes = (uploadedChunks.length / totalChunks) * fileSize;
+            
+            // Update localStorage
+            localStorage.setItem(storageKey, JSON.stringify({
+                uploadId: uploadId,
+                fileName: file.name,
+                fileSize: fileSize,
+                uploadedChunks: uploadedChunks
+            }));
+            
+            // Update progress
+            const progress = (uploadedChunks.length / totalChunks) * 100;
+            const elapsed = (Date.now() - startTime) / 1000;
+            const speed = uploadedBytes / elapsed;
             
             progressFill.style.width = progress + '%';
             progressPercent.textContent = Math.round(progress) + '%';
-            document.getElementById('uploadSpeed').textContent = `Speed: ${formatSpeed(speed)}`;
-            document.getElementById('chunkInfo').innerHTML = `
-                <i class="fas fa-sync fa-spin text-orange-500"></i>
-                <span>${uploadedChunks}/${totalChunks} chunks</span>
+            uploadSpeed.textContent = `Speed: ${formatSpeed(speed)}`;
+            chunkInfo.innerHTML = `
+                <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
+                <span>${uploadedChunks.length}/${totalChunks} chunks</span>
             `;
-        }, 300);
+        }
+        
+        // All chunks uploaded, finalize
+        chunkInfo.innerHTML = `
+            <i class="fas fa-check-circle text-green-600 text-xs"></i>
+            <span>${totalChunks}/${totalChunks} chunks uploaded</span>
+        `;
+        
+        // Clear localStorage
+        localStorage.removeItem(storageKey);
+        
+        // Update button to show ready for finalization
+        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-check text-base"></i></div> <span>Ready to Continue</span>';
+        submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        submitBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        
+        // Check if it's a concurrent upload error
+        const isConcurrentError = error.message.includes('Another upload') || error.message.includes('in progress');
+        const isUnauthorizedError = error.message.includes('Unauthorized');
+        
+        let errorTitle = 'Upload Paused';
+        let errorMessage = error.message;
+        let showResumeButton = true;
+        
+        if (isConcurrentError) {
+            errorTitle = 'Concurrent Upload Detected';
+            errorMessage = 'Another upload is in progress. Please wait for it to complete or cancel it first.';
+            showResumeButton = false;
+        } else if (isUnauthorizedError) {
+            errorTitle = 'Unauthorized Access';
+            errorMessage = 'This upload session does not belong to you. Starting a new upload...';
+            showResumeButton = false;
+            // Clear localStorage and start fresh
+            localStorage.removeItem(storageKey);
+            uploadId = generateUploadId();
+            uploadedChunks = [];
+        }
+        
+        if (showResumeButton) {
+            // Save current state for resume
+            localStorage.setItem(storageKey, JSON.stringify({
+                uploadId: uploadId,
+                fileName: file.name,
+                fileSize: fileSize,
+                uploadedChunks: uploadedChunks
+            }));
+            
+            Swal.fire({
+                icon: 'warning',
+                title: errorTitle,
+                html: `<p>Upload failed: <strong>${errorMessage}</strong></p><p class="mt-2">Uploaded ${uploadedChunks.length}/${totalChunks} chunks.</p><p class="mt-2 text-sm">You can refresh the page and try again - it will resume from where it left off.</p>`,
+                confirmButtonColor: '#60a5fa',
+                confirmButtonText: 'OK'
+            });
+            
+            submitBtn.disabled = false;
+            submitBtn.setAttribute('data-resume', 'true');
+            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-redo text-base"></i></div> <span>Resume Upload</span>';
+            submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)';
+        } else {
+            Swal.fire({
+                icon: isUnauthorizedError ? 'warning' : 'error',
+                title: errorTitle,
+                text: errorMessage,
+                confirmButtonColor: '#60a5fa'
+            });
+            submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i> Upload Video';
+            submitBtn.disabled = false;
+        }
     }
 }
+
+// Resume upload button handler
+document.addEventListener('DOMContentLoaded', function() {
+    const submitBtn = document.getElementById('submitBtn');
+    const videoFile = document.getElementById('video_file');
+    const dropzone = document.getElementById('dropzone');
+    
+    submitBtn.addEventListener('click', function(e) {
+        if (this.getAttribute('data-resume') === 'true' && videoFile.files[0]) {
+            e.preventDefault();
+            this.removeAttribute('data-resume');
+            handleFileSelect(videoFile);
+        }
+    });
+    
+    // Click handler for dropzone
+    dropzone.addEventListener('click', function(e) {
+        // Only trigger file picker if not dropping a file
+        if (!e.dataTransfer) {
+            document.getElementById('video_file').click();
+        }
+    });
+    
+    // Drag and Drop handlers
+    if (dropzone) {
+        // Prevent default browser behavior (opening file in new tab)
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Prevent default on entire document to stop browser from opening files
+        ['dragenter', 'dragover', 'drop'].forEach(eventName => {
+            document.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Highlight dropzone when dragging over
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('border-orange-500', 'bg-orange-100');
+            }, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('border-orange-500', 'bg-orange-100');
+            }, false);
+        });
+        
+        // Handle dropped files
+        dropzone.addEventListener('drop', handleDrop, false);
+    }
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+}
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    
+    if (files.length === 0) return;
+    
+    // Only allow one file
+    if (files.length > 1) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Multiple Files',
+            text: 'Please upload only one file at a time.',
+            confirmButtonColor: '#60a5fa'
+        });
+        return;
+    }
+    
+    const file = files[0];
+    
+    // Check if it's a video file
+    if (!file.type.startsWith('video/')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid File Type',
+            text: 'Please upload a video file (MP4, AVI, MOV, MKV, etc.)',
+            confirmButtonColor: '#ef4444'
+        });
+        return;
+    }
+    
+    // Set the file to input
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    document.getElementById('video_file').files = dataTransfer.files;
+    
+    // Trigger file selection handler
+    handleFileSelect(document.getElementById('video_file'));
+}
+
+// Handle form submission
+document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    const videoFile = document.getElementById('video_file').files[0];
+    const videoUrl = document.getElementById('video_url').value;
+    const matchName = document.getElementById('match_name').value;
+    
+    // If URL, submit normally
+    if (videoUrl) {
+        return true;
+    }
+    
+    // If file upload and chunks are uploaded, finalize
+    if (videoFile && uploadId) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>Finalizing...</span>';
+        
+        try {
+            const formData = new FormData();
+            formData.append('uploadId', uploadId);
+            formData.append('match_name', matchName);
+            
+            const response = await fetch('{{ route("matches.upload.finalize") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                window.location.href = result.redirectUrl;
+            } else {
+                throw new Error(result.message || 'Finalization failed');
+            }
+        } catch (error) {
+            console.error('Finalization error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Finalization Failed',
+                text: error.message || 'Failed to finalize upload. Please try again.',
+                confirmButtonColor: '#ef4444'
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-arrow-right text-base"></i></div> <span>Upload & Continue</span>';
+        }
+    }
+});
 </script>
 @endpush
 @endsection

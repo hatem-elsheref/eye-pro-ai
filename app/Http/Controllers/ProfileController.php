@@ -2,41 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile
-     */
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
+
     public function index()
     {
         return view('admin.profile');
     }
 
-    /**
-     * Update the user's profile information
-     */
     public function update(Request $request)
     {
-        $user = auth()->user();
-        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . auth()->id(),
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $user->update($validated);
-
+        $this->userService->updateProfile(auth()->user(), $validated);
         return back()->with('success', 'Profile updated successfully!');
     }
 
-    /**
-     * Update the user's password
-     */
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([
@@ -44,47 +39,25 @@ class ProfileController extends Controller
             'new_password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        $user = auth()->user();
-
-        // Check if current password is correct
-        if (!Hash::check($validated['current_password'], $user->password)) {
+        if (!$this->userService->updatePassword(
+            auth()->user(),
+            $validated['current_password'],
+            $validated['new_password']
+        )) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.']);
         }
-
-        // Update password
-        $user->update([
-            'password' => Hash::make($validated['new_password'])
-        ]);
 
         return back()->with('success', 'Password updated successfully!');
     }
 
-    /**
-     * Delete the user's account
-     */
     public function destroy(Request $request)
     {
-        $user = auth()->user();
-        
-        // Delete all user's matches and their files
-        foreach ($user->matches as $match) {
-            if ($match->video_path && \Storage::disk('public')->exists($match->video_path)) {
-                \Storage::disk('public')->delete($match->video_path);
-            }
-            $match->delete();
-        }
-        
-        // Logout and delete user
-        auth()->logout();
-        $user->delete();
+        $this->userService->deleteAccount(auth()->user());
 
+        auth()->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect('/login')->with('success', 'Your account has been deleted successfully.');
     }
 }
-
-
-
-
