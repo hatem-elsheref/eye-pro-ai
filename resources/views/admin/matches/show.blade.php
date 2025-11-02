@@ -355,10 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load predictions from database
     @php
-        $predictions = $match->predictions ?? collect([]);
-        $hasPredictions = $predictions->count() > 0;
-        $predictionsData = $predictions->toArray();
         $matchStatus = $match->status ?? 'pending';
+        $hasPredictions = isset($predictions) && $predictions->count() > 0;
+        $predictionsData = isset($predictions) ? $predictions->toArray() : [];
     @endphp
 
     const predictionsData = @json($predictionsData);
@@ -444,7 +443,45 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let html = '';
         
-        if (prediction.classes && Array.isArray(prediction.classes[0])) {
+        // Check if labels are available (formatted data from backend)
+        if (prediction.labels) {
+            html += '<div class="text-xs space-y-2">';
+            
+            // Offence Severity
+            if (prediction.labels.offence_severity) {
+                const severityAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][0] 
+                    ? (prediction.acc[0][0] * 100).toFixed(2) + '%' 
+                    : 'N/A';
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
+                        <div>
+                            <div class="font-semibold text-gray-900">${prediction.labels.offence_severity}</div>
+                            <div class="text-gray-500 text-xs mt-0.5">Offence Severity (Class ${prediction.labels.offence_severity_class || 'N/A'})</div>
+                        </div>
+                        <span class="font-bold text-purple-600 ml-2">${severityAcc}</span>
+                    </div>
+                `;
+            }
+            
+            // Action (Reason)
+            if (prediction.labels.action) {
+                const actionAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][1] 
+                    ? (prediction.acc[0][1] * 100).toFixed(2) + '%' 
+                    : 'N/A';
+                html += `
+                    <div class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
+                        <div>
+                            <div class="font-semibold text-gray-900">${prediction.labels.action}</div>
+                            <div class="text-gray-500 text-xs mt-0.5">Action/Reason (Class ${prediction.labels.action_class || 'N/A'})</div>
+                        </div>
+                        <span class="font-bold text-purple-600 ml-2">${actionAcc}</span>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+        } else if (prediction.classes && Array.isArray(prediction.classes[0])) {
+            // Fallback: show raw class IDs if labels are not available
             html += '<div class="text-xs space-y-1">';
             prediction.classes[0].forEach((classId, idx) => {
                 const accuracy = prediction.acc && prediction.acc[0] && prediction.acc[0][idx] 

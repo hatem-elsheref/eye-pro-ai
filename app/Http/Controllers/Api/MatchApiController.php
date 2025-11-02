@@ -97,8 +97,20 @@ class MatchApiController extends Controller
             'prediction_1'     => $validated['prediction_1'] ?? null,
         ]);
 
+        // Format prediction with labels for WebSocket
+        $locale = app()->getLocale();
+        $formattedPrediction = [
+            'id' => $prediction->id,
+            'match_id' => $prediction->match_id,
+            'clip_path' => $prediction->clip_path,
+            'relative_time' => $prediction->relative_time,
+            'first_model_prop' => $prediction->first_model_prop,
+            'prediction_0' => $prediction->formatPredictionData($prediction->prediction_0, $locale),
+            'prediction_1' => $prediction->formatPredictionData($prediction->prediction_1, $locale),
+        ];
+
         // Send prediction to WebSocket for real-time updates
-        WebSocketHelper::sendPrediction($match->user_id, $match->id, $prediction->toArray());
+        WebSocketHelper::sendPrediction($match->user_id, $match->id, $formattedPrediction);
 
         // If this is the first prediction, update status to processing if still pending
         if ($match->status === 'pending') {

@@ -106,7 +106,21 @@ class MatchController extends Controller
 
         $usedDisk = ucfirst($match->storage_disk ?? 'public');
 
-        return view('admin.matches.show', compact('match', 'usedDisk'));
+        // Format predictions with labels based on current locale
+        $predictions = $match->predictions->map(function ($prediction) {
+            $locale = app()->getLocale();
+            return [
+                'id' => $prediction->id,
+                'match_id' => $prediction->match_id,
+                'clip_path' => $prediction->clip_path,
+                'relative_time' => $prediction->relative_time,
+                'first_model_prop' => $prediction->first_model_prop,
+                'prediction_0' => $prediction->formatPredictionData($prediction->prediction_0, $locale),
+                'prediction_1' => $prediction->formatPredictionData($prediction->prediction_1, $locale),
+            ];
+        });
+
+        return view('admin.matches.show', compact('match', 'usedDisk', 'predictions'));
     }
 
     public function edit($id)
