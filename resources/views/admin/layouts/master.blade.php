@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,11 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    {{-- Load RTL CSS only for Arabic locale --}}
+    @if(app()->getLocale() === 'ar')
+        <link rel="stylesheet" href="{{ asset('css/app-rtl.css') }}">
+    @endif
+
     @stack('styles')
 </head>
 <body class="h-full bg-gray-50 font-cairo @yield('body-class', '')" x-data="{ sidebarOpen: false }">
@@ -45,51 +50,51 @@
 
                     <!-- Navigation -->
                     <nav class="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
-                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Main Menu</p>
+                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ __('admin.main_menu') }}</p>
 
                         <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                             <i class="fas fa-th-large text-lg"></i>
-                            <span>Dashboard</span>
+                            <span>{{ __('admin.dashboard') }}</span>
                         </a>
 
                         <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.index') || (request()->routeIs('matches.*') && !request()->routeIs('matches.create')) ? 'active' : '' }}">
                             <i class="fas fa-video text-lg"></i>
-                            <span>Matches</span>
+                            <span>{{ __('admin.matches') }}</span>
                         </a>
 
                         <a href="{{ route('matches.create') }}" class="sidebar-link {{ request()->routeIs('matches.create') ? 'active' : '' }}">
                             <i class="fas fa-plus-circle text-lg"></i>
-                            <span>Add Match</span>
+                            <span>{{ __('admin.add_match') }}</span>
                         </a>
 
-                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Support</p>
+                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">{{ __('admin.support') }}</p>
 
                         <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->routeIs('notifications.*') ? 'active' : '' }}">
                             <i class="fas fa-bell text-lg"></i>
-                            <span>Notifications</span>
+                            <span>{{ __('admin.notifications') }}</span>
                         </a>
 
                         <a href="{{ route('support') }}" class="sidebar-link {{ request()->routeIs('support') ? 'active' : '' }}">
                             <i class="fas fa-life-ring text-lg"></i>
-                            <span>User Guide</span>
+                            <span>{{ __('admin.support') }}</span>
                         </a>
 
                         @if(Auth::user()->is_admin ?? false)
-                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Admin</p>
+                        <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">{{ __('admin.admin') }}</p>
 
                         <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-users text-lg"></i>
-                            <span>Users</span>
+                            <span>{{ __('admin.users') }}</span>
                         </a>
 
                         <a href="{{ route('tickets.index') }}" class="sidebar-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
                             <i class="fas fa-ticket-alt text-lg"></i>
-                            <span>All Tickets</span>
+                            <span>{{ __('admin.all_tickets') }}</span>
                         </a>
 
                         <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-cog text-lg"></i>
-                            <span>Settings</span>
+                            <span>{{ __('admin.settings') }}</span>
                         </a>
                         @endif
                     </nav>
@@ -163,39 +168,39 @@
             </div>
 
             <nav class="flex-1 space-y-1 px-3 py-6 overflow-y-auto">
-                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Main Menu</p>
+                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">{{ __('admin.main_menu') }}</p>
 
                 <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="fas fa-th-large text-lg"></i>
-                    <span>Dashboard</span>
+                    <span>{{ __('admin.dashboard') }}</span>
                 </a>
 
                 <a href="{{ route('matches.index') }}" class="sidebar-link {{ request()->routeIs('matches.index') || (request()->routeIs('matches.*') && !request()->routeIs('matches.create')) ? 'active' : '' }}">
                     <i class="fas fa-video text-lg"></i>
-                    <span>Matches</span>
+                    <span>{{ __('admin.matches') }}</span>
                 </a>
 
                 <a href="{{ route('matches.create') }}" class="sidebar-link {{ request()->routeIs('matches.create') ? 'active' : '' }}">
                     <i class="fas fa-plus-circle text-lg"></i>
-                    <span>Add Match</span>
+                    <span>{{ __('admin.add_match') }}</span>
                 </a>
 
                 @if(Auth::user()->is_admin ?? false)
-                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">Admin</p>
+                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">{{ __('admin.admin') }}</p>
 
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-users text-lg"></i>
-                    <span>Users</span>
+                    <span>{{ __('admin.users') }}</span>
                 </a>
 
                 <a href="{{ route('tickets.index') }}" class="sidebar-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
                     <i class="fas fa-ticket-alt text-lg"></i>
-                    <span>All Tickets</span>
+                    <span>{{ __('admin.all_tickets') }}</span>
                 </a>
 
                 <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-cog text-lg"></i>
-                    <span>Settings</span>
+                    <span>{{ __('admin.settings') }}</span>
                 </a>
                 @endif
             </nav>
@@ -211,9 +216,19 @@
 
                 <div class="flex flex-1 justify-between px-6">
                     <div class="flex flex-1 items-center">
-                        <h2 class="text-2xl font-bold text-gray-900">@yield('page-title', 'Dashboard')</h2>
+                        <h2 class="text-2xl font-bold text-gray-900">@yield('page-title', __('admin.dashboard'))</h2>
                     </div>
-                    <div class="ml-4 flex items-center space-x-4">
+                    <div class="ml-4 flex items-center justify-center space-x-4">
+                        <!-- Language Switcher - Direct Switch -->
+                        @php
+                            $currentLocale = app()->getLocale();
+                            $otherLocale = $currentLocale === 'en' ? 'ar' : 'en';
+                            $currentFlag = $currentLocale === 'en' ? '🇬🇧' : '🇸🇦';
+                        @endphp
+                        <a href="{{ route('language.switch', $otherLocale) }}" class="relative flex items-center justify-center p-3 rounded-xl transition-all duration-300 hover:bg-blue-50 group" title="{{ $otherLocale === 'en' ? 'Switch to English' : 'التبديل إلى العربية' }}">
+                            <span class="text-2xl leading-none">{{ $currentFlag }}</span>
+                        </a>
+
                         <!-- Notifications Dropdown -->
                         @php
                             $user = auth()->user();
@@ -253,15 +268,15 @@
                                             <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                                                 <i class="fas fa-bell text-white text-lg"></i>
                                             </div>
-                                            <h3 class="text-xl font-extrabold text-gray-900">Notifications</h3>
+                                            <h3 class="text-xl font-extrabold text-gray-900">{{ __('admin.notifications') }}</h3>
                                         </div>
-                                        <span id="notificationHeaderBadge" class="relative inline-flex items-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
-                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
-                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
-                                            </span>
-                                            <span id="notificationHeaderCount">{{ $unreadCount }}</span> New
-                                        </span>
+                                <span id="notificationHeaderBadge" class="relative inline-flex items-center justify-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
+                                    <span class="absolute -top-1 -right-1 flex items-center justify-center h-3 w-3">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
+                                    </span>
+                                    <span id="notificationHeaderCount" class="flex items-center justify-center">{{ $unreadCount }}</span> {{ __('admin.new') }}
+                                </span>
                                     </div>
                                 </div>
                                 <div id="notificationsList" class="max-h-96 overflow-y-auto">
@@ -327,13 +342,13 @@
                                     @empty
                                         <div class="p-8 text-center">
                                             <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
-                                            <p class="text-sm text-gray-500">No new notifications</p>
+                                            <p class="text-sm text-gray-500">{{ __('admin.no_new_notifications') }}</p>
                                         </div>
                                     @endforelse
                                 </div>
                                 <div class="p-4 border-t-2 border-gray-100 bg-gray-50">
                                     <a href="{{ route('notifications.index') }}" class="flex items-center justify-center space-x-2 text-sm font-bold text-blue-600 hover:text-blue-700 py-2 transition-colors">
-                                        <span>View All Notifications</span>
+                                        <span>{{ __('admin.view_all_notifications') }}</span>
                                         <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </div>
@@ -342,7 +357,7 @@
 
                         <!-- User Menu Dropdown -->
                         <div x-data="{ open: false }" class="relative">
-                            <button @click="open = !open" class="flex items-center space-x-3 px-3 py-2 rounded-xl hover:bg-blue-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200">
+                            <button @click="open = !open" class="flex items-center justify-center space-x-3 px-3 py-2 rounded-xl hover:bg-blue-50 transition-all duration-300 group border-2 border-transparent hover:border-blue-200">
                                 @php
                                     $name = Auth::user()->name ?? 'User';
                                     $nameParts = explode(' ', $name);
@@ -401,20 +416,20 @@
                                         <div class="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                                             <i class="fas fa-user text-blue-600 text-lg"></i>
                                         </div>
-                                        <span class="font-bold">My Profile</span>
+                                        <span class="font-bold">{{ __('admin.my_profile') }}</span>
                                     </a>
                                     <a href="{{ route('support') }}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition-all duration-200 group">
                                         <div class="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                                             <i class="fas fa-life-ring text-blue-600 text-lg"></i>
                                         </div>
-                                        <span class="font-bold">Support</span>
+                                        <span class="font-bold">{{ __('admin.support') }}</span>
                                     </a>
                                     @if(Auth::user()->is_admin ?? false)
                                     <a href="{{ route('admin.index') }}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-blue-50 text-gray-700 hover:text-blue-700 transition-all duration-200 group">
                                         <div class="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                                             <i class="fas fa-cog text-blue-600 text-lg"></i>
                                         </div>
-                                        <span class="font-bold">Admin Panel</span>
+                                        <span class="font-bold">{{ __('admin.admin_panel') }}</span>
                                     </a>
                                     @endif
                                 </div>
@@ -427,7 +442,7 @@
                                             <div class="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                                 <i class="fas fa-sign-out-alt text-red-600 text-lg"></i>
                                             </div>
-                                            <span class="font-bold">Sign Out</span>
+                                            <span class="font-bold">{{ __('admin.logout') }}</span>
                                         </button>
                                     </form>
                                 </div>
@@ -455,6 +470,7 @@
         .sidebar-link {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 12px;
             padding: 12px 16px;
             border-radius: 12px;
@@ -488,8 +504,13 @@
         }
 
         .sidebar-link i {
-            width: 20px;
+            width: 24px;
+            min-width: 24px;
             text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         /* Custom Animations */
@@ -610,7 +631,7 @@
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsHost = '{{ env("WEBSOCKET_HOST", "localhost:3001") }}';
             const wsUrl = `${wsProtocol}//${wsHost}/ws`;
-            
+
             let notificationWs = null;
             let reconnectAttempts = 0;
             const maxReconnectAttempts = 10;
@@ -758,7 +779,7 @@
                 .then(data => {
                     const count = data.unreadCount || 0;
                     const notifications = data.notifications || [];
-                    
+
                     // Update notification badge count on button
                     const badge = document.querySelector('.notification-badge');
                     if (badge) {
@@ -772,7 +793,7 @@
                             badge.style.display = 'none';
                         }
                     }
-                    
+
                     // Update header badge count
                     const headerBadge = document.getElementById('notificationHeaderBadge');
                     const headerCount = document.getElementById('notificationHeaderCount');
@@ -784,7 +805,7 @@
                             headerBadge.style.display = 'none';
                         }
                     }
-                    
+
                     // Update notification list in dropdown
                     const listContainer = document.getElementById('notificationsList');
                     if (listContainer) {
@@ -815,12 +836,12 @@
                             `).join('');
                         }
                     }
-                    
+
                     // Dispatch event for other components to react
-                    window.dispatchEvent(new CustomEvent('notifications-updated', { 
-                        detail: { count: count, notifications: notifications } 
+                    window.dispatchEvent(new CustomEvent('notifications-updated', {
+                        detail: { count: count, notifications: notifications }
                     }));
-                    
+
                     // If on notifications page, reload to show new notification
                     if (window.location.pathname === '/notifications' || window.location.pathname.includes('/notifications')) {
                         // Small delay to allow toast to be visible
@@ -895,7 +916,7 @@
                             const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
                             reconnectAttempts++;
                             console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
-                            
+
                             reconnectTimeout = setTimeout(() => {
                                 connectWebSocket();
                             }, delay);
@@ -906,7 +927,7 @@
 
                 } catch (error) {
                     console.error('Error connecting to WebSocket:', error);
-                    
+
                     // Retry connection
                     if (reconnectAttempts < maxReconnectAttempts) {
                         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);

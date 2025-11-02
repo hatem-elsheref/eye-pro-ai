@@ -20,17 +20,31 @@
             <h1 class="text-3xl font-bold mb-1" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                 Eye Pro
             </h1>
-            <p class="text-gray-600 font-medium text-base mb-1">Match Analysis Platform</p>
-            <p class="text-sm text-gray-400">Sign in to continue to your account</p>
+            <p class="text-gray-600 font-medium text-base mb-1">{{ __('admin.match_analysis_platform') }}</p>
+            <p class="text-sm text-gray-400">{{ __('admin.sign_in_to_continue') }}</p>
+        </div>
+        
+        <!-- Language Switcher -->
+        <div class="flex justify-end mb-4">
+            @php
+                $currentLocale = app()->getLocale();
+                $otherLocale = $currentLocale === 'en' ? 'ar' : 'en';
+                $currentFlag = $currentLocale === 'en' ? '🇬🇧' : '🇸🇦';
+                $otherFlag = $otherLocale === 'en' ? '🇬🇧' : '🇸🇦';
+            @endphp
+            <a href="{{ route('language.switch', $otherLocale) }}" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <span class="text-xl">{{ $otherFlag }}</span>
+                <span class="text-sm font-semibold text-gray-700">{{ $otherLocale === 'en' ? __('admin.english') : __('admin.arabic') }}</span>
+            </a>
         </div>
         
         <!-- Tabs -->
         <div class="flex space-x-2 mb-6 bg-gray-100 p-1.5 rounded-xl shadow-inner">
             <a href="{{ route('login') }}" class="flex-1 py-3 text-center rounded-lg font-bold text-sm transition-all duration-200 text-white shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
-                Sign In
+                {{ __('admin.sign_in') }}
             </a>
             <a href="{{ route('register') }}" class="flex-1 py-3 text-center rounded-lg font-bold text-sm transition-all duration-200 text-gray-600 hover:bg-white hover:shadow-md">
-                Sign Up
+                {{ __('admin.sign_up') }}
             </a>
         </div>
         
@@ -39,7 +53,7 @@
             @csrf
             
             <div>
-                <label for="email" class="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                <label for="email" class="block text-sm font-bold text-gray-700 mb-2">{{ __('admin.email') }}</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <i class="fas fa-envelope text-gray-400"></i>
@@ -49,7 +63,7 @@
                         id="email" 
                         name="email" 
                         class="block w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-                        placeholder="Enter your email"
+                        placeholder="{{ __('admin.email') }}"
                         value="{{ old('email') }}"
                         autocomplete="off"
                         required
@@ -64,7 +78,7 @@
             </div>
             
             <div x-data="{ showPassword: false }">
-                <label for="password" class="block text-sm font-bold text-gray-700 mb-2">Password</label>
+                <label for="password" class="block text-sm font-bold text-gray-700 mb-2">{{ __('admin.password') }}</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <i class="fas fa-lock text-gray-400"></i>
@@ -74,7 +88,7 @@
                         id="password" 
                         name="password" 
                         class="block w-full pl-11 pr-12 py-3.5 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
-                        placeholder="Enter your password"
+                        placeholder="{{ __('admin.password') }}"
                         autocomplete="off"
                         required
                     >
@@ -93,17 +107,17 @@
             <div class="flex items-center justify-between">
                 <label class="flex items-center cursor-pointer group">
                     <input type="checkbox" name="remember" class="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer">
-                    <span class="ml-2 text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">Remember me</span>
+                    <span class="ml-2 text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{{ __('admin.remember_me') }}</span>
                 </label>
                 
                 <a href="{{ route('password.request') }}" class="text-sm font-semibold text-purple-600 hover:text-purple-800 transition-colors">
-                    Forgot Password?
+                    {{ __('admin.forgot_password') }}
                 </a>
             </div>
             
             <button type="submit" class="w-full flex items-center justify-center space-x-2 py-4 px-6 border-0 text-base font-extrabold rounded-xl text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                 <i class="fas fa-sign-in-alt text-lg"></i>
-                <span>Sign In</span>
+                <span>{{ __('admin.sign_in') }}</span>
             </button>
         </form>
     </div>

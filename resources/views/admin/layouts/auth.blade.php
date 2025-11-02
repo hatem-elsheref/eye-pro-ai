@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,11 @@
         }
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- RTL CSS - Only load if Arabic locale is active -->
+    @if(app()->getLocale() === 'ar')
+        <link rel="stylesheet" href="{{ asset('css/app-rtl.css') }}?v={{ time() }}">
+    @endif
     
     @stack('styles')
 </head>

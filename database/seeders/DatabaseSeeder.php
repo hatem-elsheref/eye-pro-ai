@@ -15,8 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(AdminUserSeeder::class);
+        // Seed dictionary data
+        $this->call([
+            DictionarySeeder::class,
+        ]);
 
-        $this->call(DictionarySeeder::class);
+        // User::factory(10)->create();
+
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        // ]);
     }
 }

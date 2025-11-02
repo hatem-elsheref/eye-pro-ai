@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Note: Tailwind utilities are loaded via CDN in the HTML */
 
 /* Custom Animations */
 @keyframes shimmer {
@@ -42,39 +40,29 @@
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;
+    direction: ltr;
 }
 
 body {
     font-family: 'Cairo', sans-serif;
+    direction: ltr;
+    text-align: left;
 }
 
-@layer utilities {
-    .animate-slide-in {
-        animation: slideIn 0.6s ease-out;
-        animation-fill-mode: both;
+/* Custom animation utilities */
+.animate-slide-in {
+    animation: slideIn 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
     }
-    
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-/* Center align numbers in Activity Overview cards for both LTR and RTL */
-.rounded-xl .text-right.ml-3 {
-    text-align: center !important;
-}
-
-.rounded-xl .text-right.ml-3 > p.text-3xl.font-black {
-    text-align: center !important;
-}
-
-.rounded-xl .text-right.ml-3 > p.text-xs.text-gray-400 {
-    text-align: center !important;
-}

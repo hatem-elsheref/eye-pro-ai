@@ -1,7 +1,7 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Dashboard - Eye Pro')
-@section('page-title', 'Dashboard')
+@section('title', __('admin.dashboard') . ' - Eye Pro')
+@section('page-title', __('admin.dashboard'))
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6 animate-fade-in">
@@ -12,12 +12,12 @@
         <div class="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full opacity-10" style="background: rgba(255,255,255,0.5);"></div>
         <div class="relative z-10 flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-white mb-1">Welcome back, {{ Auth::user()->name }}! 👋</h1>
-                <p class="text-sm text-white/90 font-medium">Here's an overview of your match analysis account</p>
+                <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.welcome_back', ['name' => Auth::user()->name]) }} 👋</h1>
+                <p class="text-sm text-white/90 font-medium">{{ __('admin.overview_of_account') }}</p>
             </div>
             <a href="{{ route('matches.create') }}" class="hidden lg:flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                 <i class="fas fa-plus text-base text-white"></i>
-                <span class="text-white">Add Match</span>
+                <span class="text-white">{{ __('admin.add_match') }}</span>
             </a>
         </div>
     </div>
@@ -32,9 +32,9 @@
                 </div>
                 <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">↑ 12%</span>
             </div>
-            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Total Matches</h3>
+            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.total_matches') }}</h3>
             <p class="text-3xl font-extrabold text-gray-900">{{ $totalMatches ?? 0 }}</p>
-            <p class="text-xs text-gray-500 mt-1">Your uploaded matches</p>
+            <p class="text-xs text-gray-500 mt-1">{{ __('admin.your_uploaded_matches') }}</p>
         </div>
         
         <!-- Upload Status Card -->
@@ -48,9 +48,9 @@
                     <span class="relative h-5 w-5 rounded-full bg-green-400 border-2 border-white shadow-lg"></span>
                 </span>
             </div>
-            <h3 class="text-white/90 text-xs font-bold mb-1 uppercase tracking-wide">Upload Status</h3>
-            <p class="text-3xl font-extrabold text-white">Ready</p>
-            <p class="text-xs text-white/90 mt-1">System operational</p>
+            <h3 class="text-white/90 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.upload_status') }}</h3>
+            <p class="text-3xl font-extrabold text-white">{{ __('admin.ready') }}</p>
+            <p class="text-xs text-white/90 mt-1">{{ __('admin.system_operational') }}</p>
         </div>
         
         <!-- Processing Card -->
@@ -60,9 +60,9 @@
                     <i class="fas fa-cog text-2xl text-white"></i>
                 </div>
             </div>
-            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Processing</h3>
+            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.processing') }}</h3>
             <p class="text-3xl font-extrabold text-gray-900">{{ $processingCount ?? 0 }}</p>
-            <p class="text-xs text-gray-500 mt-1">Matches being analyzed</p>
+            <p class="text-xs text-gray-500 mt-1">{{ __('admin.matches_being_analyzed') }}</p>
         </div>
         
         <!-- Storage Card -->
@@ -72,9 +72,9 @@
                     <i class="fas fa-hdd text-2xl text-white"></i>
                 </div>
             </div>
-            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Storage Used</h3>
+            <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.storage_used') }}</h3>
             <p class="text-3xl font-extrabold text-gray-900">{{ $storageUsed ?? '0 B' }}</p>
-            <p class="text-xs text-gray-500 mt-1">of {{ $storageLimit ?? '50 GB' }} available</p>
+            <p class="text-xs text-gray-500 mt-1">{{ __('admin.of_available', ['limit' => $storageLimit ?? '50 GB']) }}</p>
             <div class="mt-3">
                 <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                     @php
@@ -83,7 +83,7 @@
                     @endphp
                     <div class="h-full rounded-full shadow-sm transition-all duration-500" style="width: {{ $storagePercent }}%; background: {{ $progressColor }};"></div>
                 </div>
-                <p class="text-xs text-gray-400 mt-1 text-center">{{ number_format($storagePercent, 1) }}% used</p>
+                <p class="text-xs text-gray-400 mt-1 text-center">{{ __('admin.used', ['percent' => number_format($storagePercent, 1)]) }}</p>
             </div>
         </div>
     </div>
@@ -98,10 +98,10 @@
                 </div>
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-bold text-amber-900">Account Pending Approval</h3>
-                <p class="mt-1 text-sm text-amber-700">Your account needs to be approved by an administrator before you can upload matches.</p>
+                <h3 class="text-lg font-bold text-amber-900">{{ __('admin.account_pending') }}</h3>
+                <p class="mt-1 text-sm text-amber-700">{{ __('admin.account_needs_approval') }}</p>
                 <button class="mt-3 text-sm font-semibold text-amber-600 hover:text-amber-800 transition-colors">
-                    Contact Support <i class="fas fa-arrow-right ml-1"></i>
+                    {{ __('admin.contact_support') }} <i class="fas fa-arrow-right ml-1"></i>
                 </button>
             </div>
         </div>
@@ -114,7 +114,7 @@
             <div class="h-8 w-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                 <i class="fas fa-bolt text-white text-sm"></i>
             </div>
-            <h2 class="text-xl font-bold text-gray-900">Quick Actions</h2>
+            <h2 class="text-xl font-bold text-gray-900">{{ __('admin.quick_actions') }}</h2>
         </div>
         
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -122,32 +122,32 @@
                 <div class="h-12 w-12 rounded-xl bg-white/25 flex items-center justify-center mb-3 group-hover:scale-125 group-hover:rotate-12 transition-all duration-300">
                     <i class="fas fa-plus text-xl"></i>
                 </div>
-                <h3 class="font-extrabold text-lg mb-1">Upload Match</h3>
-                <p class="text-xs text-white/90">Add new video</p>
+                <h3 class="font-extrabold text-lg mb-1">{{ __('admin.upload_match') }}</h3>
+                <p class="text-xs text-white/90">{{ __('admin.add_match') }}</p>
             </a>
             
             <a href="{{ route('matches.index') }}" class="group rounded-xl bg-white border-2 border-gray-200 p-5 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 transform">
                 <div class="h-10 w-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
                     <i class="fas fa-list text-lg text-white"></i>
                 </div>
-                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">View Matches</h3>
-                <p class="text-xs text-gray-500">Browse videos</p>
+                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">{{ __('admin.matches') }}</h3>
+                <p class="text-xs text-gray-500">{{ __('admin.browse_videos') }}</p>
             </a>
             
             <a href="{{ route('profile') }}" class="group rounded-xl bg-white border-2 border-gray-200 p-5 hover:border-purple-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 transform">
                 <div class="h-10 w-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
                     <i class="fas fa-user text-lg text-white"></i>
                 </div>
-                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-purple-600 transition-colors">Profile</h3>
-                <p class="text-xs text-gray-500">Edit settings</p>
+                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-purple-600 transition-colors">{{ __('admin.profile') }}</h3>
+                <p class="text-xs text-gray-500">{{ __('admin.edit_settings') }}</p>
             </a>
             
             <a href="{{ route('support') }}" class="group rounded-xl bg-white border-2 border-gray-200 p-5 hover:border-teal-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 transform">
                 <div class="h-10 w-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
                     <i class="fas fa-life-ring text-lg text-white"></i>
                 </div>
-                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-teal-600 transition-colors">Support</h3>
-                <p class="text-xs text-gray-500">Get help</p>
+                <h3 class="font-bold text-base text-gray-900 mb-1 group-hover:text-teal-600 transition-colors">{{ __('admin.support') }}</h3>
+                <p class="text-xs text-gray-500">{{ __('admin.get_help_support') }}</p>
             </a>
         </div>
     </div>
@@ -156,9 +156,9 @@
     <!-- Recent Matches -->
     <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-gray-900">Recent Matches</h2>
+            <h2 class="text-xl font-bold text-gray-900">{{ __('admin.recent_matches') }}</h2>
             <a href="{{ route('matches.index') }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-2 group">
-                <span>View All</span>
+                <span>{{ __('admin.view_all') }}</span>
                 <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </a>
         </div>
@@ -180,16 +180,16 @@
                     @if($match->status === 'completed')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
                         <span class="h-1.5 w-1.5 rounded-full bg-green-600 mr-1.5"></span>
-                        Completed
+                        {{ __('admin.completed') }}
                     </span>
                     @elseif($match->status === 'processing')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
                         <span class="h-1.5 w-1.5 rounded-full bg-amber-600 mr-1.5 animate-pulse"></span>
-                        Processing
+                        {{ __('admin.processing') }}
                     </span>
                     @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
-                        {{ ucfirst($match->status) }}
+                        {{ __('admin.' . $match->status) }}
                     </span>
                     @endif
                 </div>
@@ -213,8 +213,8 @@
             </div>
             
             <!-- Text -->
-            <h3 class="text-4xl font-extrabold text-gray-900 mb-4">No Matches Yet</h3>
-            <p class="text-lg text-gray-500 mb-10 max-w-lg mx-auto font-medium">Get started by uploading your first match video for professional analysis</p>
+            <h3 class="text-4xl font-extrabold text-gray-900 mb-4">{{ __('admin.no_matches_yet') }}</h3>
+            <p class="text-lg text-gray-500 mb-10 max-w-lg mx-auto font-medium">{{ __('admin.get_started_uploading') }}</p>
             
             <!-- Enhanced Button -->
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -228,7 +228,7 @@
                     </div>
                     
                     <!-- Text -->
-                    <span class="relative z-10">Upload Your First Match</span>
+                    <span class="relative z-10">{{ __('admin.upload_your_first_match') }}</span>
                     
                     <!-- Arrow -->
                     <i class="fas fa-arrow-right relative z-10 group-hover:translate-x-2 transition-transform duration-300"></i>
@@ -236,7 +236,7 @@
                 
                 <a href="{{ route('support') }}" class="inline-flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 transition-all duration-300">
                     <i class="fas fa-question-circle"></i>
-                    <span>Learn How</span>
+                    <span>{{ __('admin.learn_how') }}</span>
                 </a>
             </div>
             
@@ -268,7 +268,7 @@
                         <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">
                             <i class="fas fa-chart-line text-white text-base"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900">Activity Overview</h2>
+                        <h2 class="text-xl font-bold text-gray-900">{{ __('admin.activity_overview') }}</h2>
                     </div>
                     <div class="text-xs text-gray-400 font-medium">
                         <i class="fas fa-calendar-alt mr-1"></i>
@@ -289,18 +289,18 @@
                                     <div class="absolute inset-0 rounded-xl bg-blue-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Uploads this month</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.uploads_this_month_label') }}</p>
                                     <div class="flex items-center space-x-2">
-                                        <p class="text-xs text-gray-500">Last 30 days</p>
+                                        <p class="text-xs text-gray-500">{{ __('admin.last_30_days') }}</p>
                                         @if(isset($uploadTrend) && $uploadTrend > 0)
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
                                             <i class="fas fa-arrow-up text-xs mr-0.5"></i>
-                                            +{{ $uploadTrend }}%
+                                            <span class="percent-number">+{{ $uploadTrend }}</span><span class="percent-sign">%</span>
                                         </span>
                                         @elseif(isset($uploadTrend) && $uploadTrend < 0)
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
                                             <i class="fas fa-arrow-down text-xs mr-0.5"></i>
-                                            {{ $uploadTrend }}%
+                                            <span class="percent-number">{{ $uploadTrend }}</span><span class="percent-sign">%</span>
                                         </span>
                                         @endif
                                     </div>
@@ -325,12 +325,12 @@
                                     <div class="absolute inset-0 rounded-xl bg-green-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Analyses completed</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.analyses_completed_label') }}</p>
                                     <div class="flex items-center space-x-2">
-                                        <p class="text-xs text-gray-500">All time</p>
+                                        <p class="text-xs text-gray-500">{{ __('admin.all_time') }}</p>
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
                                             <i class="fas fa-star text-xs mr-0.5"></i>
-                                            100%
+                                            <span class="percent-number">100</span><span class="percent-sign">%</span>
                                         </span>
                                     </div>
                                 </div>
@@ -354,9 +354,9 @@
                                     <div class="absolute inset-0 rounded-xl bg-cyan-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Currently Processing</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.currently_processing_label') }}</p>
                                     <div class="flex items-center space-x-2">
-                                        <p class="text-xs text-gray-500">Active matches</p>
+                                        <p class="text-xs text-gray-500">{{ __('admin.active_matches') }}</p>
                                         @if(($processingCount ?? 0) > 0)
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
                                             <i class="fas fa-spinner fa-spin text-xs mr-0.5"></i>
@@ -384,19 +384,19 @@
                     <div class="flex items-center space-x-4 text-gray-500">
                         <div class="flex items-center space-x-1.5">
                             <div class="h-2 w-2 rounded-full bg-blue-500"></div>
-                            <span class="font-medium">Uploads</span>
+                            <span class="font-medium">{{ __('admin.uploads') }}</span>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <div class="h-2 w-2 rounded-full bg-green-500"></div>
-                            <span class="font-medium">Completed</span>
+                            <span class="font-medium">{{ __('admin.completed') }}</span>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <div class="h-2 w-2 rounded-full bg-cyan-500"></div>
-                            <span class="font-medium">Processing</span>
+                            <span class="font-medium">{{ __('admin.processing') }}</span>
                         </div>
                     </div>
                     <a href="{{ route('matches.index') }}" class="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1 group">
-                        <span>View All</span>
+                        <span>{{ __('admin.view_all') }}</span>
                         <i class="fas fa-arrow-right text-xs group-hover:translate-x-0.5 transition-transform"></i>
                     </a>
                 </div>
@@ -415,11 +415,11 @@
                         <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-md" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">
                             <i class="fas fa-lightbulb text-white text-base"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900">Tips & Resources</h2>
+                        <h2 class="text-xl font-bold text-gray-900">{{ __('admin.tips_resources') }}</h2>
                     </div>
                     <div class="text-xs text-gray-400 font-medium">
                         <i class="fas fa-sparkles mr-1"></i>
-                        Pro Tips
+                        {{ __('admin.pro_tips') }}
                     </div>
                 </div>
                 
@@ -436,8 +436,8 @@
                                     <div class="absolute inset-0 rounded-xl bg-purple-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Upload in HD</p>
-                                    <p class="text-xs text-gray-500">Better quality, better results</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.upload_in_hd') }}</p>
+                                    <p class="text-xs text-gray-500">{{ __('admin.better_quality_results') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -455,8 +455,8 @@
                                     <div class="absolute inset-0 rounded-xl bg-indigo-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Tag your matches</p>
-                                    <p class="text-xs text-gray-500">Organize with tags</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.tag_your_matches') }}</p>
+                                    <p class="text-xs text-gray-500">{{ __('admin.organize_with_tags') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -474,8 +474,8 @@
                                     <div class="absolute inset-0 rounded-xl bg-teal-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Share with team</p>
-                                    <p class="text-xs text-gray-500">Collaborate better</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.share_with_team') }}</p>
+                                    <p class="text-xs text-gray-500">{{ __('admin.collaborate_better') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -493,8 +493,8 @@
                                     <div class="absolute inset-0 rounded-xl bg-amber-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Track progress</p>
-                                    <p class="text-xs text-gray-500">Monitor your analytics</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">{{ __('admin.track_progress') }}</p>
+                                    <p class="text-xs text-gray-500">{{ __('admin.monitor_analytics') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -506,15 +506,15 @@
                     <div class="flex items-center space-x-4 text-gray-500">
                         <div class="flex items-center space-x-1.5">
                             <div class="h-2 w-2 rounded-full bg-purple-500"></div>
-                            <span class="font-medium">Tips</span>
+                            <span class="font-medium">{{ __('admin.tips') }}</span>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <div class="h-2 w-2 rounded-full bg-teal-500"></div>
-                            <span class="font-medium">Resources</span>
+                            <span class="font-medium">{{ __('admin.resources') }}</span>
                         </div>
                     </div>
                     <a href="{{ route('support') }}" class="text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1 group">
-                        <span>Get Help</span>
+                        <span>{{ __('admin.get_help') }}</span>
                         <i class="fas fa-arrow-right text-xs group-hover:translate-x-0.5 transition-transform"></i>
                     </a>
                 </div>

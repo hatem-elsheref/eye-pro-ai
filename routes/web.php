@@ -8,6 +8,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\LanguageController;
+
+// Language switching route (accessible to all)
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
+
 /*
 |--------------------------------------------------------------------------
 | Guest Routes (Authentication)

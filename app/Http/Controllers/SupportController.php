@@ -33,7 +33,7 @@ class SupportController extends Controller
 
         $this->supportService->submitTicket(auth()->user(), $validated);
 
-        return back()->with('success', 'Your support ticket has been submitted successfully! We will get back to you soon.');
+        return back()->with('success', __('admin.ticket_submitted_success'));
     }
 
     public function tickets()
@@ -89,9 +89,9 @@ class SupportController extends Controller
         );
 
         if ($success) {
-            return back()->with('success', 'Ticket marked as resolved successfully.');
+            return back()->with('success', __('admin.ticket_resolved_success'));
         }
 
-        return back()->with('error', 'Failed to resolve ticket. Please try again.');
+        return back()->with('error', __('admin.failed_to_resolve_ticket'));
     }
 }

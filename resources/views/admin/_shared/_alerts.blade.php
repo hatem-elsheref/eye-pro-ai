@@ -7,7 +7,7 @@
             </div>
         </div>
         <div class="flex-1">
-            <h3 class="text-sm font-bold text-green-900">Success!</h3>
+            <h3 class="text-sm font-bold text-green-900">{{ __('admin.success') }}</h3>
             <p class="mt-1 text-sm text-green-700">{{ session('success') }}</p>
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="text-green-400 hover:text-green-600">
@@ -26,7 +26,7 @@
             </div>
         </div>
         <div class="flex-1">
-            <h3 class="text-sm font-bold text-red-900">Error!</h3>
+            <h3 class="text-sm font-bold text-red-900">{{ __('admin.error') }}</h3>
             <p class="mt-1 text-sm text-red-700">{{ session('error') }}</p>
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="text-red-400 hover:text-red-600">
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="flex-1">
-            <h3 class="text-sm font-bold text-amber-900">Warning!</h3>
+            <h3 class="text-sm font-bold text-amber-900">{{ __('admin.warning') }}</h3>
             <p class="mt-1 text-sm text-amber-700">{{ session('warning') }}</p>
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="text-amber-400 hover:text-amber-600">
@@ -64,7 +64,7 @@
             </div>
         </div>
         <div class="flex-1">
-            <h3 class="text-sm font-bold text-blue-900">Info!</h3>
+            <h3 class="text-sm font-bold text-blue-900">{{ __('admin.info') }}</h3>
             <p class="mt-1 text-sm text-blue-700">{{ session('info') }}</p>
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="text-blue-400 hover:text-blue-600">
@@ -83,7 +83,7 @@
             </div>
         </div>
         <div class="flex-1">
-            <h3 class="text-sm font-bold text-red-900">Please correct the following errors:</h3>
+            <h3 class="text-sm font-bold text-red-900">{{ __('admin.please_correct_errors') }}</h3>
             <ul class="mt-2 text-sm text-red-700 space-y-1 list-disc list-inside">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>

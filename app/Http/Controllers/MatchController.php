@@ -59,7 +59,7 @@ class MatchController extends Controller
     {
         if (!auth()->user()->is_approved) {
             return redirect()->route('matches.index')
-                ->with('error', 'Your account must be approved before you can upload matches.');
+                ->with('error', __('admin.account_must_be_approved'));
         }
 
         $validated = $request->validate([
@@ -84,25 +84,29 @@ class MatchController extends Controller
                     $validated['video_url']
                 );
             } else {
-                return back()->with('error', 'Please provide either a video file or URL.');
+                return back()->with('error', __('admin.please_provide_file_or_url'));
             }
 
             // Send notification only (no auto-processing)
             $this->notificationService->notifyUploadProcessing($match);
 
             return redirect()->route('matches.show', $match->id)
-                ->with('success', 'Match uploaded successfully!');
+                ->with('success', __('admin.match_uploaded_success'));
         } catch (\Exception $e) {
             Log::error('Failed to create match', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Failed to upload match: ' . $e->getMessage());
+            return back()->with('error', __('admin.failed_to_upload', ['error' => $e->getMessage()]));
         }
     }
 
     public function show($id)
     {
+        $user = auth()->user();
+
         $match = MatchVideo::with(['user', 'predictions'])
-            ->where('user_id', auth()->id())
-            ->findOrFail($id);
+            ->where(function ($query) use ($user) {
+                if (!$user->is_admin)
+                    $query->where('user_id', $user->id);
+            })->findOrFail($id);
 
         $usedDisk = ucfirst($match->storage_disk ?? 'public');
 
@@ -142,7 +146,7 @@ class MatchController extends Controller
         $match->update($validated);
 
         return redirect()->route('matches.show', $match->id)
-            ->with('success', 'Match updated successfully!');
+            ->with('success', __('admin.match_updated_success'));
     }
 
     public function destroy($id)
@@ -151,7 +155,7 @@ class MatchController extends Controller
         $match->delete();
 
         return redirect()->route('matches.index')
-            ->with('success', 'Match deleted successfully!');
+            ->with('success', __('admin.match_deleted_success'));
     }
 
     public function uploadChunk(Request $request)
@@ -307,7 +311,7 @@ class MatchController extends Controller
 
                 // Check if match has predictions
                 $predictionCount = $match->predictions()->count();
-                
+
                 if ($predictionCount > 0) {
                     // Has predictions - send complete success notification
                     $this->notificationService->notifyAnalysisComplete($match);

@@ -1,0 +1,533 @@
+/* ============================================
+   RTL (Right-to-Left) CSS Overrides for Arabic Language
+   All styles use [dir="rtl"] selector to only affect RTL layouts
+   ============================================ */
+
+/* Base RTL Direction */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* ============================================
+   RECENT MATCHES SECTION - RTL FIXES
+   ============================================ */
+
+/* Add spacing between video icon and match name - use same spacing as activity cards */
+[dir="rtl"] a.flex.items-center.space-x-4 {
+    gap: 0.1rem !important;
+}
+
+/* Remove margin-left that Tailwind adds */
+[dir="rtl"] a.flex.items-center.space-x-4 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Text content alignment */
+[dir="rtl"] a.flex.items-center.space-x-4 > .flex-1.min-w-0 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Calendar icon spacing in match date */
+[dir="rtl"] a.flex.items-center.space-x-4 .flex.items-center.space-x-2 {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] a.flex.items-center.space-x-4 .space-x-2 > * + * {
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] a.flex.items-center.space-x-4 .fa-calendar {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* ============================================
+   TIPS & RESOURCES SECTION - RTL FIXES
+   ============================================ */
+
+/* Section header - add spacing between icon and title */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-2\.5 {
+    gap: 0.625rem !important;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .space-x-2\.5 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Section title alignment - keep same layout, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 h2 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Sparkles icon spacing in Tips & Resources header */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .fa-sparkles {
+    margin-right: 0 !important;
+    margin-left: 0.25rem !important;
+}
+
+/* Tips cards - keep icons on left, text on right - just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex-1.min-w-0 {
+    text-align: right;
+    direction: rtl;
+}
+
+
+/* ============================================
+   QUICK ACTIONS SECTION - RTL FIXES
+   ============================================ */
+
+/* Add spacing between icon and title in Quick Actions header */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-md.p-6 .flex.items-center.space-x-2 {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-md.p-6 .flex.items-center.space-x-2 > * + * {
+    margin-left: 0 !important;
+}
+
+/* ============================================
+   ACTIVITY OVERVIEW SECTION - RTL FIXES
+   ============================================ */
+
+/* Section header - add spacing between icon and title */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-2\.5 {
+    gap: 0.625rem !important;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .space-x-2\.5 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Section header - keep same layout, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 h2 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Date selector alignment - keep date on right, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .text-xs.text-gray-400 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Calendar icon spacing - remove LTR margin-right, add margin-left for RTL */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .fa-calendar-alt {
+    margin-right: 0 !important;
+    margin-left: 0.25rem !important;
+}
+
+/* Activity cards - keep icons on left, text in middle, numbers on right - just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex-1.min-w-0 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* RTL specific margin adjustments for numbers section */
+[dir="rtl"] .rounded-xl .text-right.ml-3 {
+    margin-right: 0.75rem !important;
+    margin-left: 0 !important;
+}
+
+/* ============================================
+   SPACING FIX - USE GAP INSTEAD OF MARGIN FOR ALL CARDS
+   This ensures proper spacing in RTL that matches LTR
+   ============================================ */
+
+/* Remove Tailwind's margin-left from space-x utilities */
+[dir="rtl"] .space-x-3\.5 > * + *,
+[dir="rtl"] .space-x-4 > * + *,
+[dir="rtl"] .space-x-2 > * + *,
+[dir="rtl"] .space-x-1 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Use gap property for all flex containers with space-x - works automatically in RTL */
+[dir="rtl"] .flex.items-center.space-x-3\.5 {
+    gap: 0.875rem !important;
+}
+
+[dir="rtl"] .flex.items-center.space-x-4 {
+    gap: 1rem !important;
+}
+
+/* Numbers section - keep on right side, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .text-right {
+    text-align: right !important;
+    direction: rtl;
+}
+
+/* Add spacing between text and badges - fix space-x-2 container */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-2 {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-2 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Percentage badges with icons - reverse order so icon comes AFTER text in RTL */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border {
+    flex-direction: row-reverse;
+}
+
+/* Move percent sign to before number in RTL: "100%" becomes "%100" */
+/* In LTR: icon (order: 0), number (order: 1), percent (order: 2) = icon "100%" */
+/* In RTL with row-reverse: icon appears on right, then percent (order: -2), number (order: -1) = icon "%100" */
+.bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border i {
+    order: 0;
+}
+
+.bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border .percent-number {
+    order: 1;
+}
+
+.bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border .percent-sign {
+    order: 2;
+}
+
+/* In RTL, reverse percent and number order */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border .percent-sign {
+    order: -2;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border .percent-number {
+    order: -1;
+}
+
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center.px-1\.5.border i {
+    order: 0;
+}
+
+/* Fix icon spacing - remove margin-right, add margin-left for RTL */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center .fa-arrow-up,
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center .fa-star,
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center .fa-spinner,
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center .fa-arrow-down,
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .inline-flex.items-center .fa-check {
+    margin-right: 0 !important;
+    margin-left: 0.125rem !important;
+}
+
+/* Status indicators footer - keep same layout, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.justify-between.text-xs {
+    direction: rtl;
+}
+
+/* Status indicator items - keep same order, just fix spacing */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-4 > * + * {
+    margin-left: 0 !important;
+    margin-right: 1rem !important;
+}
+
+/* Status indicator dot spacing */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-1\.5 > * + * {
+    margin-left: 0 !important;
+    margin-right: 0.375rem !important;
+}
+
+/* ============================================
+   ARROW/NAVIGATION ICONS - REVERSE DIRECTION ONLY
+   ============================================ */
+
+/* Arrow Right → should point Left ← in RTL */
+[dir="rtl"] .fa-arrow-right,
+[dir="rtl"] i.fa-arrow-right {
+    transform: scaleX(-1);
+}
+
+/* Chevron Right > should point Left < in RTL */
+[dir="rtl"] .fa-chevron-right,
+[dir="rtl"] i.fa-chevron-right {
+    transform: scaleX(-1);
+}
+
+/* Arrow Left ← should point Right → in RTL */
+[dir="rtl"] .fa-arrow-left,
+[dir="rtl"] i.fa-arrow-left {
+    transform: scaleX(-1);
+}
+
+/* Chevron Left < should point Right > in RTL */
+[dir="rtl"] .fa-chevron-left,
+[dir="rtl"] i.fa-chevron-left {
+    transform: scaleX(-1);
+}
+
+/* Hover effects with arrows - maintain reverse direction */
+[dir="rtl"] .group:hover .fa-arrow-right,
+[dir="rtl"] a:hover .fa-arrow-right {
+    transform: scaleX(-1) translateX(-0.25rem);
+}
+
+[dir="rtl"] .group:hover .fa-chevron-right,
+[dir="rtl"] a:hover .fa-chevron-right {
+    transform: scaleX(-1) translateX(-0.25rem);
+}
+
+/* "View All" and "Get Help" links - arrow comes AFTER text in RTL (keep natural order) */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 a.flex.items-center.space-x-1 {
+    gap: 0.25rem !important;
+}
+
+/* Remove margin-left from space-x-1, add margin-right for RTL */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 a.flex.items-center.space-x-1 > * + * {
+    margin-left: 0 !important;
+    margin-right: 0.25rem !important;
+}
+
+/* Tips & Resources footer - keep same layout, just align text */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.justify-between.text-xs.mt-5 {
+    direction: rtl;
+}
+
+/* Tips & Resources footer items spacing */
+[dir="rtl"] .bg-white.rounded-2xl.shadow-lg.p-6 .flex.items-center.space-x-4.text-gray-500 > * + * {
+    margin-left: 0 !important;
+    margin-right: 1rem !important;
+}
+
+/* ============================================
+   NOTIFICATION DROPDOWN - RTL FIXES
+   ============================================ */
+
+/* Notification dropdown positioning - change from right-0 to left-0 in RTL */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 {
+    right: auto !important;
+    left: 0 !important;
+}
+
+/* Notification dropdown header - reverse order in RTL */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.justify-between,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.justify-between {
+    flex-direction: row-reverse !important; /* Reverse order: New badge on left, Notifications on right */
+    direction: rtl;
+}
+
+/* Add spacing between icon and title in notification header */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-3,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-3 {
+    gap: 0.75rem !important;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-3 > * + * {
+    margin-left: 0 !important;
+}
+
+/* "New" badge positioning in RTL - appears on left side after reverse */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 #notificationHeaderBadge,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 #notificationHeaderBadge {
+    order: -1; /* Ensure badge appears first (on left) */
+}
+
+/* Notification items - reverse order in RTL: icon on right, text on left */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-start.space-x-4,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-start.space-x-4 {
+    flex-direction: row-reverse !important; /* Reverse order: icon on right, text on left */
+    gap: 1rem !important;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-start.space-x-4 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-start.space-x-4 > * + * {
+    margin-left: 0 !important;
+    margin-right: 1rem !important;
+}
+
+/* Notification text alignment */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex-1.min-w-0,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex-1.min-w-0 {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Time indicator spacing */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-1,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-1 {
+    gap: 0.25rem !important;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-1 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-1 > * + * {
+    margin-left: 0 !important;
+}
+
+/* "View All Notifications" link - keep same layout as LTR */
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.justify-center.space-x-2,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.justify-center.space-x-2 {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.justify-center.space-x-2 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.justify-center.space-x-2 > * + * {
+    margin-left: 0 !important;
+}
+
+/* ============================================
+   NAVBAR PROFILE BUTTON - RTL FIXES
+   ============================================ */
+
+/* Navbar profile button - reverse order to match profile dropdown: name/email on left, avatar on right */
+[dir="rtl"] button.flex.items-center.space-x-3.px-3,
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 {
+    gap: 1.5rem !important; /* Increased gap for more space between items */
+    direction: rtl;
+}
+
+[dir="rtl"] button.flex.items-center.space-x-3.px-3 > * + *,
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Navbar profile button avatar - appears first (before name/email) */
+[dir="rtl"] button.flex.items-center.space-x-3.px-3 > div:first-child,
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 > div:first-child {
+    order: 1 !important; /* Avatar appears first */
+}
+
+/* Navbar profile button name/email container - appears after avatar */
+[dir="rtl"] button.flex.items-center.space-x-3.px-3 > div.hidden,
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 > div.hidden,
+[dir="rtl"] button.flex.items-center.space-x-3.px-3 > div[class*="text-left"],
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 > div[class*="text-left"] {
+    order: 2 !important; /* Name/email appears after avatar */
+    text-align: right !important;
+    direction: rtl !important;
+    margin-left: 1.5rem !important; /* Add extra space between avatar and name/email */
+}
+
+/* Navbar profile button chevron - appears after name/email */
+[dir="rtl"] button.flex.items-center.space-x-3.px-3 > i.fa-chevron-down,
+[dir="rtl"] .flex.items-center.justify-center.space-x-3.px-3 > i.fa-chevron-down {
+    order: 3 !important; /* Chevron appears after name/email */
+}
+
+/* ============================================
+   PROFILE DROPDOWN - RTL FIXES
+   ============================================ */
+
+/* Profile dropdown positioning - change from right-0 to left-0 in RTL */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 {
+    right: auto !important;
+    left: 0 !important;
+}
+
+/* Profile dropdown header - reverse order in RTL: name/email on left, avatar on right */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 .flex.items-center.space-x-3,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 .flex.items-center.space-x-3,
+[dir="rtl"] .w-72 .flex.items-center.space-x-3 {
+    flex-direction: row-reverse !important; /* Reverse order: name/email on left, avatar on right */
+    gap: 2rem !important; /* Increased gap for more visible space */
+    direction: rtl;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-72 .flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 .flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .w-72 .flex.items-center.space-x-3 > * + * {
+    margin-left: 0 !important;
+}
+
+/* Profile header avatar - appears on right */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 .flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 .flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .w-72 .flex.items-center.space-x-3 > div:first-child {
+    order: 2 !important; /* Avatar appears on right */
+}
+
+/* Profile header text container - appears on left */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 .flex.items-center.space-x-3 .flex-1,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 .flex.items-center.space-x-3 .flex-1,
+[dir="rtl"] .w-72 .flex.items-center.space-x-3 .flex-1 {
+    order: 1 !important; /* Name/email appears on left */
+    text-align: right;
+    direction: rtl;
+    margin-right: 2rem !important; /* Add extra space between name/email and avatar */
+}
+
+/* Profile header text alignment */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 .flex-1.min-w-0,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 .flex-1.min-w-0,
+[dir="rtl"] .w-72 .flex-1.min-w-0,
+[dir="rtl"] .flex-1.min-w-0 {
+    text-align: right;
+    direction: rtl;
+    margin-right: 10px !important; /* Add 10px space between name/email and avatar */
+}
+
+/* Profile menu items - reverse order in RTL: icon on right, text on left */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 a.flex.items-center.space-x-3,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 a.flex.items-center.space-x-3,
+[dir="rtl"] .absolute.right-0.mt-3.w-72 button.flex.items-center.space-x-3,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 button.flex.items-center.space-x-3,
+[dir="rtl"] .w-72 a.flex.items-center.space-x-3,
+[dir="rtl"] .w-72 button.flex.items-center.space-x-3 {
+    flex-direction: row-reverse !important; /* Reverse order: icon on right, text on left */
+    direction: rtl !important;
+    gap: 0.75rem !important;
+}
+
+[dir="rtl"] .absolute.right-0.mt-3.w-72 a.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 a.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .absolute.right-0.mt-3.w-72 button.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 button.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .w-72 a.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .w-72 button.flex.items-center.space-x-3 > * + * {
+    margin-left: 0 !important;
+    margin-right: 0.75rem !important;
+}
+
+/* Profile menu item text alignment - ensure text aligns to right and appears on left */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 a.flex.items-center.space-x-3 span,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 a.flex.items-center.space-x-3 span,
+[dir="rtl"] .absolute.right-0.mt-3.w-72 button.flex.items-center.space-x-3 span,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 button.flex.items-center.space-x-3 span,
+[dir="rtl"] .w-72 a.flex.items-center.space-x-3 span,
+[dir="rtl"] .w-72 button.flex.items-center.space-x-3 span {
+    text-align: right !important;
+    direction: rtl !important;
+    display: block;
+    width: 100%;
+    order: -1 !important; /* Text appears first (on left) */
+}
+
+/* Profile menu item icon container - ensure it appears on right */
+[dir="rtl"] .absolute.right-0.mt-3.w-72 a.flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 a.flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .absolute.right-0.mt-3.w-72 button.flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .absolute.left-0.mt-3.w-72 button.flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .w-72 a.flex.items-center.space-x-3 > div:first-child,
+[dir="rtl"] .w-72 button.flex.items-center.space-x-3 > div:first-child {
+    order: 1 !important; /* Icon appears second (on right) */
+}
+
+/* ============================================
+   GENERAL RTL FIXES
+   ============================================ */
+
+/* Forms and inputs - RTL text alignment */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Tables - RTL direction */
+[dir="rtl"] table {
+    direction: rtl;
+}
+
+[dir="rtl"] th,
+[dir="rtl"] td {
+    text-align: right;
+}
+
+/* Lists - RTL padding */
+[dir="rtl"] ul,
+[dir="rtl"] ol {
+    padding-right: 1.5rem;
+    padding-left: 0;
+    direction: rtl;
+}

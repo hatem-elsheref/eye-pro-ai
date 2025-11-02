@@ -1,0 +1,1336 @@
+[dir="rtl"] /* RTL (Right-to-Left) CSS Overrides for Arabic Language */
+
+[dir="rtl"] /* Base RTL Direction */
+[dir="rtl"] html[dir="rtl"],
+[dir="rtl"] html[dir="rtl"] body {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    RTL (Right-to-Left) Styles for Arabic Language
+[dir="rtl"]    ============================================ */
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    CRITICAL: Keep sidebar ALWAYS on the LEFT side
+[dir="rtl"]    ============================================ */
+[dir="rtl"] body > div.flex.h-screen {
+[dir="rtl"]     flex-direction: row !important; /* NEVER reverse - sidebar always on left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Desktop sidebar - FORCE to stay on left */
+[dir="rtl"] body > div.flex.h-screen > aside.hidden.lg\\:flex,
+[dir="rtl"] body > div.flex > aside.hidden.lg\\:flex {
+[dir="rtl"]     order: -999 !important; /* Force sidebar to stay first (left side) */
+[dir="rtl"]     flex-shrink: 0 !important;
+[dir="rtl"]     flex-grow: 0 !important;
+[dir="rtl"]     direction: rtl; /* Content inside sidebar is RTL */
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     position: relative !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* All sidebars - general rule */
+[dir="rtl"] body > div.flex.h-screen > aside,
+[dir="rtl"] body > div.flex > aside {
+[dir="rtl"]     order: -999 !important; /* Force sidebar to stay first */
+[dir="rtl"]     flex-shrink: 0 !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Sidebar logo area - logo starts from right edge */
+[dir="rtl"] aside .flex.h-16.items-center {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     justify-content: flex-start !important; /* Reverse: flex-start puts logo on right in RTL */
+[dir="rtl"]     padding-right: 1.5rem !important;
+[dir="rtl"]     padding-left: 1.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Logo link - align content from right edge */
+[dir="rtl"] aside .flex.h-16.items-center > a {
+[dir="rtl"]     width: 100%;
+[dir="rtl"]     display: flex;
+[dir="rtl"]     justify-content: flex-end !important; /* Logo image on far right */
+[dir="rtl"]     align-items: center;
+[dir="rtl"] }
+
+[dir="rtl"] aside .flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     justify-content: flex-end !important; /* Logo image on right */
+[dir="rtl"]     width: 100%;
+[dir="rtl"] }
+
+[dir="rtl"] aside .flex.items-center.space-x-3 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] aside a.flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     justify-content: flex-end !important; /* Logo starts from right */
+[dir="rtl"]     width: 100%;
+[dir="rtl"] }
+
+[dir="rtl"] /* Logo image - position on far right */
+[dir="rtl"] aside a.flex.items-center.space-x-3 img {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Main content - always after sidebar */
+[dir="rtl"] body > div.flex.h-screen > div.flex.flex-1.flex-col,
+[dir="rtl"] body > div.flex.h-screen > div.flex.flex-1 {
+[dir="rtl"]     order: 999 !important; /* Main content always after sidebar */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     flex: 1 1 0% !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Sidebar Navigation */
+[dir="rtl"] aside nav {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Sidebar links - start from right, icon first (right), then text (left) */
+[dir="rtl"] .sidebar-link {
+[dir="rtl"]     justify-content: flex-end !important;
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon first, text second */
+[dir="rtl"]     direction: rtl !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Icon appears first (on the right) - HTML order: icon, then text */
+[dir="rtl"] .sidebar-link i {
+[dir="rtl"]     order: 1 !important; /* Icon first (on right) */
+[dir="rtl"]     margin-left: 0.75rem !important; /* Space between icon and text (to left in RTL) */
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"]     width: 24px;
+[dir="rtl"]     min-width: 24px;
+[dir="rtl"]     text-align: center;
+[dir="rtl"]     display: flex;
+[dir="rtl"]     align-items: center;
+[dir="rtl"]     justify-content: center;
+[dir="rtl"] }
+
+[dir="rtl"] /* Text appears after icon (on the left of icon) */
+[dir="rtl"] .sidebar-link span {
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     order: 2 !important; /* Text second (on left) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Active state indicator - right side border */
+[dir="rtl"] .sidebar-link.active::before {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"]     border-radius: 4px 0 0 4px !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Sidebar section headings - align from right */
+[dir="rtl"] aside nav p.px-3 {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     padding-right: 0.75rem !important;
+[dir="rtl"]     padding-left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure all sidebar links align from right */
+[dir="rtl"] aside nav a {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     justify-content: flex-end !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Sidebar spacing fixes */
+[dir="rtl"] aside nav .space-y-1 > * + * {
+[dir="rtl"]     margin-top: 0.25rem;
+[dir="rtl"] }
+
+[dir="rtl"] /* User profile section in sidebar */
+[dir="rtl"] aside .flex.flex-shrink-0.border-t {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* User profile link - align from right: avatar → text → logout icon */
+[dir="rtl"] /* HTML: Avatar+Text container → Logout form */
+[dir="rtl"] aside .group.flex.w-full.items-center {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     flex-direction: row !important; /* Keep normal row */
+[dir="rtl"]     justify-content: flex-end !important; /* Align from right - HTML first appears right */
+[dir="rtl"] }
+
+[dir="rtl"] /* Inner flex container (avatar + text) - appears first (on right) */
+[dir="rtl"] aside .group.flex.w-full.items-center > .flex.items-center.space-x-3.flex-1 {
+[dir="rtl"]     flex-direction: row-reverse !important; /* Reverse so avatar appears before text visually */
+[dir="rtl"]     order: unset !important; /* Remove order override */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     justify-content: flex-end !important; /* Align from right */
+[dir="rtl"] }
+
+[dir="rtl"] /* Remove order overrides - let HTML order work */
+[dir="rtl"] aside .group.flex.w-full.items-center .flex.h-10.w-10,
+[dir="rtl"] aside .group.flex.w-full.items-center .flex-1.min-w-0 {
+[dir="rtl"]     order: unset !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Text container alignment */
+[dir="rtl"] aside .group.flex.w-full.items-center .flex-1.min-w-0 {
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing between avatar and text */
+[dir="rtl"] aside .group.flex.w-full.items-center .flex.items-center.space-x-3.flex-1 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Logout form button - appears second in HTML, so appears left with flex-end */
+[dir="rtl"] aside .group.flex.w-full.items-center form.ml-2 {
+[dir="rtl"]     order: unset !important; /* Remove order override */
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Main Content */
+[dir="rtl"] main {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Top Bar - Title on left (start), controls on right (end) */
+[dir="rtl"] .relative.flex.h-16 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     overflow: visible !important; /* Allow dropdowns to overflow */
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure dropdown parent containers allow overflow */
+[dir="rtl"] .relative.flex.h-16 .relative[x-data] {
+[dir="rtl"]     position: relative !important;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     z-index: 100 !important;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center {
+[dir="rtl"]     position: relative !important;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     z-index: 100 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Top bar main container - title on left (start), controls on right (end) */
+[dir="rtl"] .relative.flex.h-16 .flex.flex-1.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal order: title left, controls right */
+[dir="rtl"] }
+
+[dir="rtl"] /* Title container - should be on the RIGHT (start of navbar in RTL) */
+[dir="rtl"] .relative.flex.h-16 .flex.flex-1.items-center {
+[dir="rtl"]     order: 2; /* Title appears second (on right/start in RTL) */
+[dir="rtl"]     justify-content: flex-end !important; /* Start from right */
+[dir="rtl"]     text-align: right !important; /* Text aligns right for Arabic */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     flex: 1 1 0% !important;
+[dir="rtl"]     margin-left: auto !important;
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Controls container (language, notifications, profile) - should be on the LEFT (end in RTL) */
+[dir="rtl"] .relative.flex.h-16 .ml-4.flex.items-center.justify-center {
+[dir="rtl"]     order: 1; /* Controls appear first (on left/end in RTL) */
+[dir="rtl"]     margin-right: 1rem !important; /* Space between title and controls */
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     direction: ltr; /* Keep icons LTR for proper display */
+[dir="rtl"]     flex-shrink: 0 !important; /* Don't shrink, keep fixed width */
+[dir="rtl"] }
+
+[dir="rtl"] /* Reverse the spacing for controls */
+[dir="rtl"] .relative.flex.h-16 .ml-4.flex.items-center.justify-center.space-x-4 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Profile button in top bar - RTL order: Avatar (right) → Text → Arrow (left) */
+[dir="rtl"] /* HTML order: Avatar → Text → Arrow */
+[dir="rtl"] /* We want: Avatar (right) → Text → Arrow (left) */
+[dir="rtl"] .relative.flex.h-16 button.flex.items-center[class*="space-x-3"],
+[dir="rtl"] .relative.flex.h-16 button.flex.items-center.justify-center[class*="space-x-3"] {
+[dir="rtl"]     flex-direction: row !important; /* Normal row direction */
+[dir="rtl"]     direction: ltr; /* Keep LTR for icons */
+[dir="rtl"]     justify-content: flex-end !important; /* Align from right */
+[dir="rtl"] }
+
+[dir="rtl"] /* With flex-end, lower order = more right, higher order = more left */
+[dir="rtl"] /* Avatar should be rightmost (order 1) */
+[dir="rtl"] .relative.flex.h-16 button[class*="space-x-3"] .h-11.w-11 {
+[dir="rtl"]     order: -1 !important; /* Lowest order = rightmost position */
+[dir="rtl"] }
+
+[dir="rtl"] /* Text should be middle (order 0 or unset) */
+[dir="rtl"] .relative.flex.h-16 button[class*="space-x-3"] .hidden.lg\:block {
+[dir="rtl"]     order: 0 !important; /* Middle order */
+[dir="rtl"] }
+
+[dir="rtl"] /* Arrow should be leftmost (order 1) */
+[dir="rtl"] .relative.flex.h-16 button[class*="space-x-3"] i.fa-chevron-down {
+[dir="rtl"]     order: 1 !important; /* Highest order = leftmost position */
+[dir="rtl"] }
+
+[dir="rtl"] /* User button text alignment */
+[dir="rtl"] .relative.flex.h-16 button[class*="space-x-3"] .hidden.lg\:block {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing for all elements in profile button */
+[dir="rtl"] .relative.flex.h-16 button[class*="space-x-3"] > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 button.flex.items-center.space-x-3 .text-left {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing in user button - reverse space-x-3 margins */
+[dir="rtl"] .relative.flex.h-16 button.flex.items-center[class*="space-x-3"] > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* User dropdown positioning - align to left edge of button, not right edge of page */
+[dir="rtl"] .relative.flex.h-16 .relative[x-data] .absolute.right-0 {
+[dir="rtl"]     right: auto !important; /* Don't align to page edge */
+[dir="rtl"]     left: 0 !important; /* Align to left edge of button */
+[dir="rtl"]     top: 100% !important; /* Position below button */
+[dir="rtl"]     margin-top: 0.5rem !important;
+[dir="rtl"]     z-index: 9999 !important;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     transform: none !important; /* Prevent any transforms that might clip */
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure dropdown is fully visible and not cut off */
+[dir="rtl"] .relative.flex.h-16 .relative[x-data] {
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     position: relative !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    USER DROPDOWN MENU RTL FIXES
+[dir="rtl"]    ============================================ */
+
+[dir="rtl"] /* User dropdown menu container - ensure it's visible and properly positioned */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl.bg-white,
+[dir="rtl"] .relative.flex.h-16 .absolute.w-72.rounded-2xl {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     max-height: calc(100vh - 100px) !important; /* Ensure it doesn't get cut off */
+[dir="rtl"] }
+
+[dir="rtl"] /* Profile header in dropdown - reverse: text first, then avatar */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .border-b-2 .flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .border-b-2 .flex.items-center.space-x-3 .flex-1.min-w-0 {
+[dir="rtl"]     order: 1;
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .border-b-2 .flex.items-center.space-x-3 .h-14.w-14 {
+[dir="rtl"]     order: 2;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing in profile header */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .border-b-2 .flex.items-center.space-x-3 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Menu items in dropdown - reverse: text first, then icon */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl a.flex.items-center.space-x-3,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl button.flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     justify-content: flex-end !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Menu item icons - should appear on right (after text) */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl a.flex.items-center.space-x-3 .h-10.w-10,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl button.flex.items-center.space-x-3 .h-10.w-10 {
+[dir="rtl"]     order: 2;
+[dir="rtl"] }
+
+[dir="rtl"] /* Menu item text - should appear first (on right) */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl a.flex.items-center.space-x-3 span.font-bold,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl button.flex.items-center.space-x-3 span.font-bold {
+[dir="rtl"]     order: 1;
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing in menu items */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl a.flex.items-center.space-x-3 > * + *,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl button.flex.items-center.space-x-3 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Dropdown text alignment */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl p,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl span {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Dropdown padding adjustment */
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .p-3,
+[dir="rtl"] .relative.flex.h-16 .absolute.rounded-2xl .p-5 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Language dropdown positioning - show BELOW flag in both LTR and RTL */
+[dir="rtl"] .relative.flex.items-center.justify-center .absolute[class*="mt-2"] {
+[dir="rtl"]     top: 100% !important; /* Position below the flag button */
+[dir="rtl"]     bottom: auto !important;
+[dir="rtl"]     margin-top: 0.5rem !important; /* Small gap below flag */
+[dir="rtl"] }
+
+[dir="rtl"] /* RTL mode - show BELOW flag, align to right (controls are on right now) */
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center .absolute {
+[dir="rtl"]     right: 0 !important; /* Align to right edge */
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     top: 100% !important; /* Position below the flag button */
+[dir="rtl"]     bottom: auto !important;
+[dir="rtl"]     margin-top: 0.5rem !important; /* Small gap below flag */
+[dir="rtl"] }
+
+[dir="rtl"] /* Language dropdown menu items */
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center .absolute a.flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center .absolute a.flex.items-center.space-x-3 span {
+[dir="rtl"]     order: 1;
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center .absolute a.flex.items-center.space-x-3 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Notifications dropdown positioning - align to left edge of bell, not page edge */
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center .absolute.right-0 {
+[dir="rtl"]     right: auto !important; /* Don't align to page edge */
+[dir="rtl"]     left: 0 !important; /* Align to left edge of bell icon */
+[dir="rtl"]     top: 100% !important; /* Position below bell icon */
+[dir="rtl"]     margin-top: 0.5rem !important;
+[dir="rtl"]     z-index: 9999 !important;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     transform: none !important; /* Prevent clipping */
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure notification dropdown container is fully visible */
+[dir="rtl"] .relative.flex.h-16 .relative.flex.items-center.justify-center {
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     position: relative !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    NOTIFICATIONS DROPDOWN RTL FIXES
+[dir="rtl"]    ============================================ */
+
+[dir="rtl"] /* Notifications dropdown container - ensure visibility */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl.bg-white {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     overflow: visible !important;
+[dir="rtl"]     max-height: calc(100vh - 100px) !important; /* Prevent cutoff */
+[dir="rtl"] }
+
+[dir="rtl"] /* Notifications header - icon (right) then title (left of icon), badge on left */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl .border-b-2 .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row-reverse !important; /* Badge on left, icon+title on right */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Icon + title container - align from right, icon first then title */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl .border-b-2 .flex.items-center.space-x-3 {
+[dir="rtl"]     flex-direction: row !important; /* Keep normal row: icon first (right), title second (left) */
+[dir="rtl"]     order: 2; /* Icon+title container on right */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Notification icon - appears first on right */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl .flex.items-center.space-x-3 .h-10.w-10 {
+[dir="rtl"]     order: 1 !important; /* Icon first (on right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Title - appears after icon (to the left of icon) */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl .flex.items-center.space-x-3 h3 {
+[dir="rtl"]     order: 2 !important; /* Title second (to left of icon) */
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* "New" badge - position on far left */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl #notificationHeaderBadge {
+[dir="rtl"]     order: 1; /* Badge appears on left side */
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"]     margin-left: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Notification items - icon on right */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-start.space-x-4 {
+[dir="rtl"]     flex-direction: row-reverse !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-start.space-x-4 .flex-shrink-0 {
+[dir="rtl"]     order: 2; /* Icon appears on right */
+[dir="rtl"] }
+
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-start.space-x-4 .flex-1.min-w-0 {
+[dir="rtl"]     order: 1; /* Text appears on left */
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing in notification items */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-start.space-x-4 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* View all notifications link - text then arrow (right to left) */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-center.justify-center.space-x-2 {
+[dir="rtl"]     flex-direction: row !important; /* Keep normal row direction */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     justify-content: center;
+[dir="rtl"] }
+
+[dir="rtl"] /* Text appears first (on right) */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-center.justify-center.space-x-2 span {
+[dir="rtl"]     order: 1;
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Arrow appears AFTER text (on left of text) */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-center.justify-center.space-x-2 i.fa-arrow-right {
+[dir="rtl"]     order: 2;
+[dir="rtl"]     transform: scaleX(-1); /* Reverse arrow direction for RTL */
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important; /* Space between text and arrow */
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing - ensure proper RTL spacing */
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-center.justify-center.space-x-2 > span + i,
+[dir="rtl"] .relative.flex.h-16 .absolute.w-96.rounded-2xl a.flex.items-center.justify-center.space-x-2 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Text Alignment */
+[dir="rtl"] .text-left {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] .text-right {
+[dir="rtl"]     text-align: left !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Margins - Apply to all content except sidebar positioning */
+[dir="rtl"] .ml-1:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 0.25rem !important; }
+[dir="rtl"] .ml-2:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 0.5rem !important; }
+[dir="rtl"] .ml-3:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 0.75rem !important; }
+[dir="rtl"] .ml-4:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 1rem !important; }
+[dir="rtl"] .ml-6:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 1.5rem !important; }
+[dir="rtl"] .ml-8:not(aside):not(body):not(html) { margin-left: 0 !important; margin-right: 2rem !important; }
+
+[dir="rtl"] .mr-1:not(aside):not(body):not(html) { margin-right: 0 !important; margin-left: 0.25rem !important; }
+[dir="rtl"] .mr-2:not(aside):not(body):not(html) { margin-right: 0 !important; margin-left: 0.5rem !important; }
+[dir="rtl"] .mr-4:not(aside):not(body):not(html) { margin-right: 0 !important; margin-left: 1rem !important; }
+
+[dir="rtl"] /* Padding */
+[dir="rtl"] .pl-1:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 0.25rem !important; }
+[dir="rtl"] .pl-2:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 0.5rem !important; }
+[dir="rtl"] .pl-3:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 0.75rem !important; }
+[dir="rtl"] .pl-4:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 1rem !important; }
+[dir="rtl"] .pl-6:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 1.5rem !important; }
+[dir="rtl"] .pl-11:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 2.75rem !important; }
+[dir="rtl"] .pl-12:not(aside):not(body):not(html) { padding-left: 0 !important; padding-right: 3rem !important; }
+
+[dir="rtl"] .pr-2:not(aside):not(body):not(html) { padding-right: 0 !important; padding-left: 0.5rem !important; }
+[dir="rtl"] .pr-4:not(aside):not(body):not(html) { padding-right: 0 !important; padding-left: 1rem !important; }
+[dir="rtl"] .pr-12:not(aside):not(body):not(html) { padding-right: 0 !important; padding-left: 3rem !important; }
+
+[dir="rtl"] /* Space between items */
+[dir="rtl"] .space-x-1 > * + *:not(aside):not(body):not(html) {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.25rem !important;
+[dir="rtl"] }
+[dir="rtl"] .space-x-2 > * + *:not(aside):not(body):not(html) {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important;
+[dir="rtl"] }
+[dir="rtl"] .space-x-3 > * + *:not(aside):not(body):not(html) {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+[dir="rtl"] .space-x-4 > * + *:not(aside):not(body):not(html) {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1rem !important;
+[dir="rtl"] }
+[dir="rtl"] .space-x-6 > * + *:not(aside):not(body):not(html) {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Flex justify - Only in main content */
+[dir="rtl"] /* For RTL, icons should be first (right), so we keep normal row direction */
+[dir="rtl"] main .flex.justify-between,
+[dir="rtl"] main .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row for proper icon-first ordering */
+[dir="rtl"] }
+
+[dir="rtl"] /* For sections where we want content to start from right */
+[dir="rtl"] main .flex.justify-start {
+[dir="rtl"]     justify-content: flex-end !important; /* Start from right */
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.justify-end {
+[dir="rtl"]     justify-content: flex-start !important; /* End at left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Absolute positioning - Only in main content */
+[dir="rtl"] main .absolute.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .absolute.left-0 {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Forms */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] form .absolute.inset-y-0.left-0 {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] form .absolute.inset-y-0.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] form input.pl-11 {
+[dir="rtl"]     padding-left: 0 !important;
+[dir="rtl"]     padding-right: 2.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] form input.pr-12 {
+[dir="rtl"]     padding-right: 0 !important;
+[dir="rtl"]     padding-left: 3rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Tables */
+[dir="rtl"] table {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] th,
+[dir="rtl"] td {
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Lists */
+[dir="rtl"] ul,
+[dir="rtl"] ol {
+[dir="rtl"]     padding-right: 1.5rem;
+[dir="rtl"]     padding-left: 0;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Icons */
+[dir="rtl"] main button i:first-child,
+[dir="rtl"] main a i:first-child {
+[dir="rtl"]     margin-left: 0.5rem;
+[dir="rtl"]     margin-right: 0;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center > i:first-child {
+[dir="rtl"]     margin-left: 0.5rem;
+[dir="rtl"]     margin-right: 0;
+[dir="rtl"] }
+
+[dir="rtl"] /* Badge positioning */
+[dir="rtl"] .notification-badge {
+[dir="rtl"]     left: 0.25rem !important;
+[dir="rtl"]     right: auto !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Cards */
+[dir="rtl"] main .rounded-2xl,
+[dir="rtl"] main .rounded-xl {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Grid */
+[dir="rtl"] main .grid {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Decorative elements in main */
+[dir="rtl"] main .absolute.top-0.right-0 {
+[dir="rtl"]     right: auto;
+[dir="rtl"]     left: 0;
+[dir="rtl"] }
+
+[dir="rtl"] main .absolute.bottom-0.left-0 {
+[dir="rtl"]     left: auto;
+[dir="rtl"]     right: 0;
+[dir="rtl"] }
+
+[dir="rtl"] /* Arrow icons */
+[dir="rtl"] main .fa-arrow-right::before {
+[dir="rtl"]     content: "\f060";
+[dir="rtl"] }
+
+[dir="rtl"] main .fa-arrow-left::before {
+[dir="rtl"]     content: "\f061";
+[dir="rtl"] }
+
+[dir="rtl"] /* Utility classes */
+[dir="rtl"] .text-start {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] .text-end {
+[dir="rtl"]     text-align: left !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Top bar structure */
+[dir="rtl"] .flex.flex-1.items-center.space-x-4 {
+[dir="rtl"]     flex-direction: row;
+[dir="rtl"] }
+
+[dir="rtl"] /* Language switcher */
+[dir="rtl"] .relative[x-data] > button {
+[dir="rtl"]     direction: ltr;
+[dir="rtl"] }
+
+[dir="rtl"] .relative[x-data] > .absolute {
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"]     left: auto !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Mobile sidebar */
+[dir="rtl"] aside[x-show] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"]     right: auto !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    DASHBOARD SPECIFIC RTL FIXES
+[dir="rtl"]    ============================================ */
+
+[dir="rtl"] /* Dashboard container */
+[dir="rtl"] main .max-w-7xl {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Welcome section with gradient background */
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl .absolute.top-0.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl .absolute.bottom-0.left-0 {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Welcome banner - text on right, button on left */
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - text right, button left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Welcome banner text container - appears on right */
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl .relative.z-10.flex.items-center.justify-between > div:first-child {
+[dir="rtl"]     order: 2; /* Text appears on right */
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Welcome banner button - appears on left */
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl .relative.z-10.flex.items-center.justify-between > a {
+[dir="rtl"]     order: 1; /* Button appears on left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Stats Grid - Ensure proper RTL grid layout */
+[dir="rtl"] main .grid.grid-cols-1.gap-4 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Responsive grid fixes - use attribute selector to match Tailwind classes */
+[dir="rtl"] main .grid[class*="sm:grid-cols-2"] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .grid[class*="lg:grid-cols-4"] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .grid[class*="lg:grid-cols-2"] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Stats cards content alignment - icons should be on right (first), text on left */
+[dir="rtl"] main .group.bg-white.rounded-2xl .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon first (right), text second (left) */
+[dir="rtl"] }
+
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon first (right), text second (left) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Stats card icons - position on right side (first) */
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between .flex.items-center.justify-center.h-14,
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between .flex.items-center.justify-center.h-12,
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between .flex.items-center.justify-center {
+[dir="rtl"]     order: 1 !important; /* Icon appears first (on right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Badge/percentage appears second (on left of icon) */
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between span.text-xs.font-bold,
+[dir="rtl"] main .group.rounded-2xl .flex.items-center.justify-between span.flex {
+[dir="rtl"]     order: 2 !important; /* Badge/percentage appears on left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Cards with icon only (no justify-between) - align icon to right */
+[dir="rtl"] main .group.rounded-2xl .mb-3 {
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Icons in cards - position on right */
+[dir="rtl"] main .group.rounded-2xl .mb-3 .flex.items-center.justify-center {
+[dir="rtl"]     margin-left: auto !important;
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Text content - positioned after icon */
+[dir="rtl"] main .group.rounded-2xl .mb-3 + h3,
+[dir="rtl"] main .group.rounded-2xl .mb-3 + p {
+[dir="rtl"]     order: 2 !important; /* Text second (left) */
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Progress bar text alignment */
+[dir="rtl"] main .group.rounded-2xl .text-center {
+[dir="rtl"]     text-align: center !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Welcome banner button alignment - icon first (right), then text */
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl a[class*="hidden"] {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon first, text second */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl a[class*="hidden"] i {
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important; /* Space between icon and text */
+[dir="rtl"] }
+
+[dir="rtl"] main .relative.overflow-hidden.rounded-2xl a[class*="hidden"] span {
+[dir="rtl"]     order: 2 !important; /* Text second (left) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Card badges and icons */
+[dir="rtl"] main .group .text-right {
+[dir="rtl"]     text-align: left !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group .text-left {
+[dir="rtl"]     text-align: right !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group .space-x-2 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group .space-x-3 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group .space-x-4 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group .space-x-6 > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 1.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Quick Actions Grid */
+[dir="rtl"] main .grid[class*="sm:grid-cols-2"][class*="lg:grid-cols-4"] {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .grid[class*="sm:grid-cols-2"][class*="lg:grid-cols-4"] a {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Quick action cards - icon first (right), then text */
+[dir="rtl"] main .group.rounded-xl.p-5 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Quick action icons - positioned on right (start) */
+[dir="rtl"] main .group.rounded-xl.p-5 .h-12.w-12 {
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .group.rounded-xl.p-5 .flex.items-center.justify-center {
+[dir="rtl"]     order: 1 !important; /* Icon container first (right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Quick action text content - positioned after icon (left) */
+[dir="rtl"] main .group.rounded-xl.p-5 h3,
+[dir="rtl"] main .group.rounded-xl.p-5 p {
+[dir="rtl"]     order: 2 !important; /* Text second (left) */
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Section headers with icons - icon first (right), then title */
+[dir="rtl"] main .bg-white.rounded-2xl .flex.items-center.space-x-2,
+[dir="rtl"] main .flex.items-center.space-x-2.mb-5 {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon first, text second */
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Section header icons - on right */
+[dir="rtl"] main .bg-white.rounded-2xl .flex.items-center.space-x-2 .h-8.w-8,
+[dir="rtl"] main .flex.items-center.space-x-2.mb-5 .h-8.w-8,
+[dir="rtl"] main .flex.items-center.space-x-2 .flex.items-center.justify-center {
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Section header titles - on left */
+[dir="rtl"] main .bg-white.rounded-2xl .flex.items-center.space-x-2 h2,
+[dir="rtl"] main .flex.items-center.space-x-2.mb-5 h2 {
+[dir="rtl"]     order: 2 !important; /* Title second (left) */
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix spacing for section headers */
+[dir="rtl"] main .flex.items-center.space-x-2 > * + * {
+[dir="rtl"]     margin-left: 0.5rem !important;
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Recent Matches - icon first (right), then text */
+[dir="rtl"] main .flex.items-center.space-x-4 {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon right, text left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Headers with justify-between - reverse so icon is on right */
+[dir="rtl"] main .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row for proper ordering */
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center.justify-between.mb-6 {
+[dir="rtl"]     flex-direction: row !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Recent matches cards - icon on right, text on left */
+[dir="rtl"] main .flex.items-center.space-x-4 i,
+[dir="rtl"] main .flex.items-center.space-x-4 .flex-shrink-0 {
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center.space-x-4 .flex-1 {
+[dir="rtl"]     order: 2 !important; /* Text second (left) */
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Arrow icons in links */
+[dir="rtl"] main a .fa-arrow-right,
+[dir="rtl"] main a .fa-chevron-right {
+[dir="rtl"]     transform: scaleX(-1);
+[dir="rtl"] }
+
+[dir="rtl"] main a .fa-arrow-left,
+[dir="rtl"] main a .fa-chevron-left {
+[dir="rtl"]     transform: scaleX(-1);
+[dir="rtl"] }
+
+[dir="rtl"] /* Activity Overview cards */
+[dir="rtl"] main .space-y-3 > * {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Activity cards - icon first (right), then text */
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between {
+[dir="rtl"]     flex-direction: row !important; /* Normal row - icon right, text left */
+[dir="rtl"] }
+
+[dir="rtl"] /* Activity card icons - on right */
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between .flex.items-center.justify-center,
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between .h-12,
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between .w-12 {
+[dir="rtl"]     order: 1 !important; /* Icon first (right) */
+[dir="rtl"] }
+
+[dir="rtl"] /* Activity card text - on left */
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between .flex-1,
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .flex.items-center.justify-between > div:not(.flex.items-center.justify-center) {
+[dir="rtl"]     order: 2 !important; /* Text second (left) */
+[dir="rtl"] }
+
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .absolute.top-0.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .text-right {
+[dir="rtl"]     text-align: left !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .rounded-xl.bg-gradient-to-br .ml-3 {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Empty state */
+[dir="rtl"] main .bg-white.rounded-3xl .absolute.top-0.left-0 {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .bg-white.rounded-3xl .absolute.bottom-0.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.flex-col[class*="sm:flex-row"] {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.flex-col[class*="sm:flex-row"].items-center.justify-center {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] /* Button with icons */
+[dir="rtl"] main a.inline-flex.items-center.justify-center.space-x-3 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] main a.inline-flex.items-center.space-x-2 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] /* Supported formats */
+[dir="rtl"] main .flex.items-center.justify-center.space-x-6 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] /* Activity chart decorative elements */
+[dir="rtl"] main .bg-white.rounded-2xl .absolute.top-0.right-0 {
+[dir="rtl"]     right: auto !important;
+[dir="rtl"]     left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .bg-white.rounded-2xl .absolute.bottom-0.left-0 {
+[dir="rtl"]     left: auto !important;
+[dir="rtl"]     right: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Footer links */
+[dir="rtl"] main .flex.items-center.justify-between.text-xs {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center.space-x-4.text-gray-500 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center[class*="space-x-1.5"] {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] /* Alert/Notification boxes */
+[dir="rtl"] main .flex.items-start.space-x-4 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] main .bg-amber-50 .flex.items-start.space-x-4 {
+[dir="rtl"]     flex-direction: row-reverse;
+[dir="rtl"] }
+
+[dir="rtl"] /* Progress bars */
+[dir="rtl"] main .h-2.bg-gray-100 .h-full {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Status badges */
+[dir="rtl"] main .inline-flex.items-center [class*="mr-1.5"] {
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"]     margin-left: 0.375rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .inline-flex.items-center .mr-1 {
+[dir="rtl"]     margin-right: 0 !important;
+[dir="rtl"]     margin-left: 0.25rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure proper text flow in activity cards */
+[dir="rtl"] main .flex-1.min-w-0 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* ============================================
+[dir="rtl"]    RESPONSIVE RTL FIXES FOR DASHBOARD
+[dir="rtl"]    ============================================ */
+
+[dir="rtl"] /* Mobile responsive adjustments */
+[dir="rtl"] @media (max-width: 640px) {
+[dir="rtl"]     main .grid.grid-cols-1 {
+[dir="rtl"]         gap: 1rem;
+[dir="rtl"]     }
+[dir="rtl"]     
+[dir="rtl"]     main .group.rounded-2xl,
+[dir="rtl"]     main .group.rounded-xl {
+[dir="rtl"]         padding: 1rem !important;
+[dir="rtl"]     }
+[dir="rtl"]     
+[dir="rtl"]     main .text-3xl {
+[dir="rtl"]         font-size: 1.875rem;
+[dir="rtl"]     }
+[dir="rtl"]     
+[dir="rtl"]     main .relative.overflow-hidden.rounded-2xl {
+[dir="rtl"]         padding: 1rem !important;
+[dir="rtl"]     }
+[dir="rtl"]     
+[dir="rtl"]     main .flex.items-center.justify-between {
+[dir="rtl"]         flex-wrap: wrap;
+[dir="rtl"]         gap: 0.5rem;
+[dir="rtl"]     }
+[dir="rtl"] }
+
+[dir="rtl"] /* Tablet responsive adjustments */
+[dir="rtl"] @media (min-width: 641px) and (max-width: 1024px) {
+[dir="rtl"]     main .grid[class*="sm:grid-cols-2"] {
+[dir="rtl"]         gap: 1rem;
+[dir="rtl"]     }
+[dir="rtl"]     
+[dir="rtl"]     main .grid[class*="lg:grid-cols-2"] {
+[dir="rtl"]         gap: 1rem;
+[dir="rtl"]     }
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure proper spacing in RTL for all flex containers */
+[dir="rtl"] main .flex.items-center > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-start > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center.justify-between > *:first-child {
+[dir="rtl"]     margin-right: 0;
+[dir="rtl"]     margin-left: auto;
+[dir="rtl"] }
+
+[dir="rtl"] main .flex.items-center.justify-between > *:last-child {
+[dir="rtl"]     margin-left: 0;
+[dir="rtl"]     margin-right: auto;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix space-x utilities in main content */
+[dir="rtl"] main [class*="space-x-"] > * + * {
+[dir="rtl"]     margin-left: 0 !important;
+[dir="rtl"] }
+
+[dir="rtl"] main [class*="space-x-1"] > * + * {
+[dir="rtl"]     margin-right: 0.25rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main [class*="space-x-2"] > * + * {
+[dir="rtl"]     margin-right: 0.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main [class*="space-x-3"] > * + * {
+[dir="rtl"]     margin-right: 0.75rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main [class*="space-x-4"] > * + * {
+[dir="rtl"]     margin-right: 1rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] main [class*="space-x-6"] > * + * {
+[dir="rtl"]     margin-right: 1.5rem !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix text alignment in dashboard sections */
+[dir="rtl"] main h1,
+[dir="rtl"] main h2,
+[dir="rtl"] main h3,
+[dir="rtl"] main p {
+[dir="rtl"]     text-align: right;
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .text-center {
+[dir="rtl"]     text-align: center !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Card hover effects - maintain in RTL */
+[dir="rtl"] main .group:hover {
+[dir="rtl"]     transform: translateY(-8px);
+[dir="rtl"] }
+
+[dir="rtl"] /* Icon positioning in dashboard cards */
+[dir="rtl"] main .group .fa-arrow-right,
+[dir="rtl"] main .group .fa-chevron-right {
+[dir="rtl"]     margin-right: 0.5rem;
+[dir="rtl"]     margin-left: 0;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix max-width container padding */
+[dir="rtl"] main .max-w-7xl.mx-auto {
+[dir="rtl"]     padding-right: 1rem;
+[dir="rtl"]     padding-left: 1rem;
+[dir="rtl"] }
+
+[dir="rtl"] @media (min-width: 640px) {
+[dir="rtl"]     main .max-w-7xl.mx-auto {
+[dir="rtl"]         padding-right: 1.5rem;
+[dir="rtl"]         padding-left: 1.5rem;
+[dir="rtl"]     }
+[dir="rtl"] }
+
+[dir="rtl"] @media (min-width: 1024px) {
+[dir="rtl"]     main .max-w-7xl.mx-auto {
+[dir="rtl"]         padding-right: 2rem;
+[dir="rtl"]         padding-left: 2rem;
+[dir="rtl"]     }
+[dir="rtl"] }
+
+[dir="rtl"] /* Additional critical dashboard fixes */
+
+[dir="rtl"] /* Fix overflow and scrolling */
+[dir="rtl"] main .overflow-hidden {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] main .overflow-y-auto {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix truncated text */
+[dir="rtl"] main .truncate {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix relative positioning containers */
+[dir="rtl"] main .relative {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix z-index layering issues */
+[dir="rtl"] main .relative.z-10 {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix group hover states */
+[dir="rtl"] main .group:hover .fa-arrow-right {
+[dir="rtl"]     transform: scaleX(-1) translateX(-2px);
+[dir="rtl"] }
+
+[dir="rtl"] main .group:hover .fa-chevron-right {
+[dir="rtl"]     transform: scaleX(-1) translateX(-1px);
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix border radius in RTL context */
+[dir="rtl"] main .border-l-4 {
+[dir="rtl"]     border-left: 0 !important;
+[dir="rtl"]     border-right: 4px solid !important;
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure buttons align properly */
+[dir="rtl"] main button {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] main .relative.z-10.flex.items-center.justify-between button {
+[dir="rtl"]     direction: ltr; /* Keep LTR for icon alignment in top bar */
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix shadows and decorative elements positioning */
+[dir="rtl"] main .shadow-md,
+[dir="rtl"] main .shadow-lg,
+[dir="rtl"] main .shadow-xl,
+[dir="rtl"] main .shadow-2xl {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
+[dir="rtl"] /* Ensure all dashboard sections respect RTL */
+[dir="rtl"] main section {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix list items in dashboard */
+[dir="rtl"] main li {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"]     text-align: right;
+[dir="rtl"] }
+
+[dir="rtl"] /* Fix animations to work in RTL */
+[dir="rtl"] main .animate-fade-in,
+[dir="rtl"] main .animate-slide-in,
+[dir="rtl"] main .animate-scale-in {
+[dir="rtl"]     direction: rtl;
+[dir="rtl"] }
+
