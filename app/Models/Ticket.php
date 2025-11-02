@@ -4,18 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MatchVideo extends Model
+class Ticket extends Model
 {
-    use HasFactory, SoftDeletes;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'matches';
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -24,16 +16,14 @@ class MatchVideo extends Model
      */
     protected $fillable = [
         'user_id',
-        'name',
-        'type',
+        'subject',
+        'category',
+        'priority',
+        'message',
         'status',
-        'video_url',
-        'video_path',
-        'description',
-        'tags',
-        'duration',
-        'file_size',
-        'storage_disk',
+        'admin_response',
+        'resolved_by',
+        'resolved_at',
     ];
 
     /**
@@ -42,13 +32,13 @@ class MatchVideo extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'resolved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
     ];
 
     /**
-     * Get the user that owns the match.
+     * Get the user that created the ticket.
      */
     public function user()
     {
@@ -56,15 +46,10 @@ class MatchVideo extends Model
     }
 
     /**
-     * Get the predictions for this match.
+     * Get the admin who resolved the ticket.
      */
-    public function predictions()
+    public function resolver()
     {
-        return $this->hasMany(Prediction::class, 'match_id');
+        return $this->belongsTo(User::class, 'resolved_by');
     }
 }
-
-
-
-
-

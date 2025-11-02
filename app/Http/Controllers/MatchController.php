@@ -7,6 +7,7 @@ use App\Services\AIModelService;
 use App\Services\NotificationService;
 use App\Models\MatchVideo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class MatchController extends Controller
@@ -86,9 +87,8 @@ class MatchController extends Controller
                 return back()->with('error', 'Please provide either a video file or URL.');
             }
 
-            // Send notification and start AI processing
+            // Send notification only (no auto-processing)
             $this->notificationService->notifyUploadProcessing($match);
-            $this->aiModelService->startProcessing($match->id);
 
             return redirect()->route('matches.show', $match->id)
                 ->with('success', 'Match uploaded successfully!');
@@ -100,7 +100,7 @@ class MatchController extends Controller
 
     public function show($id)
     {
-        $match = MatchVideo::with('user')
+        $match = MatchVideo::with(['user', 'predictions'])
             ->where('user_id', auth()->id())
             ->findOrFail($id);
 
@@ -177,9 +177,8 @@ class MatchController extends Controller
                 $validated['match_name']
             );
 
-            // Send notification and start AI processing
+            // Send notification only (no auto-processing)
             $this->notificationService->notifyUploadProcessing($match);
-            $this->aiModelService->startProcessing($match->id);
 
             return response()->json([
                 'success' => true,
@@ -206,6 +205,133 @@ class MatchController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 404);
+        }
+    }
+
+    /**
+     * Start processing a match
+     */
+    public function startProcessing($id)
+    {
+        try {
+            $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+            // Check if match is in pending status
+            if ($match->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Match is not in pending status. Current status: ' . $match->status
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            // Update status to processing
+            $match->update(['status' => 'processing']);
+
+            // Start AI processing
+            $result = $this->aiModelService->startProcessing($match->id);
+
+            if ($result['success']) {
+                // Send notification
+                $this->notificationService->notifyProcessingStarted($match);
+
+                DB::commit();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Processing started successfully',
+                    'status' => 'processing'
+                ]);
+            } else {
+                // Revert status on failure
+                $match->update(['status' => 'pending']);
+
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to start processing'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to start match processing', ['matchId' => $id, 'error' => $e->getMessage()]);
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to start processing: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Stop processing a match
+     */
+    public function stopProcessing($id)
+    {
+        try {
+            $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+            // Check if match is in processing status
+            if ($match->status !== 'processing') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Match is not currently processing. Current status: ' . $match->status
+                ], 400);
+            }
+
+            // Stop AI processing
+            $result = $this->aiModelService->stopProcessing($match->id);
+
+            if ($result['success']) {
+                // Update status to completed when stopped
+                $match->update(['status' => 'completed']);
+
+                // Send success notification for stopping
+                $this->notificationService->notifyProcessingStopped($match, true);
+
+                // Check if match has predictions
+                $predictionCount = $match->predictions()->count();
+                
+                if ($predictionCount > 0) {
+                    // Has predictions - send complete success notification
+                    $this->notificationService->notifyAnalysisComplete($match);
+                } else {
+                    // No predictions - send notification that process ended without predictions
+                    $this->notificationService->notifyProcessingEndedWithoutPredictions($match);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Processing stopped successfully',
+                    'status' => 'completed',
+                    'has_predictions' => $predictionCount > 0
+                ]);
+            } else {
+                // Send failure notification
+                $this->notificationService->notifyProcessingStopped($match, false);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Failed to stop processing'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to stop match processing', ['matchId' => $id, 'error' => $e->getMessage()]);
+
+            // Send failure notification
+            try {
+                $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+                $this->notificationService->notifyProcessingStopped($match, false);
+            } catch (\Exception $notifError) {
+                Log::error('Failed to send stop failure notification', ['error' => $notifError->getMessage()]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to stop processing: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -97,6 +97,63 @@
         </form>
     </div>
     
+    <!-- My Tickets Section -->
+    @if($tickets && $tickets->count() > 0)
+    <div class="bg-white rounded-3xl shadow-xl p-8 border-2 border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-3">
+                <div class="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i class="fas fa-ticket-alt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-gray-900">My Tickets</h2>
+                    <p class="text-sm text-gray-500">View your submitted support tickets</p>
+                </div>
+            </div>
+            <a href="{{ route('tickets.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors">
+                <i class="fas fa-list"></i>
+                <span>View All</span>
+            </a>
+        </div>
+        
+        <div class="space-y-4">
+            @foreach($tickets->take(5) as $ticket)
+            <div class="border-2 border-gray-100 rounded-xl p-5 hover:border-blue-200 transition-colors">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="font-bold text-gray-900">#{{ $ticket->id }} - {{ $ticket->subject }}</h3>
+                            @if($ticket->status === 'resolved')
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Resolved</span>
+                            @elseif($ticket->status === 'in_progress')
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">In Progress</span>
+                            @else
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Open</span>
+                            @endif
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">{{ Str::limit($ticket->message, 100) }}</p>
+                        <div class="flex items-center gap-4 text-xs text-gray-500">
+                            <span><i class="fas fa-tag mr-1"></i>{{ ucfirst($ticket->category) }}</span>
+                            <span><i class="fas fa-flag mr-1"></i>{{ ucfirst($ticket->priority) }}</span>
+                            <span><i class="fas fa-clock mr-1"></i>{{ $ticket->created_at->diffForHumans() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        
+        @if($tickets->count() > 5)
+        <div class="mt-4 text-center">
+            <a href="{{ route('tickets.index') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                <span>View all {{ $tickets->count() }} tickets</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        @endif
+    </div>
+    @endif
+    
     <!-- FAQ Section -->
     <div class="bg-white rounded-3xl shadow-xl p-8 border-2 border-gray-100">
         <div class="flex items-center space-x-3 mb-6">

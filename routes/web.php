@@ -8,17 +8,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NotificationController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes - Match Analysis Platform
-|--------------------------------------------------------------------------
-|
-| Here are all the routes for the Match Analysis Platform.
-| Routes are organized by functionality and protected by middleware.
-|
-*/
-
 /*
 |--------------------------------------------------------------------------
 | Guest Routes (Authentication)
@@ -87,6 +76,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/matches/upload/finalize', [MatchController::class, 'finalizeUpload'])->name('matches.upload.finalize');
     Route::get('/matches/upload/status/{uploadId}', [MatchController::class, 'getUploadStatus'])->name('matches.upload.status');
 
+    // Match processing routes
+    Route::post('/matches/{id}/start-processing', [MatchController::class, 'startProcessing'])->name('matches.start-processing');
+    Route::post('/matches/{id}/stop-processing', [MatchController::class, 'stopProcessing'])->name('matches.stop-processing');
+
     /*
     |--------------------------------------------------------------------------
     | Profile Routes
@@ -106,6 +99,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/support', [SupportController::class, 'index'])->name('support');
     Route::post('/support', [SupportController::class, 'submit'])->name('support.submit');
+    Route::get('/tickets', [SupportController::class, 'tickets'])->name('tickets.index');
+    Route::post('/tickets/{id}/resolve', [SupportController::class, 'resolve'])->name('tickets.resolve');
 
     /*
     |--------------------------------------------------------------------------
@@ -140,3 +135,4 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
     });
 });
+

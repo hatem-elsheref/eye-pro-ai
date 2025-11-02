@@ -75,6 +75,22 @@
                         <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
                             <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
                         </div>
+                        @elseif($notifType === 'match_processing_ended_no_predictions')
+                        <div class="h-14 w-14 rounded-2xl bg-yellow-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_stopped')
+                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-stop-circle text-blue-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_stopped_failed')
+                        <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_started')
+                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-play-circle text-blue-600 text-2xl"></i>
+                        </div>
                         @elseif($notifType === 'account_approved')
                         <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
                             <i class="fas fa-user-check text-blue-600 text-2xl"></i>

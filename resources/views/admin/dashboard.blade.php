@@ -61,7 +61,7 @@
                 </div>
             </div>
             <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Processing</h3>
-            <p class="text-3xl font-extrabold text-gray-900">0</p>
+            <p class="text-3xl font-extrabold text-gray-900">{{ $processingCount ?? 0 }}</p>
             <p class="text-xs text-gray-500 mt-1">Matches being analyzed</p>
         </div>
         
@@ -73,12 +73,17 @@
                 </div>
             </div>
             <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Storage Used</h3>
-            <p class="text-3xl font-extrabold text-gray-900">2.4 GB</p>
-            <p class="text-xs text-gray-500 mt-1">of 50 GB available</p>
+            <p class="text-3xl font-extrabold text-gray-900">{{ $storageUsed ?? '0 B' }}</p>
+            <p class="text-xs text-gray-500 mt-1">of {{ $storageLimit ?? '50 GB' }} available</p>
             <div class="mt-3">
                 <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                    <div class="h-full rounded-full shadow-sm" style="width: 5%; background: linear-gradient(90deg, #10b981 0%, #059669 100%);"></div>
+                    @php
+                        $storagePercent = min(100, max(0, $storagePercentage ?? 0));
+                        $progressColor = $storagePercent > 80 ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)' : ($storagePercent > 60 ? 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(90deg, #10b981 0%, #059669 100%)');
+                    @endphp
+                    <div class="h-full rounded-full shadow-sm transition-all duration-500" style="width: {{ $storagePercent }}%; background: {{ $progressColor }};"></div>
                 </div>
+                <p class="text-xs text-gray-400 mt-1 text-center">{{ number_format($storagePercent, 1) }}% used</p>
             </div>
         </div>
     </div>
@@ -287,15 +292,22 @@
                                     <p class="text-sm font-semibold text-gray-900 mb-0.5">Uploads this month</p>
                                     <div class="flex items-center space-x-2">
                                         <p class="text-xs text-gray-500">Last 30 days</p>
+                                        @if(isset($uploadTrend) && $uploadTrend > 0)
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
                                             <i class="fas fa-arrow-up text-xs mr-0.5"></i>
-                                            +12%
+                                            +{{ $uploadTrend }}%
                                         </span>
+                                        @elseif(isset($uploadTrend) && $uploadTrend < 0)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                                            <i class="fas fa-arrow-down text-xs mr-0.5"></i>
+                                            {{ $uploadTrend }}%
+                                        </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                             <div class="text-right ml-3">
-                                <p class="text-3xl font-black text-blue-700 mb-0 leading-none">{{ $totalMatches ?? 0 }}</p>
+                                <p class="text-3xl font-black text-blue-700 mb-0 leading-none">{{ $uploadsThisMonth ?? 0 }}</p>
                                 <p class="text-xs text-gray-400 font-medium mt-0.5">matches</p>
                             </div>
                         </div>
@@ -324,7 +336,7 @@
                                 </div>
                             </div>
                             <div class="text-right ml-3">
-                                <p class="text-3xl font-black text-green-700 mb-0 leading-none">{{ $totalMatches ?? 0 }}</p>
+                                <p class="text-3xl font-black text-green-700 mb-0 leading-none">{{ $completedCount ?? 0 }}</p>
                                 <p class="text-xs text-gray-400 font-medium mt-0.5">completed</p>
                             </div>
                         </div>
@@ -342,19 +354,26 @@
                                     <div class="absolute inset-0 rounded-xl bg-cyan-400 blur-md opacity-30 group-hover:opacity-50 transition-opacity"></div>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Avg. processing time</p>
+                                    <p class="text-sm font-semibold text-gray-900 mb-0.5">Currently Processing</p>
                                     <div class="flex items-center space-x-2">
-                                        <p class="text-xs text-gray-500">Per match</p>
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">
-                                            <i class="fas fa-bolt text-xs mr-0.5"></i>
-                                            Fast
+                                        <p class="text-xs text-gray-500">Active matches</p>
+                                        @if(($processingCount ?? 0) > 0)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                                            <i class="fas fa-spinner fa-spin text-xs mr-0.5"></i>
+                                            Active
                                         </span>
+                                        @else
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                            <i class="fas fa-check text-xs mr-0.5"></i>
+                                            None
+                                        </span>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                             <div class="text-right ml-3">
-                                <p class="text-3xl font-black text-cyan-700 mb-0 leading-none">2.5m</p>
-                                <p class="text-xs text-gray-400 font-medium mt-0.5">average</p>
+                                <p class="text-3xl font-black text-cyan-700 mb-0 leading-none">{{ $processingCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">matches</p>
                             </div>
                         </div>
                     </div>

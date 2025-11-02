@@ -75,6 +75,22 @@ class NotificationController extends Controller
                 $icon = 'fa-exclamation-circle';
                 $iconBg = 'bg-red-100';
                 $iconColor = 'text-red-600';
+            } elseif ($notifType === 'match_processing_ended_no_predictions') {
+                $icon = 'fa-exclamation-triangle';
+                $iconBg = 'bg-yellow-100';
+                $iconColor = 'text-yellow-600';
+            } elseif ($notifType === 'match_processing_stopped') {
+                $icon = 'fa-stop-circle';
+                $iconBg = 'bg-blue-100';
+                $iconColor = 'text-blue-600';
+            } elseif ($notifType === 'match_processing_stopped_failed') {
+                $icon = 'fa-exclamation-circle';
+                $iconBg = 'bg-red-100';
+                $iconColor = 'text-red-600';
+            } elseif ($notifType === 'match_processing_started') {
+                $icon = 'fa-play-circle';
+                $iconBg = 'bg-blue-100';
+                $iconColor = 'text-blue-600';
             }
             
             return [

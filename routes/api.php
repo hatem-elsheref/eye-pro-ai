@@ -12,4 +12,5 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/match/{id}', [\App\Http\Controllers\Api\MatchApiController::class, 'getMatch']);
-Route::put('/match/{id}/analysis', [\App\Http\Controllers\Api\MatchApiController::class, 'updateAnalysis']);
+Route::post('/match/{id}/prediction', [\App\Http\Controllers\Api\MatchApiController::class, 'storePrediction']);
+Route::post('/match/{id}/complete', [\App\Http\Controllers\Api\MatchApiController::class, 'completeProcessing']);

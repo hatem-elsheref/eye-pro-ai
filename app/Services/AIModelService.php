@@ -23,6 +23,7 @@ class AIModelService
             return $this->error('AI_MODEL_ENDPOINT not configured');
         }
 
+
         try {
             $response = Http::timeout(30)->post("{$this->endpoint}/start", [
                 'match_id' => $matchId
@@ -36,6 +37,32 @@ class AIModelService
             return $this->error('Failed to start processing', $response->body());
         } catch (\Exception $e) {
             Log::error('Exception starting AI processing', ['matchId' => $matchId, 'error' => $e->getMessage()]);
+            return $this->error('Exception occurred', $e->getMessage());
+        }
+    }
+
+    /**
+     * Stop processing for a match
+     */
+    public function stopProcessing(int $matchId): array
+    {
+        if (!$this->endpoint) {
+            return $this->error('AI_MODEL_ENDPOINT not configured');
+        }
+
+        try {
+            $response = Http::timeout(30)->post("{$this->endpoint}/stop", [
+                'match_id' => $matchId
+            ]);
+
+            if ($response->successful()) {
+                Log::info('AI processing stopped', ['matchId' => $matchId]);
+                return $this->success($response->json());
+            }
+
+            return $this->error('Failed to stop processing', $response->body());
+        } catch (\Exception $e) {
+            Log::error('Exception stopping AI processing', ['matchId' => $matchId, 'error' => $e->getMessage()]);
             return $this->error('Exception occurred', $e->getMessage());
         }
     }
@@ -92,4 +119,5 @@ class AIModelService
         ];
     }
 }
+
 

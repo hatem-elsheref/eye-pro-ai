@@ -56,6 +56,22 @@
     </div>
 
             <div class="flex gap-3">
+                <!-- Start/Stop Processing Button -->
+                @if(isset($match->status) && $match->status === 'pending')
+                    <button id="processingBtn" type="button" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-play text-sm"></i>
+                        <span>Start Processing</span>
+                    </button>
+                @elseif(isset($match->status) && $match->status === 'processing')
+                    <button id="processingBtn" type="button" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700">
+                        <i class="fas fa-stop text-sm"></i>
+                        <span>Stop Processing</span>
+                    </button>
+                @elseif(isset($match->status) && $match->status === 'completed')
+                    <!-- Button hidden when completed -->
+                    <button id="processingBtn" type="button" style="display: none;"></button>
+                @endif
+
                 <a href="{{ route('matches.edit', $match->id ?? 1) }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                     <i class="fas fa-edit text-sm"></i>
                     <span>Edit Match</span>
@@ -119,7 +135,7 @@
                 <!-- Compact Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                     <!-- Status -->
-                    <div class="flex items-center gap-2 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                    <div id="statusCard" class="flex items-center gap-2 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
                         <div class="flex-shrink-0">
                             @if(isset($match->status) && $match->status === 'completed')
                                 <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -137,7 +153,7 @@
                         </div>
                         <div class="min-w-0">
                             <p class="text-xs text-gray-500 font-medium truncate">Status</p>
-                            <p class="text-xs font-bold text-gray-900 truncate">
+                            <p id="statusText" class="text-xs font-bold text-gray-900 truncate">
                                 {{ isset($match->status) ? ucfirst($match->status) : 'Pending' }}
                             </p>
                         </div>
@@ -249,40 +265,43 @@
 
                     <!-- Analysis Container (will be populated by JavaScript) -->
                     <div id="analysisLoadingContainer" class="space-y-4">
-                        <!-- Skeleton Loader (shown initially, replaced by analysis if available) -->
-                        <!-- Header Skeleton -->
-                        <div class="flex items-center gap-3">
-                            <div class="h-8 w-8 bg-purple-200 rounded-lg"></div>
-                            <div class="h-4 w-32 bg-gray-200 rounded"></div>
-                        </div>
-
-                        <!-- Content Skeleton Lines -->
-                        <div class="space-y-3">
-                            <div class="h-4 bg-gray-200 rounded w-full"></div>
-                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
-                            <div class="h-4 bg-gray-200 rounded w-full"></div>
-                            <div class="h-4 bg-gray-200 rounded w-4/6"></div>
-                            <div class="h-4 bg-gray-200 rounded w-full"></div>
-                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-                        </div>
-
-                        <!-- Chart/Graph Skeleton -->
-                        <div class="mt-6 space-y-2">
-                            <div class="h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg border-2 border-dashed border-purple-200 flex items-center justify-center">
-                                <div class="text-center">
-                                    <i class="fas fa-chart-line text-3xl text-purple-300 mb-2"></i>
-                                    <p class="text-sm text-purple-400 font-medium">Analyzing match data...</p>
+                        @if(isset($match->status) && $match->status === 'completed' && (!$match->predictions || $match->predictions->count() === 0))
+                            <!-- Completed but no predictions -->
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4 shadow-lg">
+                                    <i class="fas fa-info-circle text-2xl text-gray-600"></i>
+                                </div>
+                                <p class="text-gray-800 font-bold text-base mb-1">No Predictions Available</p>
+                                <p class="text-xs text-gray-500">Processing completed but no predictions were generated for this match.</p>
+                            </div>
+                        @elseif(isset($match->status) && $match->status !== 'completed')
+                            <!-- Loading state (only show if not completed) -->
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 bg-purple-200 rounded-lg animate-pulse"></div>
+                                <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                                <div class="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+                                <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                            </div>
+                            <div class="mt-6">
+                                <div class="h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg border-2 border-dashed border-purple-200 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <i class="fas fa-chart-line text-3xl text-purple-300 mb-2"></i>
+                                        <p class="text-sm text-purple-400 font-medium">Analyzing match data...</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Loading indicator -->
-                        <div class="flex items-center justify-center gap-2 pt-4">
-                            <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
-                            <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
-                            <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
-                            <span class="ml-2 text-sm text-gray-500 font-medium">Processing analysis...</span>
-                        </div>
+                            <div class="flex items-center justify-center gap-2 pt-4">
+                                <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                                <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                                <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+                                <span class="ml-2 text-sm text-gray-500 font-medium">Processing analysis...</span>
+                            </div>
+                        @else
+                            <!-- Will be populated by JavaScript if predictions exist -->
+                        @endif
                     </div>
             </div>
         </div>
@@ -334,48 +353,122 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Check and render analysis if available, otherwise connect WebSocket
+    // Load predictions from database
     @php
-        $hasAnalysis = isset($match->analysis) && !empty($match->analysis);
-        $analysisData = $hasAnalysis ? $match->analysis : null;
+        $predictions = $match->predictions ?? collect([]);
+        $hasPredictions = $predictions->count() > 0;
+        $predictionsData = $predictions->toArray();
+        $matchStatus = $match->status ?? 'pending';
     @endphp
 
-    const hasAnalysis = {{ $hasAnalysis ? 'true' : 'false' }};
-    const analysisData = @json($analysisData);
+    const predictionsData = @json($predictionsData);
+    const hasPredictions = {{ $hasPredictions ? 'true' : 'false' }};
+    const matchStatus = '{{ $matchStatus }}';
+    let allPredictions = hasPredictions ? predictionsData : [];
 
-    // Render analysis result function (used by both direct render and WebSocket)
-    function renderAnalysisResult(analysis) {
+    // Render predictions function
+    function renderPredictions(predictions) {
         const analysisContainer = document.getElementById('analysisLoadingContainer');
         if (!analysisContainer) return;
 
-        let analysisJson = '';
-        try {
-            // Try to parse and pretty print
-            const parsed = typeof analysis === 'string' 
-                ? JSON.parse(analysis) 
-                : analysis;
-            analysisJson = JSON.stringify(parsed, null, 2);
-        } catch (e) {
-            // If not valid JSON, just display as is
-            analysisJson = typeof analysis === 'string' 
-                ? analysis 
-                : JSON.stringify(analysis);
+        if (predictions.length === 0) {
+            // If status is completed, show message that no predictions were found
+            // Otherwise show loading state
+            if (matchStatus === 'completed') {
+                analysisContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4 shadow-lg">
+                                <i class="fas fa-info-circle text-2xl text-gray-600"></i>
+                            </div>
+                            <p class="text-gray-800 font-bold text-base mb-1">No Predictions Available</p>
+                            <p class="text-xs text-gray-500">Processing completed but no predictions were generated for this match.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Show loading state only if not completed
+                analysisContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full mb-4 shadow-lg">
+                                <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
+                            </div>
+                            <p class="text-gray-800 font-bold text-base mb-1">Waiting for predictions...</p>
+                            <p class="text-xs text-gray-500">Processing match video. Predictions will appear here.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            return;
         }
 
-        analysisContainer.innerHTML = `
-            <div id="analysisResults" class="space-y-4">
-                <div class="bg-gray-900 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <pre id="analysisJson" class="text-green-400 text-xs font-mono whitespace-pre-wrap break-words">${analysisJson}</pre>
+        // Build predictions HTML
+        let predictionsHtml = '<div class="space-y-4">';
+        predictionsHtml += `<div class="mb-4"><h3 class="text-lg font-bold text-gray-900">Found ${predictions.length} prediction(s)</h3></div>`;
+
+        predictions.forEach((prediction, index) => {
+            predictionsHtml += `
+                <div class="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-gray-900">Prediction #${index + 1}</h4>
+                        ${prediction.relative_time ? `<span class="text-xs text-gray-500"><i class="fas fa-clock mr-1"></i>${prediction.relative_time}</span>` : ''}
+                    </div>
+                    ${prediction.clip_path ? `<div class="mb-2 text-xs text-gray-600"><i class="fas fa-video mr-1"></i>Clip: ${prediction.clip_path}</div>` : ''}
+                    ${prediction.first_model_prop !== null ? `<div class="mb-2 text-xs"><span class="font-medium">First Model Accuracy:</span> <span class="text-purple-600">${(prediction.first_model_prop * 100).toFixed(2)}%</span></div>` : ''}
+                    
+                    ${prediction.prediction_0 ? `
+                        <div class="mb-3 p-3 bg-purple-50 rounded border border-purple-200">
+                            <div class="font-medium text-xs text-purple-900 mb-2">Model 0 Prediction:</div>
+                            ${renderPredictionData(prediction.prediction_0)}
+                        </div>
+                    ` : ''}
+                    
+                    ${prediction.prediction_1 ? `
+                        <div class="mb-3 p-3 bg-indigo-50 rounded border border-indigo-200">
+                            <div class="font-medium text-xs text-indigo-900 mb-2">Model 1 Prediction:</div>
+                            ${renderPredictionData(prediction.prediction_1)}
+                        </div>
+                    ` : ''}
                 </div>
-            </div>
-        `;
+            `;
+        });
+
+        predictionsHtml += '</div>';
+        analysisContainer.innerHTML = predictionsHtml;
     }
 
-    // If analysis exists, render it directly (no WebSocket needed)
-    if (hasAnalysis && analysisData) {
-        renderAnalysisResult(analysisData);
+    // Helper function to render prediction data
+    function renderPredictionData(prediction) {
+        if (!prediction) return '<div class="text-xs text-gray-500">No data</div>';
+        
+        let html = '';
+        
+        if (prediction.classes && Array.isArray(prediction.classes[0])) {
+            html += '<div class="text-xs space-y-1">';
+            prediction.classes[0].forEach((classId, idx) => {
+                const accuracy = prediction.acc && prediction.acc[0] && prediction.acc[0][idx] 
+                    ? (prediction.acc[0][idx] * 100).toFixed(2) + '%' 
+                    : 'N/A';
+                html += `<div class="flex justify-between"><span>Class ${classId}:</span><span class="font-semibold">${accuracy}</span></div>`;
+            });
+            html += '</div>';
+        }
+        
+        return html || '<pre class="text-xs">' + JSON.stringify(prediction, null, 2) + '</pre>';
+    }
+
+    // If predictions exist, render them directly
+    if (hasPredictions) {
+        renderPredictions(allPredictions);
     } else {
-        // No analysis - connect to WebSocket for real-time updates
+        // No predictions - render empty state (with status check)
+        renderPredictions([]);
+    }
+
+    // Connect to WebSocket only if processing (not if completed)
+    if (matchStatus === 'processing') {
+        // Connect to WebSocket for real-time updates
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsHost = '{{ env("WEBSOCKET_HOST", "localhost:3001") }}';
         const wsUrl = `${wsProtocol}//${wsHost}/ws`;
@@ -409,14 +502,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         if (data.type === 'subscribed') {
                             console.log('Subscribed to channel:', data.channel);
-                        } else if (data.type === 'analysis_result') {
-                            // Received analysis result - render it
-                            renderAnalysisResult(data.analysis);
-                            // Close connection after receiving result
-                            if (ws) {
-                                ws.close();
-                                ws = null;
+                        } else if (data.type === 'prediction') {
+                            // Received new prediction - add to array and re-render
+                            console.log('Received prediction:', data.prediction);
+                            allPredictions.push(data.prediction);
+                            renderPredictions(allPredictions);
+                            // Keep connection open for more predictions
+                        } else if (data.type === 'processing_complete') {
+                            // Processing is complete - hide loading indicator
+                            console.log('Processing complete');
+                            const analysisContainer = document.getElementById('analysisLoadingContainer');
+                            if (analysisContainer && allPredictions.length > 0) {
+                                // Update status to show completion
+                                const statusText = document.getElementById('statusText');
+                                if (statusText) {
+                                    statusText.textContent = 'Completed';
+                                }
+                                // Status already updated in renderPredictions
                             }
+                            // Don't close connection, keep it open for any late predictions
                         }
                     } catch (error) {
                         console.error('Error parsing WebSocket message:', error);
@@ -468,8 +572,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-            // Connect when page loads
-            connectWebSocket();
+            // Connect when page loads only if processing (not if completed)
+            if (matchStatus === 'processing') {
+                connectWebSocket();
+            }
 
             // Cleanup on page unload
             window.addEventListener('beforeunload', function() {
@@ -505,6 +611,139 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Start/Stop Processing Button Handler
+    const processingBtn = document.getElementById('processingBtn');
+    const statusCard = document.getElementById('statusCard');
+    const statusText = document.getElementById('statusText');
+    const matchId = {{ $match->id ?? 0 }};
+    let currentMatchStatus = '{{ isset($match->status) ? $match->status : "pending" }}';
+
+    if (processingBtn) {
+        processingBtn.addEventListener('click', function() {
+            const isProcessing = currentMatchStatus === 'processing';
+            const action = isProcessing ? 'stop' : 'start';
+            const actionUrl = isProcessing 
+                ? `/matches/${matchId}/stop-processing`
+                : `/matches/${matchId}/start-processing`;
+
+            // Disable button during request
+            processingBtn.disabled = true;
+            const originalHTML = processingBtn.innerHTML;
+            processingBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> <span>Processing...</span>';
+
+            fetch(actionUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update button state
+                    if (action === 'start') {
+                        // Change to Stop button with red/danger styling
+                        processingBtn.className = 'inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700';
+                        processingBtn.style.background = ''; // Clear inline style if any
+                        processingBtn.innerHTML = '<i class="fas fa-stop text-sm"></i> <span>Stop Processing</span>';
+                        
+                        // Update status display
+                        if (statusCard) {
+                            const iconContainer = statusCard.querySelector('.w-8.h-8');
+                            if (iconContainer) {
+                                iconContainer.className = 'w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center';
+                                iconContainer.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600 text-xs"></i>';
+                            }
+                            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-blue-300 hover:border-blue-400 transition-colors';
+                        }
+                        if (statusText) {
+                            statusText.textContent = 'Processing';
+                        }
+                        
+                        // Update video header badge if exists
+                        const videoBadge = document.querySelector('.info-card .bg-blue-100');
+                        if (videoBadge) {
+                            videoBadge.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing';
+                        }
+
+                        // Update current status immediately
+                        currentMatchStatus = 'processing';
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Processing Started',
+                            text: 'Match has been sent to AI model. Processing is now in progress.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        // Processing stopped - hide the button (status is now completed)
+                        processingBtn.style.display = 'none';
+                        
+                        // Update status display to completed
+                        if (statusCard) {
+                            const iconContainer = statusCard.querySelector('.w-8.h-8');
+                            if (iconContainer) {
+                                iconContainer.className = 'w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center';
+                                iconContainer.innerHTML = '<i class="fas fa-check-circle text-green-600 text-xs"></i>';
+                            }
+                            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-green-300 hover:border-green-400 transition-colors';
+                        }
+                        if (statusText) {
+                            statusText.textContent = 'Completed';
+                        }
+                        
+                        // Update video header badge if exists
+                        const videoBadge = document.querySelector('.info-card .bg-blue-100');
+                        if (videoBadge) {
+                            videoBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Completed';
+                            videoBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';
+                        }
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Processing Stopped',
+                            text: 'AI model processing has been stopped and marked as completed.',
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    }
+
+                    // Update current status variable for next click
+                    currentMatchStatus = action === 'start' ? 'processing' : 'completed';
+                } else {
+                    // Show error
+                    Swal.fire({
+                        icon: 'error',
+                        title: action === 'start' ? 'Failed to Start' : 'Failed to Stop',
+                        text: data.message || (action === 'start' ? 'Failed to start processing. Something went wrong.' : 'Failed to stop processing or something went wrong.'),
+                        confirmButtonColor: '#ef4444'
+                    });
+                    
+                    // Restore button
+                    processingBtn.innerHTML = originalHTML;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: action === 'start' ? 'Failed to start processing. Please try again.' : 'Failed to stop processing. Please try again.',
+                    confirmButtonColor: '#ef4444'
+                });
+                
+                // Restore button
+                processingBtn.innerHTML = originalHTML;
+            })
+            .finally(() => {
+                processingBtn.disabled = false;
+            });
+        });
+    }
 });
 
 function shareMatch() {
@@ -537,13 +776,14 @@ function copyToClipboard(text) {
 }
 
 function exportAnalysis() {
-    const analysis = `{{ addslashes($match->analysis ?? '') }}`;
+    const predictions = allPredictions;
     const name = `{{ $match->name ?? 'match' }}`;
-    const blob = new Blob([analysis], { type: 'text/plain' });
+    const data = JSON.stringify(predictions, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${name}_analysis.txt`;
+    a.download = `${name}_predictions.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

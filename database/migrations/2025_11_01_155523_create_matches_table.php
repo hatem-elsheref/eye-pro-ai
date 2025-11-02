@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('type'); // 'file' or 'url'
-            $table->string('status')->default('processing'); // processing, completed, failed
+            $table->string('status')->default('pending'); // pending, processing, completed, failed
             $table->text('video_url')->nullable();
             $table->string('video_path')->nullable();
             $table->text('description')->nullable();

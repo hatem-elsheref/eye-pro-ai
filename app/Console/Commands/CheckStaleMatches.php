@@ -66,10 +66,14 @@ class CheckStaleMatches extends Command
                     $this->markAsFailed($match, 'AI model reported processing failure');
                     $failedCount++;
                 } elseif ($aiStatus === 'completed' || $aiStatus === 'finished') {
-                    // AI model says it's done, but we don't have analysis yet
-                    // Wait a bit more or check if we can get results
-                    $this->line("AI model reports match #{$match->id} ({$match->name}) as completed - but no analysis in database");
-                    $this->line("  Status retrieved successfully - if analysis not received, it may be queued");
+                    // AI model says it's done - check if we have predictions
+                    $predictionCount = $match->predictions()->count();
+                    if ($predictionCount > 0) {
+                        $this->line("AI model reports match #{$match->id} ({$match->name}) as completed - has {$predictionCount} prediction(s)");
+                    } else {
+                        $this->line("AI model reports match #{$match->id} ({$match->name}) as completed - but no predictions in database");
+                        $this->line("  Status retrieved successfully - if predictions not received, they may be queued");
+                    }
                     $skippedCount++;
                 } elseif ($aiStatus === 'processing' || $aiStatus === 'in_progress') {
                     // Still processing after 24 hours - mark as failed
@@ -115,13 +119,7 @@ class CheckStaleMatches extends Command
         $reason = $reason ?? 'Processing timeout - no response from AI model after 24 hours';
 
         $match->update([
-            'status' => 'failed',
-            'analysis' => json_encode([
-                'error' => 'Processing failed',
-                'message' => $reason,
-                'failed_at' => now()->toIso8601String(),
-                'checked_at' => now()->toIso8601String()
-            ])
+            'status' => 'failed'
         ]);
 
         // Send notification to user

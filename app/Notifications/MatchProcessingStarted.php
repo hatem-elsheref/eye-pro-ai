@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class MatchAnalysisComplete extends Notification
+class MatchProcessingStarted extends Notification
 {
     use Queueable;
 
@@ -40,12 +40,12 @@ class MatchAnalysisComplete extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'AI Analysis Complete',
-            'message' => "AI model has finished processing your match '{$this->match->name}'. Results are now available.",
+            'title' => 'Processing Started',
+            'message' => "Match '{$this->match->name}' has been sent to AI model. Processing is now in progress.",
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
-            'type' => 'match_analysis_complete',
-            'has_results' => $this->match->predictions()->count() > 0,
+            'type' => 'match_processing_started',
         ];
     }
 }
+

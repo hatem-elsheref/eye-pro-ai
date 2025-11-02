@@ -41,7 +41,7 @@ class MatchUploadProcessing extends Notification
     {
         return [
             'title' => 'File Upload Successful',
-            'message' => "Your match '{$this->match->name}' has been uploaded successfully. AI model is now processing your video.",
+            'message' => "Your match '{$this->match->name}' has been uploaded successfully. You can start processing now.",
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
             'type' => 'match_upload_processing',

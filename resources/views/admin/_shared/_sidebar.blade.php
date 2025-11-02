@@ -28,6 +28,13 @@
             </a>
         </li>
         
+        <li class="sidebar-item">
+            <a href="{{ route('tickets.index') }}" class="sidebar-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
+                <i class="fas fa-ticket-alt"></i>
+                <span>My Tickets</span>
+            </a>
+        </li>
+        
         @if(Auth::user()->is_admin ?? false)
         <li class="sidebar-item">
             <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.*') ? 'active' : '' }}">

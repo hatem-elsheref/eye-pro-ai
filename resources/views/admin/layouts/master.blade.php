@@ -82,6 +82,11 @@
                             <span>Users</span>
                         </a>
 
+                        <a href="{{ route('tickets.index') }}" class="sidebar-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
+                            <i class="fas fa-ticket-alt text-lg"></i>
+                            <span>All Tickets</span>
+                        </a>
+
                         <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-cog text-lg"></i>
                             <span>Settings</span>
@@ -183,6 +188,11 @@
                     <span>Users</span>
                 </a>
 
+                <a href="{{ route('tickets.index') }}" class="sidebar-link {{ request()->routeIs('tickets.*') ? 'active' : '' }}">
+                    <i class="fas fa-ticket-alt text-lg"></i>
+                    <span>All Tickets</span>
+                </a>
+
                 <a href="{{ route('admin.index') }}" class="sidebar-link {{ request()->routeIs('admin.index') && !request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-cog text-lg"></i>
                     <span>Settings</span>
@@ -282,6 +292,22 @@
                                                 @elseif($notifType === 'match_processing_failed')
                                                 <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                                     <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_ended_no_predictions')
+                                                <div class="h-12 w-12 rounded-xl bg-yellow-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_stopped')
+                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-stop-circle text-blue-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_stopped_failed')
+                                                <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_started')
+                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-play-circle text-blue-600 text-xl"></i>
                                                 </div>
                                                 @else
                                                 <div class="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -663,6 +689,26 @@
                     bgClass = 'bg-red-100';
                     textClass = 'text-red-600';
                     toastClass = 'error';
+                } else if (type === 'match_processing_ended_no_predictions') {
+                    iconClass = 'fas fa-exclamation-triangle';
+                    bgClass = 'bg-yellow-100';
+                    textClass = 'text-yellow-600';
+                    toastClass = 'warning';
+                } else if (type === 'match_processing_stopped') {
+                    iconClass = 'fas fa-stop-circle';
+                    bgClass = 'bg-blue-100';
+                    textClass = 'text-blue-600';
+                    toastClass = 'info';
+                } else if (type === 'match_processing_stopped_failed') {
+                    iconClass = 'fas fa-exclamation-circle';
+                    bgClass = 'bg-red-100';
+                    textClass = 'text-red-600';
+                    toastClass = 'error';
+                } else if (type === 'match_processing_started') {
+                    iconClass = 'fas fa-play-circle';
+                    bgClass = 'bg-blue-100';
+                    textClass = 'text-blue-600';
+                    toastClass = 'info';
                 }
 
                 const toast = document.createElement('div');

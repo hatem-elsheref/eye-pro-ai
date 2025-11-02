@@ -35,7 +35,7 @@ class MatchService
             'user_id' => $user->id,
             'name' => $name,
             'type' => 'file',
-            'status' => 'processing',
+            'status' => 'pending',
             'video_url' => $videoUrl,
             'video_path' => $videoPath,
             'file_size' => $this->formatBytes($file->getSize()),
@@ -52,7 +52,7 @@ class MatchService
             'user_id' => $user->id,
             'name' => $name,
             'type' => 'url',
-            'status' => 'processing',
+            'status' => 'pending',
             'video_url' => $url,
             'storage_disk' => $this->finalStorageDisk,
         ]);
@@ -213,7 +213,7 @@ class MatchService
             'user_id' => $userId,
             'name' => $matchName,
             'type' => 'file',
-            'status' => 'processing',
+            'status' => 'pending',
             'video_url' => $videoUrl,
             'video_path' => $finalPath,
             'file_size' => $this->formatBytes($uploadStatus['fileSize']),
@@ -268,4 +268,5 @@ class MatchService
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 }
+
 
