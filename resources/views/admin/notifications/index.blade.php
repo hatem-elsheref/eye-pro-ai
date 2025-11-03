@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
-    
+
     <!-- Notifications Header -->
     <div class="relative overflow-hidden rounded-2xl p-6 shadow-lg border border-blue-200" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
         <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10"></div>
@@ -48,7 +48,7 @@
             @endif
         </div>
     </div>
-    
+
     @if(isset($notifications) && count($notifications) > 0)
     <!-- Notifications List -->
     <div class="bg-white rounded-3xl shadow-xl border-2 border-gray-100 overflow-hidden">
@@ -77,7 +77,7 @@
                 @endif
             </div>
         </div>
-        
+
         <div class="divide-y-2 divide-gray-100">
             @foreach($notifications as $notification)
             <div class="p-6 hover:bg-blue-50 transition-all duration-200 {{ $notification->read_at ? 'opacity-60' : '' }}">
@@ -140,18 +140,18 @@
                         </div>
                         @endif
                     </div>
-                    
+
                     <div class="flex-1 min-w-0">
                         @php
                             $titleKey = $notification->data['title_key'] ?? null;
                             $messageKey = $notification->data['message_key'] ?? null;
-                            
+
                             if ($titleKey) {
                                 $title = __($titleKey);
                             } else {
                                 $title = $notification->data['title'] ?? __('admin.notification');
                             }
-                            
+
                             if ($messageKey) {
                                 $matchName = $notification->data['match_name'] ?? '';
                                 $message = __($messageKey, ['match_name' => $matchName]);
@@ -187,7 +187,7 @@
         <div class="mx-auto h-28 w-28 rounded-full bg-gradient-to-br from-teal-100 to-blue-200 flex items-center justify-center mb-6">
             <i class="fas fa-bell-slash text-5xl text-blue-600"></i>
         </div>
-        <h3 class="text-3xl font-extrabold text-gray-900 mb-3 notifications-empty-title">{{ __('admin.no_notifications') }}</h3>
+        <h3 class="text-3xl font-extrabold text-gray-900 mb-3 notifications-empty-title" style="text-align: center!important;">{{ __('admin.no_notifications') }}</h3>
         <p class="text-lg text-gray-500 notifications-empty-description">{{ __('admin.all_caught_up') }}</p>
     </div>
     @endif
