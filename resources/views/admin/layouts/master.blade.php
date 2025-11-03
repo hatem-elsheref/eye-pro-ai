@@ -118,7 +118,7 @@
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold group-hover:scale-110 transition-transform duration-300 shadow-lg" style="background: linear-gradient(135deg, {{ $userColors[0] }} 0%, {{ $userColors[1] }} 100%);">
                                     {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                                 </div>
-                                <div class="flex-1 min-w-0">
+                                <div class="flex-1 min-w-0" id="avatar-name-sidebar">
                                     <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name ?? 'User' }}</p>
                                     <p class="text-xs text-gray-400 truncate">{{ Auth::user()->email ?? '' }}</p>
                                 </div>
@@ -283,8 +283,23 @@
                                     @forelse($notifications as $notification)
                                         @php
                                             $notifType = $notification->data['type'] ?? $notification->type;
-                                            $title = $notification->data['title'] ?? 'Notification';
-                                            $message = $notification->data['message'] ?? '';
+                                            
+                                            // Use translation keys if available
+                                            $titleKey = $notification->data['title_key'] ?? null;
+                                            $messageKey = $notification->data['message_key'] ?? null;
+                                            
+                                            if ($titleKey) {
+                                                $title = __($titleKey);
+                                            } else {
+                                                $title = $notification->data['title'] ?? __('admin.notification');
+                                            }
+                                            
+                                            if ($messageKey) {
+                                                $matchName = $notification->data['match_name'] ?? '';
+                                                $message = __($messageKey, ['match_name' => $matchName]);
+                                            } else {
+                                                $message = $notification->data['message'] ?? '';
+                                            }
                                         @endphp
                                         <a href="{{ route('notifications.index') }}" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 {{ !$loop->last ? 'border-b border-gray-100' : '' }} group {{ $notification->read_at ? 'opacity-60' : '' }}">
                                             <div class="flex-shrink-0">
@@ -675,7 +690,8 @@
                 const container = document.getElementById('toastContainer');
                 if (!container) return;
 
-                const title = notification.title || 'Notification';
+                // Notifications from API already have translated text
+                const title = notification.title || '{{ __('admin.notification') }}';
                 const message = notification.message || '';
                 const type = notification.type || 'info';
 

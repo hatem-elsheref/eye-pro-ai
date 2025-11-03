@@ -43,16 +43,20 @@ class MatchProcessingStopped extends Notification
     {
         if ($this->success) {
             return [
-                'title' => 'Processing Stopped',
-                'message' => "AI model processing for match '{$this->match->name}' has been stopped successfully.",
+                'title_key' => 'admin.notification_processing_stopped_title',
+                'message_key' => 'admin.notification_processing_stopped_message',
+                'title' => 'Processing Stopped', // Keep for backward compatibility
+                'message' => "AI model processing for match '{$this->match->name}' has been stopped successfully.", // Keep for backward compatibility
                 'match_id' => $this->match->id,
                 'match_name' => $this->match->name,
                 'type' => 'match_processing_stopped',
             ];
         } else {
             return [
-                'title' => 'Failed to Stop Processing',
-                'message' => "Failed to stop AI model processing for match '{$this->match->name}'. Something went wrong.",
+                'title_key' => 'admin.notification_processing_stopped_title',
+                'message_key' => 'admin.notification_processing_failed_message',
+                'title' => 'Failed to Stop Processing', // Keep for backward compatibility
+                'message' => "Failed to stop AI model processing for match '{$this->match->name}'. Something went wrong.", // Keep for backward compatibility
                 'match_id' => $this->match->id,
                 'match_name' => $this->match->name,
                 'type' => 'match_processing_stopped_failed',

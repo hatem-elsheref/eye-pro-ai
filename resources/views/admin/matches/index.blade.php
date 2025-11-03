@@ -1,7 +1,7 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Matches - Eye Pro')
-@section('page-title', 'Matches')
+@section('title', __('admin.matches') . ' - Eye Pro')
+@section('page-title', __('admin.matches'))
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6">
@@ -12,12 +12,12 @@
         <div class="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full opacity-10" style="background: rgba(255,255,255,0.5);"></div>
         <div class="relative z-10 flex items-center justify-between flex-wrap gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-white mb-1">Your Matches</h1>
-                <p class="text-sm text-blue-50 font-medium">Manage and analyze your uploaded videos</p>
+                <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.your_matches') }}</h1>
+                <p class="text-sm text-blue-50 font-medium">{{ __('admin.manage_and_analyze') }}</p>
             </div>
             <a href="{{ route('matches.create') }}" class="flex items-center space-x-2 px-6 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
                 <i class="fas fa-plus text-base pointer-events-none"></i>
-                <span class="pointer-events-none">Upload Match</span>
+                <span class="pointer-events-none">{{ __('admin.upload_match') }}</span>
             </a>
         </div>
     </div>
@@ -31,8 +31,8 @@
                 </div>
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-extrabold text-amber-900">Account Pending Approval</h3>
-                <p class="mt-1 text-sm text-amber-700 font-medium">Your account needs to be approved by an administrator before you can upload matches.</p>
+                <h3 class="text-lg font-extrabold text-amber-900">{{ __('admin.account_pending_approval') }}</h3>
+                <p class="mt-1 text-sm text-amber-700 font-medium">{{ __('admin.account_pending_approval_message') }}</p>
             </div>
         </div>
     </div>
@@ -45,7 +45,7 @@
                 type="text" 
                 name="search" 
                 value="{{ request('search') }}" 
-                placeholder="Search matches..." 
+                placeholder="{{ __('admin.search_matches') }}" 
                 class="pl-8 pr-8 py-2 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all w-56"
                 id="searchInput"
                 autocomplete="off"
@@ -54,7 +54,7 @@
                 <i class="fas fa-search"></i>
             </button>
             @if(request('search'))
-                <a href="{{ route('matches.index') }}" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs" title="Clear search">
+                <a href="{{ route('matches.index') }}" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs" title="{{ __('admin.clear_search') }}">
                     <i class="fas fa-times"></i>
                 </a>
             @endif
@@ -80,12 +80,12 @@
                         @if($match->status === 'completed')
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
                             <span class="h-1 w-1 rounded-full bg-green-600 mr-1"></span>
-                            Done
+                            {{ __('admin.done') }}
                         </span>
                         @elseif($match->status === 'processing')
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
                             <span class="h-1 w-1 rounded-full bg-amber-600 mr-1 animate-pulse"></span>
-                            Processing
+                            {{ __('admin.processing') }}
                         </span>
                         @else
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
@@ -109,7 +109,7 @@
                     </div>
                 </div>
                 <div class="flex items-center text-xs text-blue-600 group-hover:text-blue-700 font-medium pt-1">
-                    <span>View Details</span>
+                    <span>{{ __('admin.view_details') }}</span>
                     <i class="fas fa-arrow-right ml-1.5 text-xs group-hover:translate-x-0.5 transition-transform"></i>
                 </div>
             </div>
@@ -122,7 +122,7 @@
     <div class="matches-cards-pagination mt-6">
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
             <div class="text-sm text-gray-600 font-medium">
-                Showing {{ $matches->firstItem() ?? 0 }} to {{ $matches->lastItem() ?? 0 }} of {{ $matches->total() }} results
+                {{ __('admin.showing_results', ['from' => $matches->firstItem() ?? 0, 'to' => $matches->lastItem() ?? 0, 'total' => $matches->total()]) }}
             </div>
             <div class="flex items-center gap-2">
                 @php
@@ -136,24 +136,24 @@
                 @if($hasPrevious && $matches->previousPageUrl())
                     <a href="{{ $matches->previousPageUrl() }}" style="background: linear-gradient(to right, #9333ea, #ec4899);" class="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
                         <i class="fas fa-chevron-left mr-2"></i>
-                        Previous
+                        {{ __('admin.previous') }}
                     </a>
                 @else
                     <button type="button" disabled style="background-color: #d1d5db;" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 border border-gray-400 cursor-not-allowed opacity-60">
                         <i class="fas fa-chevron-left mr-2"></i>
-                        Previous
+                        {{ __('admin.previous') }}
                     </button>
                 @endif
                 
                 {{-- Next Button --}}
                 @if($hasNext && $matches->nextPageUrl())
                     <a href="{{ $matches->nextPageUrl() }}" style="background: linear-gradient(to right, #9333ea, #ec4899);" class="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 shadow-md hover:shadow-lg transition-all duration-200 flex items-center">
-                        Next
+                        {{ __('admin.next') }}
                         <i class="fas fa-chevron-right ml-2"></i>
                     </a>
                 @else
                     <button type="button" disabled style="background-color: #d1d5db;" class="px-4 py-2 rounded-lg text-sm font-semibold text-gray-400 border border-gray-400 cursor-not-allowed opacity-60">
-                        Next
+                        {{ __('admin.next') }}
                         <i class="fas fa-chevron-right ml-2"></i>
                     </button>
                 @endif
@@ -174,12 +174,12 @@
                 <i class="fas fa-video text-6xl text-white drop-shadow-lg relative z-10"></i>
             </div>
             
-            <h3 class="text-4xl font-extrabold text-gray-900 mb-4">No Matches Yet</h3>
+            <h3 class="text-4xl font-extrabold text-gray-900 mb-4">{{ __('admin.no_matches_yet') }}</h3>
             <p class="text-lg text-gray-500 mb-10 max-w-lg mx-auto font-medium">
                 @if(isset($accountPending) && $accountPending)
-                    Wait for approval to upload matches
+                    {{ __('admin.wait_for_approval') }}
                 @else
-                    Upload your first match to get started with analysis
+                    {{ __('admin.upload_first_match_message') }}
                 @endif
             </p>
             
@@ -188,7 +188,7 @@
                 <div class="h-12 w-12 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center pointer-events-none">
                     <i class="fas fa-plus text-2xl pointer-events-none"></i>
                 </div>
-                <span class="pointer-events-none">Upload Your First Match</span>
+                <span class="pointer-events-none">{{ __('admin.upload_your_first_match') }}</span>
             </a>
             @endif
         </div>

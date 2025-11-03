@@ -40,8 +40,10 @@ class MatchUploadProcessing extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'File Upload Successful',
-            'message' => "Your match '{$this->match->name}' has been uploaded successfully. You can start processing now.",
+            'title_key' => 'admin.notification_upload_processing_title',
+            'message_key' => 'admin.notification_upload_processing_message',
+            'title' => 'File Upload Successful', // Keep for backward compatibility
+            'message' => "Your match '{$this->match->name}' has been uploaded successfully. You can start processing now.", // Keep for backward compatibility
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
             'type' => 'match_upload_processing',

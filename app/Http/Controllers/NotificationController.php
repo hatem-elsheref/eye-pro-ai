@@ -23,13 +23,13 @@ class NotificationController extends Controller
     public function markAsRead($id)
     {
         $this->notificationService->markAsRead(auth()->user(), $id);
-        return back()->with('success', 'Notification marked as read.');
+        return back()->with('success', __('admin.notification_marked_read'));
     }
 
     public function markAllAsRead()
     {
         $this->notificationService->markAllAsRead(auth()->user());
-        return back()->with('success', 'All notifications marked as read.');
+        return back()->with('success', __('admin.all_notifications_marked_read'));
     }
 
     public function getCount()
@@ -47,8 +47,23 @@ class NotificationController extends Controller
         
         $notificationsData = $notifications->map(function ($notification) {
             $notifType = $notification->data['type'] ?? $notification->type;
-            $title = $notification->data['title'] ?? 'Notification';
-            $message = $notification->data['message'] ?? '';
+            
+            // Use translation keys if available, otherwise fall back to hardcoded text
+            $titleKey = $notification->data['title_key'] ?? null;
+            $messageKey = $notification->data['message_key'] ?? null;
+            
+            if ($titleKey) {
+                $title = __($titleKey);
+            } else {
+                $title = $notification->data['title'] ?? __('admin.notification');
+            }
+            
+            if ($messageKey) {
+                $matchName = $notification->data['match_name'] ?? '';
+                $message = __($messageKey, ['match_name' => $matchName]);
+            } else {
+                $message = $notification->data['message'] ?? '';
+            }
             
             // Determine icon and color based on type
             $icon = 'fa-bell';

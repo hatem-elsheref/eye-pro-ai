@@ -40,14 +40,19 @@ class MatchProcessingStarted extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Processing Started',
-            'message' => "Match '{$this->match->name}' has been sent to AI model. Processing is now in progress.",
+            'title_key' => 'admin.notification_processing_started_title',
+            'message_key' => 'admin.notification_processing_started_message',
+            'title' => 'Processing Started', // Keep for backward compatibility
+            'message' => "Match '{$this->match->name}' has been sent to AI model. Processing is now in progress.", // Keep for backward compatibility
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
             'type' => 'match_processing_started',
         ];
     }
 }
+
+
+
 
 
 

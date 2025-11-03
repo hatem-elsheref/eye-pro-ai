@@ -1,7 +1,7 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Admin Panel - Eye Pro')
-@section('page-title', 'Admin Panel')
+@section('title', __('admin.admin_panel') . ' - Eye Pro')
+@section('page-title', __('admin.admin_panel'))
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
@@ -11,8 +11,8 @@
         <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10"></div>
         <div class="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full bg-white opacity-10"></div>
         <div class="relative z-10">
-            <h1 class="text-xl sm:text-2xl font-bold text-white mb-1">Admin Panel</h1>
-            <p class="text-xs sm:text-sm text-blue-50 font-medium">Manage users and system settings</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-white mb-1">{{ __('admin.admin_panel') }}</h1>
+            <p class="text-xs sm:text-sm text-blue-50 font-medium">{{ __('admin.manage_users_system_settings') }}</p>
         </div>
     </div>
 
@@ -27,9 +27,9 @@
                         <i class="fas fa-users text-3xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Total Users</h3>
+                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">{{ __('admin.total_users') }}</h3>
                 <p class="text-5xl font-black text-blue-700 mb-2">{{ $totalUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Registered users</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.registered_users') }}</p>
             </div>
         </div>
 
@@ -42,9 +42,9 @@
                         <i class="fas fa-clock text-3xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Pending Approvals</h3>
+                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">{{ __('admin.pending_approvals') }}</h3>
                 <p class="text-5xl font-black text-amber-700 mb-2">{{ $pendingUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Users awaiting approval</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.users_awaiting_approval') }}</p>
             </div>
         </div>
 
@@ -57,9 +57,9 @@
                         <i class="fas fa-check-circle text-3xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Approved Users</h3>
+                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">{{ __('admin.approved_users') }}</h3>
                 <p class="text-5xl font-black text-green-700 mb-2">{{ $approvedUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Active users</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.active_users') }}</p>
             </div>
         </div>
 
@@ -72,23 +72,24 @@
                         <i class="fas fa-video text-3xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">Total Matches</h3>
+                <h3 class="text-gray-500 text-sm font-bold mb-2 uppercase tracking-wide">{{ __('admin.total_matches') }}</h3>
                 <p class="text-5xl font-black text-green-700 mb-2">{{ $totalMatches ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">All uploaded matches</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.all_uploaded_matches') }}</p>
             </div>
         </div>
     </div>
 
+    @if(false)
     <!-- System Settings -->
-    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border-2 border-gray-100">
+    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border-2 border-gray-100" style="display: none">
         <!-- Header -->
         <div class="flex items-center gap-4 mb-8">
             <div class="h-12 w-12 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                 <i class="fas fa-cog text-white text-xl"></i>
             </div>
             <div>
-                <h2 class="text-2xl font-extrabold text-gray-900">System Settings</h2>
-                <p class="text-sm text-gray-500 mt-1">Configure platform behavior</p>
+                <h2 class="text-2xl font-extrabold text-gray-900">{{ __('admin.system_settings') }}</h2>
+                <p class="text-sm text-gray-500 mt-1">{{ __('admin.configure_platform_behavior') }}</p>
             </div>
         </div>
 
@@ -105,8 +106,8 @@
                             <i class="fas fa-user-shield text-blue-600 text-lg"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 mb-1">Require User Approval</h3>
-                            <p class="text-sm text-gray-600">New users must be approved by an administrator before accessing the platform</p>
+                            <h3 class="font-bold text-gray-900 mb-1">{{ __('admin.require_user_approval') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('admin.require_user_approval_description') }}</p>
                         </div>
                     </div>
                     <div class="flex-shrink-0">
@@ -124,8 +125,8 @@
                             <i class="fas fa-cloud-upload-alt text-blue-600 text-lg"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 mb-1">Allow Video Uploads</h3>
-                            <p class="text-sm text-gray-600">Enable users to upload match videos to the platform</p>
+                            <h3 class="font-bold text-gray-900 mb-1">{{ __('admin.allow_video_uploads') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('admin.allow_video_uploads_description') }}</p>
                         </div>
                     </div>
                     <div class="flex-shrink-0">
@@ -143,8 +144,8 @@
                             <i class="fas fa-envelope text-green-600 text-lg"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 mb-1">Email Notifications</h3>
-                            <p class="text-sm text-gray-600">Send email notifications for important account activities</p>
+                            <h3 class="font-bold text-gray-900 mb-1">{{ __('admin.email_notifications') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('admin.email_notifications_description') }}</p>
                         </div>
                     </div>
                     <div class="flex-shrink-0">
@@ -162,8 +163,8 @@
                             <i class="fas fa-tools text-red-600 text-lg"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-900 mb-1">Maintenance Mode</h3>
-                            <p class="text-sm text-gray-600">Temporarily disable access for all non-admin users</p>
+                            <h3 class="font-bold text-gray-900 mb-1">{{ __('admin.maintenance_mode') }}</h3>
+                            <p class="text-sm text-gray-600">{{ __('admin.maintenance_mode_description') }}</p>
                         </div>
                     </div>
                     <div class="flex-shrink-0">
@@ -179,7 +180,7 @@
             <div class="mt-8 pt-6 border-t border-gray-200">
                 <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-base rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
                     <i class="fas fa-save"></i>
-                    <span>Save Settings</span>
+                    <span>{{ __('admin.save_settings') }}</span>
                 </button>
             </div>
         </form>
@@ -211,6 +212,8 @@
             <p class="text-sm text-gray-500">Check system status</p>
         </a>
     </div>
+
+    @endif
 </div>
 @push('styles')
 <style>
@@ -225,7 +228,7 @@
         transition: all 0.3s ease;
         cursor: pointer;
     }
-    
+
     .setting-checkbox-label::after {
         content: '';
         position: absolute;
@@ -238,30 +241,30 @@
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    
+
     .setting-checkbox:checked + .setting-checkbox-label {
         background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);
     }
-    
+
     .setting-checkbox:checked + .setting-checkbox-label::after {
         transform: translateX(20px);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
-    
+
     .setting-checkbox:focus + .setting-checkbox-label {
         outline: 2px solid rgba(96, 165, 250, 0.5);
         outline-offset: 2px;
     }
-    
+
     .setting-checkbox-label:hover {
         background-color: #d1d5db;
     }
-    
+
     .setting-checkbox:checked + .setting-checkbox-label:hover {
         background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
     }
-    
-    
+
+
     .sr-only {
         position: absolute;
         width: 1px;

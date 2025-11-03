@@ -40,8 +40,10 @@ class MatchProcessingFailed extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Processing Failed',
-            'message' => "Processing failed for your match '{$this->match->name}'. Please try uploading again or contact support.",
+            'title_key' => 'admin.notification_processing_failed_title',
+            'message_key' => 'admin.notification_processing_failed_message',
+            'title' => 'Processing Failed', // Keep for backward compatibility
+            'message' => "Processing failed for your match '{$this->match->name}'. Please try uploading again or contact support.", // Keep for backward compatibility
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
             'type' => 'match_processing_failed',

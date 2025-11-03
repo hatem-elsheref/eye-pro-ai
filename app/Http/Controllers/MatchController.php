@@ -9,6 +9,7 @@ use App\Models\MatchVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MatchController extends Controller
 {
@@ -109,14 +110,33 @@ class MatchController extends Controller
             })->findOrFail($id);
 
         $usedDisk = ucfirst($match->storage_disk ?? 'public');
+        
+        // Get the storage disk for clips (use same disk as match, or check for clip-specific disk)
+        $clipStorageDisk = env('CLIP_STORAGE_DISK', $match->storage_disk ?? 'public');
 
         // Format predictions with labels based on current locale
-        $predictions = $match->predictions->map(function ($prediction) {
+        $predictions = $match->predictions->map(function ($prediction) use ($clipStorageDisk) {
             $locale = app()->getLocale();
+            
+            // Generate URL from clip_path if it exists
+            $clipUrl = null;
+            if ($prediction->clip_path) {
+                try {
+                    $clipUrl = Storage::disk($clipStorageDisk)->url($prediction->clip_path);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to generate clip URL', [
+                        'clip_path' => $prediction->clip_path,
+                        'disk' => $clipStorageDisk,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
             return [
                 'id' => $prediction->id,
                 'match_id' => $prediction->match_id,
                 'clip_path' => $prediction->clip_path,
+                'url' => $clipUrl,
                 'relative_time' => $prediction->relative_time,
                 'first_model_prop' => $prediction->first_model_prop,
                 'prediction_0' => $prediction->formatPredictionData($prediction->prediction_0, $locale),

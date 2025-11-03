@@ -302,7 +302,6 @@
 /* Notification dropdown header - reverse order in RTL */
 [dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.justify-between,
 [dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.justify-between {
-    flex-direction: row-reverse !important; /* Reverse order: New badge on left, Notifications on right */
     direction: rtl;
 }
 
@@ -443,7 +442,7 @@
     order: 1 !important; /* Name/email appears on left */
     text-align: right;
     direction: rtl;
-    margin-right: 0 !important; /* Remove extra margin */
+    margin-right: 0.75rem !important; /* Add space between name/email and avatar */
 }
 
 /* Profile header text alignment */
@@ -544,4 +543,461 @@
     left: auto !important;
     right: 0 !important;
     border-radius: 4px 0 0 4px !important; /* Rounded corners on left side for RTL */
+}
+
+/* ============================================
+   MATCHES LIST PAGE - RTL SPACING FIXES
+   ============================================ */
+
+/* Add 10px margin between match name and blue video icon */
+[dir="rtl"] .group.bg-white.rounded-xl .flex.items-center.space-x-2\.5 h3,
+[dir="rtl"] a.group.bg-white .flex.items-center.space-x-2\.5 h3 {
+    margin-right: 10px !important;
+}
+
+/* Add 10px margin between calendar icon and date */
+[dir="rtl"] .group.bg-white.rounded-xl .flex.items-center.space-x-1\.5 .fa-calendar ~ span,
+[dir="rtl"] a.group.bg-white .flex.items-center.space-x-1\.5 .fa-calendar ~ span {
+    margin-right: 10px !important;
+}
+
+/* Add 10px margin between file/url icon and text */
+[dir="rtl"] .group.bg-white.rounded-xl .flex.items-center.space-x-1\.5 .fa-link ~ span,
+[dir="rtl"] .group.bg-white.rounded-xl .flex.items-center.space-x-1\.5 .fa-file-video ~ span,
+[dir="rtl"] a.group.bg-white .flex.items-center.space-x-1\.5 .fa-link ~ span,
+[dir="rtl"] a.group.bg-white .flex.items-center.space-x-1\.5 .fa-file-video ~ span {
+    margin-right: 10px !important;
+}
+
+/* Add space between dot and "complete"/"processing" text in status badge */
+[dir="rtl"] .group.bg-white.rounded-xl .inline-flex.items-center > span:first-child,
+[dir="rtl"] a.group.bg-white .inline-flex.items-center > span:first-child {
+    margin-right: 0 !important;
+    margin-left: 10px !important;
+}
+
+/* View Details and arrow - text on left, arrow on right */
+[dir="rtl"] .group.bg-white.rounded-xl .flex.items-center.text-xs.text-blue-600,
+[dir="rtl"] a.group.bg-white .flex.items-center.text-xs.text-blue-600 {
+    flex-direction: row !important; /* Text on left, arrow on right */
+    flex-wrap: nowrap !important;
+    gap: 0.375rem !important;
+}
+
+/* Add space between "View Details" text and arrow */
+[dir="rtl"] .group.bg-white.rounded-xl .fa-arrow-right,
+[dir="rtl"] a.group.bg-white .fa-arrow-right {
+    margin-left: 10px !important;
+    margin-right: 0 !important;
+}
+
+/* Add space between plus icon and "Upload Match" text in header button */
+[dir="rtl"] a.flex.items-center.space-x-2 .fa-plus,
+[dir="rtl"] .flex.items-center.space-x-2 .fa-plus {
+    margin-left: 0 !important;
+    margin-right: 0.5rem !important;
+}
+
+[dir="rtl"] a.flex.items-center.space-x-2,
+[dir="rtl"] .flex.items-center.space-x-2 {
+    gap: 0.5rem !important;
+}
+
+/* Search input styling for RTL */
+[dir="rtl"] #searchForm.relative,
+[dir="rtl"] form.relative#searchForm {
+    direction: rtl;
+}
+
+/* Search icon - move to left side (start) in RTL and center vertically */
+[dir="rtl"] #searchForm button.absolute,
+[dir="rtl"] form.relative button.absolute {
+    left: 0.75rem !important;
+    right: auto !important;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+}
+
+[dir="rtl"] #searchForm button i.fa-search {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 0px !important;
+}
+
+/* Search input padding - icon on left, clear button on right */
+[dir="rtl"] #searchForm input.pl-8,
+[dir="rtl"] #searchInput.pl-8 {
+    padding-left: 2.5rem !important; /* Space for search icon on left */
+    padding-right: 2rem !important; /* Space for clear button on right */
+    text-align: right !important;
+    direction: rtl;
+}
+
+/* Clear button (X) - move to right side in RTL */
+[dir="rtl"] #searchForm a.absolute.right-2 {
+    left: auto !important;
+    right: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+/* Upload Method Info - add space between icon and text in RTL */
+[dir="rtl"] .bg-gradient-to-r.from-teal-50.to-blue-50 .flex.items-start.space-x-2 {
+    direction: rtl;
+    gap: 0.5rem !important; /* Add space between icon and text */
+}
+
+[dir="rtl"] .bg-gradient-to-r.from-teal-50.to-blue-50 .flex.items-start.space-x-2 > div:first-child {
+    margin-left: 0.5rem !important; /* Add extra margin for icon (on right side) */
+    margin-right: 0 !important;
+}
+
+[dir="rtl"] .bg-gradient-to-r.from-teal-50.to-blue-50 .flex.items-start.space-x-2 > div:last-child {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    text-align: right !important;
+    direction: rtl;
+}
+
+/* Ensure headings and paragraphs in upload method info are right-aligned */
+[dir="rtl"] .bg-gradient-to-r.from-teal-50.to-blue-50 .flex.items-start.space-x-2 > div:last-child h3,
+[dir="rtl"] .bg-gradient-to-r.from-teal-50.to-blue-50 .flex.items-start.space-x-2 > div:last-child p {
+    text-align: right !important;
+    direction: rtl !important;
+}
+
+/* Upload button - make arrow appear after text in RTL */
+[dir="rtl"] button.flex.items-center.justify-center.space-x-2 > div:first-child {
+    order: 2 !important; /* Arrow appears after text */
+}
+
+[dir="rtl"] button.flex.items-center.justify-center.space-x-2 > span#btnText,
+[dir="rtl"] button.flex.items-center.justify-center.space-x-2 > span {
+    order: 1 !important; /* Text appears first */
+}
+
+/* Also handle dynamically inserted arrows */
+[dir="rtl"] button.flex.items-center.space-x-2 > div:first-child,
+[dir="rtl"] button.flex.items-center.justify-center.space-x-2 > div:first-child {
+    order: 2 !important;
+}
+
+[dir="rtl"] button.flex.items-center.space-x-2 > span,
+[dir="rtl"] button.flex.items-center.justify-center.space-x-2 > span {
+    order: 1 !important;
+}
+
+#avatar-name-sidebar{
+    margin-right: 10px;
+}
+
+/* Add space between date and calendar icon in RTL */
+[dir="rtl"] .text-sm.text-gray-500 {
+    direction: rtl;
+}
+
+[dir="rtl"] .text-sm.text-gray-500 .fa-calendar-alt {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Add space between video icon and clip path in RTL */
+[dir="rtl"] .fa-video.mr-1 {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}
+
+/* Add space between clock icon and time value in RTL */
+[dir="rtl"] .fa-clock.mr-1 {
+    margin-right: 0 !important;
+    margin-left: 0.5rem !important;
+}
+
+/* Make clip path clickable and styled - works for both LTR and RTL */
+.clip-path-link {
+    color: #3b82f6 !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+}
+
+.clip-path-link:hover {
+    color: #2563eb !important;
+}
+
+/* Add space between clip label and link in RTL */
+[dir="rtl"] .clip-path-link.ml-2 {
+    margin-left: 0 !important;
+    margin-right: 0.5rem !important;
+}
+
+/* Add space between video icon and clip path - LTR mode */
+.fa-video.mr-1 {
+    margin-right: 0.25rem;
+}
+
+/* Add space between clock icon and time value - LTR mode */
+.fa-clock.mr-1 {
+    margin-right: 0.25rem;
+}
+
+/* Unread badge - ensure dot appears after text with space in RTL */
+[dir="rtl"] .unread-badge-container {
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .unread-badge-container .unread-dot {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    order: 2 !important;
+}
+
+[dir="rtl"] .unread-badge-container span {
+    order: 1 !important;
+}
+
+/* Unread count badge in recent activity section - RTL */
+[dir="rtl"] .unread-count-badge {
+    flex-direction: row !important;
+    gap: 0.375rem !important;
+}
+
+[dir="rtl"] .unread-count-badge .unread-count-dot {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    order: 2 !important;
+}
+
+[dir="rtl"] .unread-count-badge > span {
+    order: 1 !important;
+}
+
+/* LTR mode - ensure proper spacing */
+.unread-badge-container {
+    gap: 0.5rem !important;
+}
+
+.unread-count-badge {
+    gap: 0.375rem !important;
+}
+
+/* Notification items - spacing between icon and content */
+.notification-item {
+    gap: 1rem !important;
+}
+
+[dir="rtl"] .notification-item {
+    gap: 1rem !important;
+}
+
+/* Notification time - spacing between clock icon and time text */
+.notification-time {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .notification-time {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .notification-clock-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Success alert - add margin between check icon and text */
+[dir="rtl"] .alert-success-container .alert-success-icon {
+    margin-left: 0.75rem !important;
+}
+
+[dir="rtl"] .alert-success-container .flex-1 {
+    margin-right: 0.75rem !important;
+}
+
+/* LTR mode - margin between icon and text */
+.alert-success-container .flex-shrink-0 {
+    margin-right: 0.75rem;
+}
+
+/* Empty notifications state - align title right in RTL */
+[dir="rtl"] .notifications-empty-state {
+    text-align: center !important;
+}
+
+[dir="rtl"] .notifications-empty-title {
+    text-align: right !important;
+    display: block;
+}
+
+[dir="rtl"] .notifications-empty-description {
+    text-align: center !important;
+}
+
+/* Support page - spacing between title and icon for all sections */
+.support-section-header {
+    gap: 1rem !important;
+}
+
+[dir="rtl"] .support-section-header {
+    gap: 1rem !important;
+}
+
+/* Submit ticket button - spacing between icon and text */
+.submit-ticket-button {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .submit-ticket-button {
+    flex-direction: row-reverse !important;
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .submit-ticket-button .submit-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Ticket info icons - spacing between icon and text */
+.ticket-info-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] .ticket-info-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+.ticket-info-icon + span,
+span:has(.ticket-info-icon) {
+    gap: 0.375rem !important;
+}
+
+[dir="rtl"] span.inline-flex.items-center.gap-1\.5 {
+    gap: 0.375rem !important;
+}
+
+/* Select dropdown arrow - move to left side in RTL */
+[dir="rtl"] .select-arrow-container {
+    right: auto !important;
+    left: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 1rem !important;
+}
+
+/* Users management page - spacing between icons and text */
+/* Stats cards icon spacing */
+.users-table-header {
+    gap: 0.75rem !important;
+}
+
+[dir="rtl"] .users-table-header {
+    gap: 0.75rem !important;
+}
+
+/* User cell in table - spacing between avatar and text */
+.user-cell {
+    gap: 0.75rem !important;
+}
+
+[dir="rtl"] .user-cell {
+    gap: 0.75rem !important;
+}
+
+/* Status badge - spacing between dot and text */
+.status-badge {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .status-badge {
+    flex-direction: row-reverse !important;
+    gap: 0.5rem !important;
+}
+
+.status-dot {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] .status-dot {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Action buttons - spacing between icon and text */
+.action-btn {
+    gap: 0.375rem !important;
+}
+
+[dir="rtl"] .action-btn {
+    flex-direction: row-reverse !important;
+    gap: 0.375rem !important;
+}
+
+.action-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] .action-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Status display (approved/rejected badge in actions) */
+.status-display {
+    gap: 0.375rem !important;
+}
+
+[dir="rtl"] .status-display {
+    flex-direction: row-reverse !important;
+    gap: 0.375rem !important;
+}
+
+.status-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] .status-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Created at cell - spacing between clock icon and time */
+.created-at-cell {
+    gap: 0.375rem !important;
+}
+
+[dir="rtl"] .created-at-cell {
+    flex-direction: row-reverse !important;
+    gap: 0.375rem !important;
+}
+
+.created-at-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+[dir="rtl"] .created-at-icon {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+
+/* Action buttons container */
+.action-buttons {
+    gap: 0.5rem !important;
+}
+
+[dir="rtl"] .action-buttons {
+    gap: 0.5rem !important;
 }

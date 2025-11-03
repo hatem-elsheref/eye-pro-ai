@@ -43,15 +43,15 @@
     <div class="mb-6">
         <a href="{{ route('matches.index') }}" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4">
             <i class="fas fa-arrow-left text-sm"></i>
-            <span class="font-medium">Back to Matches</span>
+            <span class="font-medium">{{ __('admin.back_to_matches') }}</span>
         </a>
 
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $match->name ?? 'Match Details' }}</h1>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $match->name ?? __('admin.match_details') }}</h1>
                 <p class="text-sm text-gray-500">
                     <i class="fas fa-calendar-alt mr-2"></i>
-                    Uploaded on {{ isset($match->created_at) ? $match->created_at->format('F d, Y \a\t h:i A') : 'N/A' }}
+                    {{ __('admin.uploaded_on') }} {{ isset($match->created_at) ? $match->created_at->format('F d, Y \a\t h:i A') : 'N/A' }}
         </p>
     </div>
 
@@ -60,12 +60,12 @@
                 @if(isset($match->status) && $match->status === 'pending')
                     <button id="processingBtn" type="button" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <i class="fas fa-play text-sm"></i>
-                        <span>Start Processing</span>
+                        <span>{{ __('admin.start_processing_button') }}</span>
                     </button>
                 @elseif(isset($match->status) && $match->status === 'processing')
                     <button id="processingBtn" type="button" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700">
                         <i class="fas fa-stop text-sm"></i>
-                        <span>Stop Processing</span>
+                        <span>{{ __('admin.stop_processing_button') }}</span>
                     </button>
                 @elseif(isset($match->status) && $match->status === 'completed')
                     <!-- Button hidden when completed -->
@@ -74,7 +74,7 @@
 
                 <a href="{{ route('matches.edit', $match->id ?? 1) }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
                     <i class="fas fa-edit text-sm"></i>
-                    <span>Edit Match</span>
+                    <span>{{ __('admin.edit_match') }}</span>
                 </a>
 
                 <form id="deleteMatchForm" action="{{ route('matches.destroy', $match->id ?? 1) }}" method="POST" class="inline">
@@ -82,7 +82,7 @@
                     @method('DELETE')
                     <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
                         <i class="fas fa-trash text-sm"></i>
-                        <span>Delete Match</span>
+                        <span>{{ __('admin.delete_match_button') }}</span>
                     </button>
                 </form>
             </div>
@@ -97,12 +97,12 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                         <i class="fas fa-play-circle text-blue-500"></i>
-                        Match Video
+                        {{ __('admin.match_video') }}
                     </h2>
                     @if(isset($match->status) && $match->status === 'processing')
                         <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
                             <i class="fas fa-spinner fa-spin mr-1"></i>
-                            Processing
+                            {{ __('admin.processing') }}
                         </span>
                     @endif
                 </div>
@@ -129,7 +129,7 @@
             <div class="info-card rounded-2xl p-5 shadow-lg">
                 <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <i class="fas fa-info-circle text-indigo-500 text-base"></i>
-                    <span>Match Information</span>
+                    <span>{{ __('admin.match_information') }}</span>
                 </h2>
 
                 <!-- Compact Grid -->
@@ -152,9 +152,9 @@
                             @endif
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Status</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.status') }}</p>
                             <p id="statusText" class="text-xs font-bold text-gray-900 truncate">
-                                {{ isset($match->status) ? ucfirst($match->status) : 'Pending' }}
+                                {{ isset($match->status) ? __('admin.' . strtolower($match->status)) : __('admin.pending') }}
                             </p>
                         </div>
                     </div>
@@ -165,7 +165,7 @@
                             <i class="fas {{ isset($match->type) && $match->type === 'url' ? 'fa-link' : 'fa-file-video' }} text-indigo-600 text-xs"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Type</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.type_label') }}</p>
                             <p class="text-xs font-bold text-gray-900 truncate">
                                 {{ isset($match->type) ? ucfirst($match->type) : 'File' }}
                             </p>
@@ -179,7 +179,7 @@
                             <i class="fas fa-hdd text-pink-600 text-xs"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Size</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.size') }}</p>
                             <p class="text-xs font-bold text-gray-900 truncate">{{ $match->file_size }}</p>
                         </div>
                     </div>
@@ -191,7 +191,7 @@
                             <i class="fas fa-calendar text-teal-600 text-xs"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Created</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.created_label') }}</p>
                             <p class="text-xs font-bold text-gray-900 truncate">
                                 {{ isset($match->created_at) ? $match->created_at->format('M d, Y') : 'N/A' }}
                             </p>
@@ -204,7 +204,7 @@
                             <i class="fas fa-user text-purple-600 text-xs"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Uploaded By</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.uploaded_by') }}</p>
                             <p class="text-xs font-bold text-gray-900 truncate">{{ $match->user->name ?? 'N/A' }}</p>
                         </div>
                     </div>
@@ -215,7 +215,7 @@
                             <i class="fas fa-server text-blue-600 text-xs"></i>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-xs text-gray-500 font-medium truncate">Storage</p>
+                            <p class="text-xs text-gray-500 font-medium truncate">{{ __('admin.storage') }}</p>
                             <p class="text-xs font-bold text-gray-900 truncate">{{ $usedDisk ?? 'Public' }}</p>
                         </div>
                     </div>
@@ -226,7 +226,7 @@
                 <div class="mb-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
                     <div class="flex items-start gap-2 mb-2">
                         <i class="fas fa-align-left text-indigo-600 text-sm mt-0.5"></i>
-                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide">Description</h3>
+                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide">{{ __('admin.description') }}</h3>
                     </div>
                     <p class="text-sm text-gray-700 leading-relaxed">{{ $match->description }}</p>
                 </div>
@@ -237,7 +237,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="flex items-center gap-1.5 mr-1">
                         <i class="fas fa-hashtag text-indigo-600 text-xs"></i>
-                        <span class="text-xs font-semibold text-gray-700">Tags:</span>
+                        <span class="text-xs font-semibold text-gray-700">{{ __('admin.tags') }}</span>
                     </div>
                     @php
                         $tagsArray = is_string($match->tags) ? explode(',', $match->tags) : [];
@@ -260,7 +260,7 @@
             <div class="info-card rounded-2xl p-6 shadow-lg">
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <i class="fas fa-chart-line text-purple-500"></i>
-                    Match Analysis
+                    {{ __('admin.match_analysis') }}
                 </h2>
 
                     <!-- Analysis Container (will be populated by JavaScript) -->
@@ -271,11 +271,20 @@
                                 <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4 shadow-lg">
                                     <i class="fas fa-info-circle text-2xl text-gray-600"></i>
                                 </div>
-                                <p class="text-gray-800 font-bold text-base mb-1">No Predictions Available</p>
-                                <p class="text-xs text-gray-500">Processing completed but no predictions were generated for this match.</p>
+                                <p class="text-gray-800 font-bold text-base mb-1">{{ __('admin.no_predictions_available') }}</p>
+                                <p class="text-xs text-gray-500">{{ __('admin.no_predictions_generated') }}</p>
                             </div>
-                        @elseif(isset($match->status) && $match->status !== 'completed')
-                            <!-- Loading state (only show if not completed) -->
+                        @elseif(isset($match->status) && $match->status === 'pending')
+                            <!-- Pending state - show message that nothing is running -->
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full mb-4 shadow-lg">
+                                    <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                                </div>
+                                <p class="text-gray-800 font-bold text-base mb-1">{{ __('admin.match_pending_message') }}</p>
+                                <p class="text-xs text-gray-500">{{ __('admin.nothing_running_background') }}</p>
+                            </div>
+                        @elseif(isset($match->status) && $match->status === 'processing')
+                            <!-- Loading state (only show if processing) -->
                             <div class="flex items-center gap-3">
                                 <div class="h-8 w-8 bg-purple-200 rounded-lg animate-pulse"></div>
                                 <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
@@ -297,7 +306,7 @@
                                 <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
                                 <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
                                 <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
-                                <span class="ml-2 text-sm text-gray-500 font-medium">Processing analysis...</span>
+                                <span class="ml-2 text-sm text-gray-500 font-medium">{{ __('admin.processing_analysis') }}</span>
                             </div>
                         @else
                             <!-- Will be populated by JavaScript if predictions exist -->
@@ -308,9 +317,43 @@
     </div>
 </div>
 
+<!-- Video Clip Modal -->
+<div id="clipVideoModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h3 id="clipModalTitle" class="text-xl font-bold text-gray-900">{{ __('admin.match_video') }}</h3>
+            <button id="closeClipModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <div class="flex-1 p-6 overflow-auto">
+            <video id="clipVideoPlayer" class="w-full rounded-lg" controls>
+                <source id="clipVideoSource" src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
+// Translations
+const translations = {
+    waitingForPredictions: '{{ __('admin.waiting_for_predictions') }}',
+    processingMatchVideo: '{{ __('admin.processing_match_video') }}',
+    foundPredictions: '{{ __('admin.found_predictions') }}',
+    predictionNumber: '{{ __('admin.prediction_number') }}',
+    clip: '{{ __('admin.clip') }}',
+    firstModelAccuracy: '{{ __('admin.first_model_accuracy') }}',
+    model0Prediction: '{{ __('admin.model_0_prediction') }}',
+    model1Prediction: '{{ __('admin.model_1_prediction') }}',
+    offenceSeverity: '{{ __('admin.offence_severity') }}',
+    noData: '{{ __('admin.no_data') }}',
+    matchPendingMessage: '{{ __('admin.match_pending_message') }}',
+    nothingRunningBackground: '{{ __('admin.nothing_running_background') }}'
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Plyr video player with smaller size
     const video = document.getElementById('player');
@@ -371,30 +414,43 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!analysisContainer) return;
 
         if (predictions.length === 0) {
-            // If status is completed, show message that no predictions were found
-            // Otherwise show loading state
+            // Check status and show appropriate message
             if (matchStatus === 'completed') {
+                // Completed but no predictions
                 analysisContainer.innerHTML = `
                     <div class="space-y-4">
                         <div class="text-center py-8">
                             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full mb-4 shadow-lg">
                                 <i class="fas fa-info-circle text-2xl text-gray-600"></i>
                             </div>
-                            <p class="text-gray-800 font-bold text-base mb-1">No Predictions Available</p>
-                            <p class="text-xs text-gray-500">Processing completed but no predictions were generated for this match.</p>
+                            <p class="text-gray-800 font-bold text-base mb-1">{{ __('admin.no_predictions_available') }}</p>
+                            <p class="text-xs text-gray-500">{{ __('admin.no_predictions_generated') }}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (matchStatus === 'pending') {
+                // Pending - show message that nothing is running
+                analysisContainer.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="text-center py-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full mb-4 shadow-lg">
+                                <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                            </div>
+                            <p class="text-gray-800 font-bold text-base mb-1">${translations.matchPendingMessage}</p>
+                            <p class="text-xs text-gray-500">${translations.nothingRunningBackground}</p>
                         </div>
                     </div>
                 `;
             } else {
-                // Show loading state only if not completed
+                // Processing - show loading state
                 analysisContainer.innerHTML = `
                     <div class="space-y-4">
                         <div class="text-center py-8">
                             <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full mb-4 shadow-lg">
                                 <i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i>
                             </div>
-                            <p class="text-gray-800 font-bold text-base mb-1">Waiting for predictions...</p>
-                            <p class="text-xs text-gray-500">Processing match video. Predictions will appear here.</p>
+                            <p class="text-gray-800 font-bold text-base mb-1">${translations.waitingForPredictions}</p>
+                            <p class="text-xs text-gray-500">${translations.processingMatchVideo}</p>
                         </div>
                     </div>
                 `;
@@ -404,28 +460,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Build predictions HTML
         let predictionsHtml = '<div class="space-y-4">';
-        predictionsHtml += `<div class="mb-4"><h3 class="text-lg font-bold text-gray-900">Found ${predictions.length} prediction(s)</h3></div>`;
+        predictionsHtml += `<div class="mb-4"><h3 class="text-lg font-bold text-gray-900">${translations.foundPredictions.replace(':count', predictions.length)}</h3></div>`;
 
         predictions.forEach((prediction, index) => {
             predictionsHtml += `
                 <div class="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm">
                     <div class="flex items-center justify-between mb-3">
-                        <h4 class="font-semibold text-gray-900">Prediction #${index + 1}</h4>
+                        <h4 class="font-semibold text-gray-900">${translations.predictionNumber.replace(':number', index + 1)}</h4>
                         ${prediction.relative_time ? `<span class="text-xs text-gray-500"><i class="fas fa-clock mr-1"></i>${prediction.relative_time}</span>` : ''}
                     </div>
-                    ${prediction.clip_path ? `<div class="mb-2 text-xs text-gray-600"><i class="fas fa-video mr-1"></i>Clip: ${prediction.clip_path}</div>` : ''}
-                    ${prediction.first_model_prop !== null ? `<div class="mb-2 text-xs"><span class="font-medium">First Model Accuracy:</span> <span class="text-purple-600">${(prediction.first_model_prop * 100).toFixed(2)}%</span></div>` : ''}
+                    ${prediction.clip_path ? `<div class="mb-2 text-xs text-gray-600 flex items-center"><i class="fas fa-video mr-1"></i><span>${translations.clip}</span><a href="#" class="clip-path-link ml-2" data-clip-title="${translations.predictionNumber.replace(':number', index + 1)}" data-clip-url="${prediction.url || prediction.clip_path}">${prediction.clip_path}</a></div>` : ''}
+                    ${prediction.first_model_prop !== null ? `<div class="mb-2 text-xs"><span class="font-medium">${translations.firstModelAccuracy}</span> <span class="text-purple-600">${(prediction.first_model_prop * 100).toFixed(2)}%</span></div>` : ''}
                     
                     ${prediction.prediction_0 ? `
                         <div class="mb-3 p-3 bg-purple-50 rounded border border-purple-200">
-                            <div class="font-medium text-xs text-purple-900 mb-2">Model 0 Prediction:</div>
+                            <div class="font-medium text-xs text-purple-900 mb-2">${translations.model0Prediction}</div>
                             ${renderPredictionData(prediction.prediction_0)}
                         </div>
                     ` : ''}
                     
                     ${prediction.prediction_1 ? `
                         <div class="mb-3 p-3 bg-indigo-50 rounded border border-indigo-200">
-                            <div class="font-medium text-xs text-indigo-900 mb-2">Model 1 Prediction:</div>
+                            <div class="font-medium text-xs text-indigo-900 mb-2">${translations.model1Prediction}</div>
                             ${renderPredictionData(prediction.prediction_1)}
                         </div>
                     ` : ''}
@@ -439,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper function to render prediction data
     function renderPredictionData(prediction) {
-        if (!prediction) return '<div class="text-xs text-gray-500">No data</div>';
+        if (!prediction) return '<div class="text-xs text-gray-500">' + translations.noData + '</div>';
         
         let html = '';
         
@@ -456,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
                         <div>
                             <div class="font-semibold text-gray-900">${prediction.labels.offence_severity}</div>
-                            <div class="text-gray-500 text-xs mt-0.5">Offence Severity (Class ${prediction.labels.offence_severity_class || 'N/A'})</div>
+                            <div class="text-gray-500 text-xs mt-0.5">${translations.offenceSeverity.replace(':class', prediction.labels.offence_severity_class || 'N/A')}</div>
                         </div>
                         <span class="font-bold text-purple-600 ml-2">${severityAcc}</span>
                     </div>
@@ -634,13 +690,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             Swal.fire({
                 icon: 'warning',
-                title: 'Are you sure?',
-                text: 'Are you sure you want to delete this match? This action cannot be undone.',
+                title: '{{ __('admin.delete_confirmation_title') }}',
+                text: '{{ __('admin.delete_confirmation_text') }}',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, delete it',
-                cancelButtonText: 'Cancel'
+                confirmButtonText: '{{ __('admin.delete_confirmation_yes') }}',
+                cancelButtonText: '{{ __('admin.delete_confirmation_cancel') }}'
             }).then((result) => {
                 if (result.isConfirmed) {
                     deleteForm.submit();
@@ -826,6 +882,78 @@ function exportAnalysis() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// Handle clip path clicks - show video modal
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('clip-path-link')) {
+        e.preventDefault();
+        const clipUrl = e.target.getAttribute('data-clip-url');
+        const clipTitle = e.target.getAttribute('data-clip-title');
+        
+        if (clipUrl) {
+            const modal = document.getElementById('clipVideoModal');
+            const videoSource = document.getElementById('clipVideoSource');
+            const videoPlayer = document.getElementById('clipVideoPlayer');
+            const modalTitle = document.getElementById('clipModalTitle');
+            
+            // Set modal title
+            if (clipTitle && modalTitle) {
+                modalTitle.textContent = clipTitle;
+            }
+            
+            // Set video source
+            videoSource.src = clipUrl;
+            videoPlayer.load();
+            modal.classList.remove('hidden');
+            
+            // Play video when modal opens
+            videoPlayer.play().catch(err => {
+                console.log('Auto-play prevented:', err);
+            });
+        }
+    }
+});
+
+// Close modal handlers
+const closeClipModal = document.getElementById('closeClipModal');
+const clipVideoModal = document.getElementById('clipVideoModal');
+
+if (closeClipModal) {
+    closeClipModal.addEventListener('click', function() {
+        const videoPlayer = document.getElementById('clipVideoPlayer');
+        if (videoPlayer) {
+            videoPlayer.pause();
+            videoPlayer.currentTime = 0;
+        }
+        clipVideoModal.classList.add('hidden');
+    });
+}
+
+// Close modal on backdrop click
+if (clipVideoModal) {
+    clipVideoModal.addEventListener('click', function(e) {
+        if (e.target === clipVideoModal) {
+            const videoPlayer = document.getElementById('clipVideoPlayer');
+            if (videoPlayer) {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+            }
+            clipVideoModal.classList.add('hidden');
+        }
+    });
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !clipVideoModal.classList.contains('hidden')) {
+        const videoPlayer = document.getElementById('clipVideoPlayer');
+        if (videoPlayer) {
+            videoPlayer.pause();
+            videoPlayer.currentTime = 0;
+        }
+        clipVideoModal.classList.add('hidden');
+    }
+});
 </script>
 @endpush
 @endsection

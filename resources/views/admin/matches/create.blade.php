@@ -1,7 +1,7 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Upload New Match - Eye Pro')
-@section('page-title', 'Upload New Match')
+@section('title', __('admin.upload_new_match') . ' - Eye Pro')
+@section('page-title', __('admin.upload_new_match'))
 
 @section('content')
 <div class="max-w-2xl mx-auto" x-data="{ tab: 'file', uploading: false, progress: 0 }">
@@ -14,8 +14,8 @@
             <div class="inline-flex items-center justify-center h-12 w-12 rounded-lg bg-white/20 backdrop-blur-lg mb-2 shadow-md border border-white/30">
                 <i class="fas fa-cloud-upload-alt text-xl text-white"></i>
             </div>
-            <h1 class="text-xl font-bold text-white mb-1 drop-shadow-md">Upload New Match</h1>
-            <p class="text-xs text-blue-50 font-medium">Upload a video file or provide a link to analyze the match</p>
+            <h1 class="text-xl font-bold text-white mb-1 drop-shadow-md">{{ __('admin.upload_new_match') }}</h1>
+            <p class="text-xs text-blue-50 font-medium">{{ __('admin.upload_new_match_description') }}</p>
         </div>
     </div>
     
@@ -28,14 +28,14 @@
             <div class="mb-4">
                 <label for="match_name" class="block text-sm font-bold text-gray-700 mb-2 flex items-center space-x-2">
                     <i class="fas fa-tag text-orange-500 text-xs"></i>
-                    <span>Match Name</span>
+                    <span>{{ __('admin.match_name') }}</span>
                 </label>
                 <input 
                     type="text" 
                     id="match_name" 
                     name="match_name" 
                     class="block w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all duration-200 font-medium text-sm"
-                    placeholder="e.g., Championship Final 2024"
+                    placeholder="{{ __('admin.match_name_placeholder') }}"
                     value="{{ old('match_name') }}"
                     required
                 >
@@ -48,8 +48,8 @@
                         <i class="fas fa-info-circle text-white text-xs"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-bold text-gray-900 mb-0.5">Upload Method</h3>
-                        <p class="text-xs text-gray-600">Choose how you want to add your match video</p>
+                        <h3 class="text-xs font-bold text-gray-900 mb-0.5">{{ __('admin.upload_method') }}</h3>
+                        <p class="text-xs text-gray-600">{{ __('admin.upload_method_description') }}</p>
                     </div>
                 </div>
             </div>
@@ -58,11 +58,11 @@
             <div class="flex space-x-2 mb-4 bg-gray-100 p-1 rounded-lg shadow-inner">
                 <button @click="tab = 'file'" type="button" :class="tab === 'file' ? 'text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'" class="flex-1 py-2 text-center rounded-md font-semibold text-xs transition-all duration-200 flex items-center justify-center space-x-1.5" :style="tab === 'file' ? 'background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);' : ''">
                     <i class="fas fa-cloud-upload-alt text-xs"></i>
-                    <span>Upload File</span>
+                    <span>{{ __('admin.upload_file') }}</span>
                 </button>
                 <button @click="tab = 'url'" type="button" :class="tab === 'url' ? 'text-white shadow-md' : 'text-gray-600 hover:bg-gray-200'" class="flex-1 py-2 text-center rounded-md font-semibold text-xs transition-all duration-200 flex items-center justify-center space-x-1.5" :style="tab === 'url' ? 'background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);' : ''">
                     <i class="fas fa-link text-xs"></i>
-                    <span>Video URL</span>
+                    <span>{{ __('admin.video_url') }}</span>
                 </button>
             </div>
             
@@ -70,7 +70,7 @@
             <div x-show="tab === 'file'" x-transition class="mb-6">
                 <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center space-x-2">
                     <i class="fas fa-file-video text-orange-500 text-xs"></i>
-                    <span>Video File</span>
+                    <span>{{ __('admin.video_file') }}</span>
                 </label>
                 <div 
                     id="dropzone"
@@ -83,8 +83,8 @@
                             </div>
                         </div>
                         <div>
-                            <p id="fileName" class="text-base font-bold text-gray-900 mb-1">Choose File or Drag & Drop</p>
-                            <p class="text-xs text-gray-500 font-medium">Supports large files (1GB+). Files are uploaded in chunks.</p>
+                            <p id="fileName" class="text-base font-bold text-gray-900 mb-1">{{ __('admin.choose_file_or_drag') }}</p>
+                            <p class="text-xs text-gray-500 font-medium">{{ __('admin.supports_large_files') }}</p>
                             <div class="flex items-center justify-center space-x-2 mt-3 text-xs font-semibold text-gray-400">
                                 <span class="px-2 py-1 bg-white rounded shadow-sm">MP4</span>
                                 <span class="px-2 py-1 bg-white rounded shadow-sm">AVI</span>
@@ -112,8 +112,8 @@
                                 <i class="fas fa-cloud-upload-alt text-white text-sm"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-bold text-gray-900">Uploading in chunks...</p>
-                                <p class="text-xs text-gray-500 font-medium">Please wait</p>
+                                <p class="text-sm font-bold text-gray-900">{{ __('admin.uploading_in_chunks') }}</p>
+                                <p class="text-xs text-gray-500 font-medium">{{ __('admin.please_wait') }}</p>
                             </div>
                         </div>
                         <span id="progressPercent" class="text-xl font-black text-orange-600">0%</span>
@@ -129,15 +129,15 @@
                         <div class="flex items-center space-x-2 text-xs">
                             <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-white rounded-lg font-semibold text-gray-700 shadow-sm">
                                 <i class="fas fa-tachometer-alt text-orange-500 text-xs"></i>
-                                <span id="uploadSpeed">Speed: Calculating...</span>
+                                <span id="uploadSpeed">{{ __('admin.speed') }}: {{ __('admin.calculating') }}</span>
                             </div>
                             <div id="chunkInfo" class="flex items-center space-x-1.5 px-2 py-1.5 bg-white rounded-lg font-semibold text-gray-700 shadow-sm">
                                 <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-                                <span>0/0 chunks</span>
+                                <span>0/0 {{ __('admin.chunks') }}</span>
                             </div>
                             <div id="connectionStatus" class="flex items-center space-x-1.5 px-2 py-1.5 bg-white rounded-lg font-semibold text-gray-700 shadow-sm hidden">
                                 <i class="fas fa-wifi text-green-500 text-xs"></i>
-                                <span>Connected</span>
+                                <span>{{ __('admin.connected') }}</span>
                             </div>
                         </div>
                     </div>
@@ -148,7 +148,7 @@
             <div x-show="tab === 'url'" x-transition class="mb-6">
                 <label for="video_url" class="block text-sm font-bold text-gray-700 mb-2 flex items-center space-x-2">
                     <i class="fas fa-link text-orange-500 text-xs"></i>
-                    <span>Video URL</span>
+                    <span>{{ __('admin.video_url') }}</span>
                 </label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -159,13 +159,13 @@
                         id="video_url" 
                         name="video_url" 
                         class="block w-full pl-10 pr-3 py-2.5 border-2 border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition-all duration-200 font-medium text-sm"
-                        placeholder="https://youtube.com/watch?v=..."
+                        placeholder="{{ __('admin.video_url_placeholder') }}"
                         value="{{ old('video_url') }}"
                     >
                 </div>
                 <p class="mt-2 text-xs text-gray-500 flex items-center space-x-2 bg-blue-50 p-2 rounded-lg border border-blue-200">
                     <i class="fas fa-check-circle text-blue-500 text-xs"></i>
-                    <span class="font-medium">YouTube, Vimeo, or direct video links supported</span>
+                    <span class="font-medium">{{ __('admin.video_url_supported') }}</span>
                 </p>
             </div>
             
@@ -178,7 +178,7 @@
                 <div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center">
                     <i class="fas fa-arrow-right text-base"></i>
                 </div>
-                <span id="btnText">Upload & Continue</span>
+                <span id="btnText">{{ __('admin.upload_continue') }}</span>
             </button>
         </form>
     </div>
@@ -199,6 +199,20 @@
 
 @push('scripts')
 <script>
+// Translations
+const translations = {
+    connected: '{{ __('admin.connected') }}',
+    noConnection: '{{ __('admin.no_connection') }}',
+    speed: '{{ __('admin.speed') }}',
+    chunks: '{{ __('admin.chunks') }}',
+    chunksUploaded: '{{ __('admin.chunks_uploaded') }}',
+    readyToContinue: '{{ __('admin.ready_to_continue') }}',
+    uploading: '{{ __('admin.uploading_in_chunks') }}',
+    finalizing: '{{ __('admin.finalizing') }}',
+    resumeUpload: '{{ __('admin.resume_upload') }}',
+    uploadContinue: '{{ __('admin.upload_continue') }}'
+};
+
 let uploadId = null;
 let uploadedChunks = [];
 let currentUpload = null;
@@ -211,7 +225,7 @@ window.addEventListener('online', () => {
     if (connStatus) {
         connStatus.classList.remove('hidden', 'bg-red-50', 'text-red-700');
         connStatus.classList.add('bg-green-50', 'text-green-700');
-        connStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>Connected</span>';
+        connStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>' + translations.connected + '</span>';
     }
 });
 
@@ -221,7 +235,7 @@ window.addEventListener('offline', () => {
     if (connStatus) {
         connStatus.classList.remove('hidden', 'bg-green-50', 'text-green-700');
         connStatus.classList.add('bg-red-50', 'text-red-700');
-        connStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>No Connection</span>';
+        connStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>' + translations.noConnection + '</span>';
     }
 });
 
@@ -378,15 +392,15 @@ async function handleFileSelect(input) {
     progressDiv.classList.remove('hidden');
     connectionStatus.classList.remove('hidden');
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>Uploading...</span>';
+    submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>' + translations.uploading + '</span>';
     
     // Update connection status
     if (isOnline) {
         connectionStatus.classList.add('bg-green-50', 'text-green-700');
-        connectionStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>Connected</span>';
+        connectionStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>' + translations.connected + '</span>';
     } else {
         connectionStatus.classList.add('bg-red-50', 'text-red-700');
-        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>No Connection</span>';
+        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>' + translations.noConnection + '</span>';
     }
     
     const startTime = Date.now();
@@ -429,24 +443,24 @@ async function handleFileSelect(input) {
             
             progressFill.style.width = progress + '%';
             progressPercent.textContent = Math.round(progress) + '%';
-            uploadSpeed.textContent = `Speed: ${formatSpeed(speed)}`;
+            uploadSpeed.textContent = `${translations.speed}: ${formatSpeed(speed)}`;
             chunkInfo.innerHTML = `
                 <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-                <span>${uploadedChunks.length}/${totalChunks} chunks</span>
+                <span>${uploadedChunks.length}/${totalChunks} ${translations.chunks}</span>
             `;
         }
         
         // All chunks uploaded, finalize
         chunkInfo.innerHTML = `
             <i class="fas fa-check-circle text-green-600 text-xs"></i>
-            <span>${totalChunks}/${totalChunks} chunks uploaded</span>
+            <span>${translations.chunksUploaded.replace(':current', totalChunks).replace(':total', totalChunks)}</span>
         `;
         
         // Clear localStorage
         localStorage.removeItem(storageKey);
         
         // Update button to show ready for finalization
-        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-check text-base"></i></div> <span>Ready to Continue</span>';
+        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-check text-base"></i></div> <span>' + translations.readyToContinue + '</span>';
         submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         submitBtn.disabled = false;
         
@@ -494,7 +508,7 @@ async function handleFileSelect(input) {
             
             submitBtn.disabled = false;
             submitBtn.setAttribute('data-resume', 'true');
-            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-redo text-base"></i></div> <span>Resume Upload</span>';
+            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-redo text-base"></i></div> <span>' + translations.resumeUpload + '</span>';
             submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)';
         } else {
             Swal.fire({
@@ -623,7 +637,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>Finalizing...</span>';
+        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>' + translations.finalizing + '</span>';
         
         try {
             const formData = new FormData();
@@ -654,7 +668,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
                 confirmButtonColor: '#ef4444'
             });
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-arrow-right text-base"></i></div> <span>Upload & Continue</span>';
+            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-arrow-right text-base"></i></div> <span>' + translations.uploadContinue + '</span>';
         }
     }
 });

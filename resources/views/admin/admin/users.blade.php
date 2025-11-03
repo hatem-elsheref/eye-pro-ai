@@ -1,17 +1,17 @@
 @extends('admin.layouts.master')
 
-@section('title', 'Users Management - Eye Pro')
-@section('page-title', 'Users Management')
+@section('title', __('admin.users_management') . ' - Eye Pro')
+@section('page-title', __('admin.users_management'))
 
 @section('content')
-<div class="space-y-6">
+<div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
     <!-- Header -->
     <div class="relative overflow-hidden rounded-2xl p-6 shadow-lg border border-blue-200" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
         <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10"></div>
         <div class="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full bg-white opacity-10"></div>
         <div class="relative z-10">
-            <h1 class="text-2xl font-bold text-white mb-1">Users Management</h1>
-            <p class="text-sm text-blue-50 font-medium">Manage all non-admin users and their status</p>
+            <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.users_management') }}</h1>
+            <p class="text-sm text-blue-50 font-medium">{{ __('admin.users_management_description') }}</p>
         </div>
     </div>
 
@@ -26,9 +26,9 @@
                         <i class="fas fa-users text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Total Users</h3>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.total_users') }}</h3>
                 <p class="text-3xl font-black text-blue-700 mb-1">{{ $totalUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Registered users</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.registered_users') }}</p>
             </div>
         </div>
 
@@ -41,9 +41,9 @@
                         <i class="fas fa-clock text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Pending Approvals</h3>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.pending_approvals') }}</h3>
                 <p class="text-3xl font-black text-amber-700 mb-1">{{ $pendingUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Users awaiting approval</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.users_awaiting_approval') }}</p>
             </div>
         </div>
 
@@ -56,9 +56,9 @@
                         <i class="fas fa-check-circle text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Approved Users</h3>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.approved_users') }}</h3>
                 <p class="text-3xl font-black text-green-700 mb-1">{{ $approvedUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Active users</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.active_users') }}</p>
             </div>
         </div>
 
@@ -71,9 +71,9 @@
                         <i class="fas fa-ban text-xl text-white"></i>
                     </div>
                 </div>
-                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">Rejected Users</h3>
+                <h3 class="text-gray-500 text-xs font-bold mb-1 uppercase tracking-wide">{{ __('admin.rejected_users') }}</h3>
                 <p class="text-3xl font-black text-red-700 mb-1">{{ $rejectedUsers ?? 0 }}</p>
-                <p class="text-xs text-gray-400 font-medium">Rejected accounts</p>
+                <p class="text-xs text-gray-400 font-medium">{{ __('admin.rejected_accounts') }}</p>
             </div>
         </div>
     </div>
@@ -82,13 +82,13 @@
     <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mt-4">
         <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <div class="flex items-center space-x-3">
-                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-md">
-                        <i class="fas fa-users text-white text-lg"></i>
+                <div class="flex items-center gap-3 users-table-header">
+                    <div class="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-lg users-table-icon border-2" style="border-color: #3b82f6;">
+                        <i class="fas fa-users text-xl users-icon"></i>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">All Users</h2>
-                        <p class="text-xs text-gray-500">Manage all non-admin users</p>
+                        <h2 class="text-xl font-bold text-gray-900">{{ __('admin.all_users') }}</h2>
+                        <p class="text-xs text-gray-500">{{ __('admin.manage_all_users') }}</p>
                     </div>
                 </div>
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
@@ -98,10 +98,10 @@
                             <input 
                                 type="text" 
                                 id="customSearchInput" 
-                                placeholder="Search users..." 
+                                placeholder="{{ __('admin.search_users_placeholder') }}" 
                                 class="w-full pl-10 pr-10 py-2.5 border-2 border-white rounded-lg text-sm font-medium focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all bg-white shadow-sm hover:shadow-md"
                             >
-                            <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-blue-500 text-sm"></i>
+                            <i class="fas fa-search absolute left-3.5 top-1/2 transform -translate-y-1/2 text-blue-500 text-sm table-search-icon"></i>
                             <button type="button" id="clearSearchBtn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors hidden">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
@@ -109,10 +109,10 @@
                     </div>
                     <!-- Status Filter -->
                     <select id="statusFilter" class="px-3 py-2.5 border-2 border-white rounded-lg text-sm font-semibold focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 bg-white shadow-sm transition-all hover:shadow-md w-full sm:w-auto">
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+                        <option value="all">{{ __('admin.all_status') }}</option>
+                        <option value="pending">{{ __('admin.pending') }}</option>
+                        <option value="approved">{{ __('admin.approved') }}</option>
+                        <option value="rejected">{{ __('admin.rejected') }}</option>
                     </select>
                 </div>
             </div>
@@ -123,10 +123,10 @@
                 <table id="usersTable" class="min-w-full bg-white" style="width:100%">
                     <thead>
                         <tr class="bg-gradient-to-r from-gray-50 via-gray-50 to-gray-100 border-b-2 border-gray-300">
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">User</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Status</th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">Registered</th>
-                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">{{ __('admin.user') }}</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">{{ __('admin.status') }}</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200">{{ __('admin.registered') }}</th>
+                            <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">{{ __('admin.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -206,6 +206,30 @@
     #usersTable_wrapper .dataTables_filter input::placeholder {
         color: #9ca3af;
         font-weight: 400;
+    }
+    
+    /* Table search icon - ensure visible and line-height 0 */
+    .table-search-icon {
+        line-height: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 10 !important;
+    }
+    
+    [dir="rtl"] .table-search-icon {
+        left: auto !important;
+        right: 0.875rem !important;
+    }
+    
+    /* Users table icon - force blue color, override any white or other color */
+    .users-table-icon .users-icon,
+    .users-table-icon .fa-users,
+    .users-table-icon i.fa-users,
+    .users-table-icon i {
+        color: #3b82f6 !important;
+        -webkit-text-fill-color: #3b82f6 !important;
+        display: inline-block !important;
     }
 
     #usersTable_wrapper .dataTables_filter input:focus {
@@ -570,7 +594,7 @@ $(document).ready(function() {
             {
                 data: null,
                 render: function(data, type, row) {
-                    return '<div class="flex items-center space-x-3">' + 
+                    return '<div class="flex items-center gap-3 user-cell">' + 
                            row.avatar + 
                            '<div class="flex flex-col">' +
                            '<span class="text-sm font-semibold text-gray-900">' + row.name + '</span>' +
@@ -588,21 +612,21 @@ $(document).ready(function() {
         pageLength: 10,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {
-            processing: '<div class="flex items-center space-x-2"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div><span>Loading...</span></div>',
+            processing: '<div class="flex items-center gap-2"><div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div><span>{{ __('admin.loading') }}</span></div>',
             search: "",
-            searchPlaceholder: "Search users by name or email...",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ users",
-            infoEmpty: "No users found",
-            infoFiltered: "(filtered from _MAX_ total users)",
-            zeroRecords: "No matching users found",
+            searchPlaceholder: "{{ __('admin.search_users_datatable') }}",
+            lengthMenu: "{{ __('admin.show_entries') }}",
+            info: "{{ __('admin.showing_users_info') }}",
+            infoEmpty: "{{ __('admin.no_users_found') }}",
+            infoFiltered: "{{ __('admin.filtered_from_total') }}",
+            zeroRecords: "{{ __('admin.no_matching_users') }}",
             paginate: {
                 first: '<i class="fas fa-angle-double-left"></i>',
                 last: '<i class="fas fa-angle-double-right"></i>',
                 next: '<i class="fas fa-chevron-right"></i>',
                 previous: '<i class="fas fa-chevron-left"></i>'
             },
-            emptyTable: "No users available"
+            emptyTable: "{{ __('admin.no_users_available') }}"
         },
         dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         // Hide default search since we have custom one
@@ -746,7 +770,7 @@ $(document).ready(function() {
                     if (response.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Success!',
+                            title: '{{ __('admin.success') }}!',
                             text: response.message,
                             confirmButtonColor: '#60a5fa',
                             timer: 2000,
@@ -757,10 +781,10 @@ $(document).ready(function() {
                     }
                 },
                 error: function(xhr) {
-                    var message = xhr.responseJSON?.message || 'An error occurred';
+                    var message = xhr.responseJSON?.message || '{{ __('admin.error_occurred') }}';
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error!',
+                        title: '{{ __('admin.error') }}!',
                         text: message,
                         confirmButtonColor: '#ef4444'
                     });
@@ -771,13 +795,13 @@ $(document).ready(function() {
         if (action === 'reject') {
             Swal.fire({
                 icon: 'warning',
-                title: 'Are you sure?',
-                text: 'Are you sure you want to reject this user?',
+                title: '{{ __('admin.are_you_sure') }}?',
+                text: '{{ __('admin.confirm_reject_user') }}',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Yes, reject user',
-                cancelButtonText: 'Cancel'
+                confirmButtonText: '{{ __('admin.yes_reject_user') }}',
+                cancelButtonText: '{{ __('admin.cancel') }}'
             }).then((result) => {
                 if (result.isConfirmed) {
                     submitForm();

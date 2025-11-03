@@ -1,9 +1,9 @@
 @if(session('success'))
 <div class="mb-6 rounded-xl bg-green-50 border-l-4 border-green-500 p-4 shadow-md animate-slide-in">
-    <div class="flex items-start space-x-3">
+    <div class="flex items-start space-x-3 alert-success-container">
         <div class="flex-shrink-0">
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                <i class="fas fa-check-circle text-green-600 text-lg alert-success-icon"></i>
             </div>
         </div>
         <div class="flex-1">

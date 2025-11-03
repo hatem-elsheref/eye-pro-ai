@@ -99,10 +99,27 @@ class MatchApiController extends Controller
 
         // Format prediction with labels for WebSocket
         $locale = app()->getLocale();
+        
+        // Generate URL from clip_path if it exists
+        $clipUrl = null;
+        if ($prediction->clip_path) {
+            $clipStorageDisk = env('CLIP_STORAGE_DISK', $match->storage_disk ?? 'public');
+            try {
+                $clipUrl = Storage::disk($clipStorageDisk)->url($prediction->clip_path);
+            } catch (\Exception $e) {
+                Log::warning('Failed to generate clip URL for WebSocket', [
+                    'clip_path' => $prediction->clip_path,
+                    'disk' => $clipStorageDisk,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
         $formattedPrediction = [
             'id' => $prediction->id,
             'match_id' => $prediction->match_id,
             'clip_path' => $prediction->clip_path,
+            'url' => $clipUrl,
             'relative_time' => $prediction->relative_time,
             'first_model_prop' => $prediction->first_model_prop,
             'prediction_0' => $prediction->formatPredictionData($prediction->prediction_0, $locale),

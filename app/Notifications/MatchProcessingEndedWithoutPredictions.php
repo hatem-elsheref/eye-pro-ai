@@ -40,8 +40,10 @@ class MatchProcessingEndedWithoutPredictions extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Processing Ended Without Predictions',
-            'message' => "Match '{$this->match->name}' processing has ended without any predictions being added.",
+            'title_key' => 'admin.notification_processing_ended_no_predictions_title',
+            'message_key' => 'admin.notification_processing_ended_no_predictions_message',
+            'title' => 'Processing Ended Without Predictions', // Keep for backward compatibility
+            'message' => "Match '{$this->match->name}' processing has ended without any predictions being added.", // Keep for backward compatibility
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
             'type' => 'match_processing_ended_no_predictions',
