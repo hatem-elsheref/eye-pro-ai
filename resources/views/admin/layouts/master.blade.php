@@ -41,9 +41,9 @@
             <div class="flex w-64 flex-col">
                 <div class="flex min-h-0 flex-1 flex-col bg-gray-900">
                     <!-- Logo -->
-                    <div class="flex h-16 flex-shrink-0 items-center px-6 bg-black">
+                    <div class="flex h-16 flex-shrink-0 items-center px-6 bg-gray-50">
                         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 group">
-                            <img src="{{ asset('logo.png') }}" alt="Eye Pro" class="h-24 w-32 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300 object-contain bg-transparent">
+                            <img src="{{ asset('logo.png') }}" alt="Eye Pro" class="h-24 w-32 rounded-lg group-hover:scale-110 transition-transform duration-300 object-contain bg-transparent">
                             <span class="text-xl font-bold text-white"></span>
                         </a>
                     </div>
@@ -157,9 +157,9 @@
                class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 lg:hidden"
                style="display: none;">
             <!-- Mobile sidebar content (same as desktop) -->
-            <div class="flex h-16 flex-shrink-0 items-center px-6 bg-black justify-between">
+            <div class="flex h-16 flex-shrink-0 items-center px-6 bg-gray-50 justify-between">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-                    <img src="{{ asset('logo.jpeg') }}" alt="Eye Pro" class="h-12 w-12 rounded-lg shadow-lg object-contain bg-transparent">
+                    <img src="{{ asset('logo.jpeg') }}" alt="Eye Pro" class="h-12 w-12 rounded-lg object-contain bg-transparent">
                     <span class="text-xl font-bold text-white">Eye Pro</span>
                 </a>
                 <button @click="sidebarOpen = false" class="text-gray-400 hover:text-white">
