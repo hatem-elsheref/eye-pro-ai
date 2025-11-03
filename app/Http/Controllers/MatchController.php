@@ -27,6 +27,41 @@ class MatchController extends Controller
         $this->notificationService = $notificationService;
     }
 
+    /**
+     * Generate storage URL with proper handling for S3 (pre-signed URLs)
+     */
+    protected function generateStorageUrl(string $disk, string $path): string
+    {
+        if ($disk === 'public' || $disk === 'local') {
+            return Storage::disk($disk)->url($path);
+        }
+
+        // For S3 and other cloud storage, use pre-signed URLs if bucket is private
+        try {
+            $storage = Storage::disk($disk);
+
+            // Check if we should use pre-signed URLs (default: true for S3)
+            $usePreSigned = env('S3_USE_PRESIGNED_URLS', true);
+
+            if ($usePreSigned && $disk === 's3') {
+                // Generate pre-signed URL that expires in 1 hour (3600 seconds)
+                return $storage->temporaryUrl($path, now()->addHours(1));
+            }
+
+            // Fallback to regular URL (works if bucket has public read access)
+            return $storage->url($path);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate storage URL', [
+                'disk' => $disk,
+                'path' => $path,
+                'error' => $e->getMessage()
+            ]);
+
+            // Fallback to regular URL attempt
+            return Storage::disk($disk)->url($path);
+        }
+    }
+
     public function index(Request $request)
     {
         $query = MatchVideo::where('user_id', auth()->id());
@@ -110,28 +145,57 @@ class MatchController extends Controller
             })->findOrFail($id);
 
         $usedDisk = ucfirst($match->storage_disk ?? 'public');
+
+        // Regenerate match video URL if it's a file stored on S3 or other cloud storage
+        // This ensures pre-signed URLs are fresh on each page load
+        $matchVideoUrl = $match->video_url;
+        $isExternalVideo = false;
+        $embedUrl = null;
+        
+        if ($match->type === 'file' && $match->video_path && $match->storage_disk) {
+            try {
+                $matchVideoUrl = $this->generateStorageUrl($match->storage_disk, $match->video_path);
+            } catch (\Exception $e) {
+                Log::warning('Failed to regenerate match video URL', [
+                    'match_id' => $match->id,
+                    'video_path' => $match->video_path,
+                    'disk' => $match->storage_disk,
+                    'error' => $e->getMessage()
+                ]);
+                // Keep original URL if regeneration fails
+            }
+        } elseif ($match->type === 'url' && $match->video_url) {
+            // Check if it's a YouTube or Vimeo URL
+            $videoInfo = $this->parseExternalVideoUrl($match->video_url);
+            if ($videoInfo['is_external']) {
+                $isExternalVideo = true;
+                $embedUrl = $videoInfo['embed_url'];
+            }
+        }
         
         // Get the storage disk for clips (use same disk as match, or check for clip-specific disk)
         $clipStorageDisk = env('CLIP_STORAGE_DISK', $match->storage_disk ?? 'public');
 
         // Format predictions with labels based on current locale
+        // Regenerate clip URLs on each page load to ensure fresh pre-signed URLs
         $predictions = $match->predictions->map(function ($prediction) use ($clipStorageDisk) {
             $locale = app()->getLocale();
-            
-            // Generate URL from clip_path if it exists
+
+            // Generate fresh URL from clip_path if it exists (regenerated on each page load)
             $clipUrl = null;
             if ($prediction->clip_path) {
                 try {
-                    $clipUrl = Storage::disk($clipStorageDisk)->url($prediction->clip_path);
+                    $clipUrl = $this->generateStorageUrl($clipStorageDisk, $prediction->clip_path);
                 } catch (\Exception $e) {
-                    Log::warning('Failed to generate clip URL', [
+                    Log::warning('Failed to regenerate clip URL', [
+                        'prediction_id' => $prediction->id,
                         'clip_path' => $prediction->clip_path,
                         'disk' => $clipStorageDisk,
                         'error' => $e->getMessage()
                     ]);
                 }
             }
-            
+
             return [
                 'id' => $prediction->id,
                 'match_id' => $prediction->match_id,
@@ -144,7 +208,68 @@ class MatchController extends Controller
             ];
         });
 
-        return view('admin.matches.show', compact('match', 'usedDisk', 'predictions'));
+        return view('admin.matches.show', compact('match', 'usedDisk', 'predictions', 'matchVideoUrl', 'isExternalVideo', 'embedUrl'));
+    }
+
+    /**
+     * Parse external video URL (YouTube, Vimeo) and convert to embed URL
+     */
+    protected function parseExternalVideoUrl(string $url): array
+    {
+        $result = [
+            'is_external' => false,
+            'embed_url' => null,
+            'provider' => null,
+            'video_id' => null
+        ];
+
+        // YouTube patterns
+        $youtubePatterns = [
+            // youtube.com/watch?v=VIDEO_ID
+            '/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/',
+            // youtube.com/embed/VIDEO_ID
+            '/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/',
+            // youtube.com/v/VIDEO_ID
+            '/youtube\.com\/v\/([a-zA-Z0-9_-]+)/',
+            // youtu.be/VIDEO_ID
+            '/youtu\.be\/([a-zA-Z0-9_-]+)/',
+            // youtube.com/watch?v=VIDEO_ID&other_params
+            '/youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]+)/',
+        ];
+
+        // Vimeo patterns
+        $vimeoPatterns = [
+            // vimeo.com/VIDEO_ID
+            '/vimeo\.com\/(\d+)/',
+            // vimeo.com/channels/CHANNEL/VIDEO_ID
+            '/vimeo\.com\/channels\/[^\/]+\/(\d+)/',
+            // vimeo.com/groups/GROUP/videos/VIDEO_ID
+            '/vimeo\.com\/groups\/[^\/]+\/videos\/(\d+)/',
+        ];
+
+        // Check YouTube
+        foreach ($youtubePatterns as $pattern) {
+            if (preg_match($pattern, $url, $matches)) {
+                $result['is_external'] = true;
+                $result['provider'] = 'youtube';
+                $result['video_id'] = $matches[1];
+                $result['embed_url'] = 'https://www.youtube.com/embed/' . $matches[1] . '?rel=0&modestbranding=1';
+                return $result;
+            }
+        }
+
+        // Check Vimeo
+        foreach ($vimeoPatterns as $pattern) {
+            if (preg_match($pattern, $url, $matches)) {
+                $result['is_external'] = true;
+                $result['provider'] = 'vimeo';
+                $result['video_id'] = $matches[1];
+                $result['embed_url'] = 'https://player.vimeo.com/video/' . $matches[1];
+                return $result;
+            }
+        }
+
+        return $result;
     }
 
     public function edit($id)
@@ -194,6 +319,13 @@ class MatchController extends Controller
 
             return response()->json($result);
         } catch (\Exception $e) {
+            Log::error('Failed to upload chunk', [
+                'uploadId' => $request->input('uploadId'),
+                'chunkIndex' => $request->input('chunkIndex'),
+                'error' => $e->getMessage(),
+                'userId' => auth()->id()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -220,12 +352,18 @@ class MatchController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Upload completed successfully!',
+                'message' => __('admin.upload_completed_successfully'),
                 'matchId' => $match->id,
                 'redirectUrl' => route('matches.show', $match->id),
             ]);
         } catch (\Exception $e) {
-            Log::error('Failed to finalize upload', ['error' => $e->getMessage()]);
+            Log::error('Failed to finalize upload', [
+                'uploadId' => $validated['uploadId'] ?? 'unknown',
+                'error' => $e->getMessage(),
+                'userId' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

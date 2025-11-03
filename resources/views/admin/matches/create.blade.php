@@ -210,7 +210,16 @@ const translations = {
     uploading: '{{ __('admin.uploading_in_chunks') }}',
     finalizing: '{{ __('admin.finalizing') }}',
     resumeUpload: '{{ __('admin.resume_upload') }}',
-    uploadContinue: '{{ __('admin.upload_continue') }}'
+    uploadContinue: '{{ __('admin.upload_continue') }}',
+    uploadPaused: '{{ __('admin.upload_paused') }}',
+    uploadFailed: '{{ __('admin.upload_failed') }}',
+    uploadedChunks: '{{ __('admin.uploaded_chunks') }}',
+    resumeFromWhereLeftOff: '{{ __('admin.resume_from_where_left_off') }}',
+    concurrentUploadDetected: '{{ __('admin.concurrent_upload_detected') }}',
+    concurrentUploadMessage: '{{ __('admin.concurrent_upload_message') }}',
+    unauthorizedAccess: '{{ __('admin.unauthorized_access') }}',
+    unauthorizedAccessMessage: '{{ __('admin.unauthorized_access_message') }}',
+    ok: '{{ __('admin.ok') }}'
 };
 
 let uploadId = null;
@@ -467,21 +476,16 @@ async function handleFileSelect(input) {
     } catch (error) {
         console.error('Upload error:', error);
         
-        // Check if it's a concurrent upload error
-        const isConcurrentError = error.message.includes('Another upload') || error.message.includes('in progress');
-        const isUnauthorizedError = error.message.includes('Unauthorized');
+        // Check if it's an unauthorized error
+        const isUnauthorizedError = error.message.includes('Unauthorized') || error.message.includes('Invalid upload ID');
         
-        let errorTitle = 'Upload Paused';
+        let errorTitle = translations.uploadPaused;
         let errorMessage = error.message;
         let showResumeButton = true;
         
-        if (isConcurrentError) {
-            errorTitle = 'Concurrent Upload Detected';
-            errorMessage = 'Another upload is in progress. Please wait for it to complete or cancel it first.';
-            showResumeButton = false;
-        } else if (isUnauthorizedError) {
-            errorTitle = 'Unauthorized Access';
-            errorMessage = 'This upload session does not belong to you. Starting a new upload...';
+        if (isUnauthorizedError) {
+            errorTitle = translations.unauthorizedAccess;
+            errorMessage = translations.unauthorizedAccessMessage;
             showResumeButton = false;
             // Clear localStorage and start fresh
             localStorage.removeItem(storageKey);
@@ -498,12 +502,34 @@ async function handleFileSelect(input) {
                 uploadedChunks: uploadedChunks
             }));
             
+            const isRTL = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
+            const borderSide = isRTL ? 'border-right' : 'border-left';
+            const iconMargin = isRTL ? 'margin-left: 0.5rem; margin-right: 0;' : 'margin-right: 0.5rem; margin-left: 0;';
+            const textAlign = isRTL ? 'right' : 'left';
+            
             Swal.fire({
                 icon: 'warning',
                 title: errorTitle,
-                html: `<p>Upload failed: <strong>${errorMessage}</strong></p><p class="mt-2">Uploaded ${uploadedChunks.length}/${totalChunks} chunks.</p><p class="mt-2 text-sm">You can refresh the page and try again - it will resume from where it left off.</p>`,
+                html: `
+                    <div style="text-align: ${textAlign}; padding: 0.5rem 0; direction: ${isRTL ? 'rtl' : 'ltr'};">
+                        <p style="font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
+                            ${translations.uploadFailed}: <strong style="color: #ef4444;">${errorMessage}</strong>
+                        </p>
+                        <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem; ${borderSide}: 3px solid #f59e0b;">
+                            <p style="font-size: 0.875rem; color: #6b7280; margin: 0; display: flex; align-items: center; flex-direction: ${isRTL ? 'row-reverse' : 'row'};">
+                                <i class="fas fa-info-circle" style="${iconMargin} color: #f59e0b;"></i>
+                                ${translations.uploadedChunks.replace(':uploaded', uploadedChunks.length).replace(':total', totalChunks)}
+                            </p>
+                        </div>
+                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0; line-height: 1.5;">
+                            ${translations.resumeFromWhereLeftOff}
+                        </p>
+                    </div>
+                `,
                 confirmButtonColor: '#60a5fa',
-                confirmButtonText: 'OK'
+                confirmButtonText: translations.ok,
+                width: '32rem',
+                padding: '2rem'
             });
             
             submitBtn.disabled = false;
@@ -515,7 +541,8 @@ async function handleFileSelect(input) {
                 icon: isUnauthorizedError ? 'warning' : 'error',
                 title: errorTitle,
                 text: errorMessage,
-                confirmButtonColor: '#60a5fa'
+                confirmButtonColor: '#60a5fa',
+                confirmButtonText: translations.ok
             });
             submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i> Upload Video';
             submitBtn.disabled = false;

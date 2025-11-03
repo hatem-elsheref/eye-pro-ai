@@ -32,7 +32,7 @@ CHUNK_STORAGE_DISK=public
 FINAL_STORAGE_DISK=public
 ```
 - Chunks: `storage/app/public/chunks/`
-- Final files: `storage/app/public/matches/`
+- Final files: `storage/app/public/Full_Matches/`
 
 ### Example 2: S3 for Final, Local for Chunks (Recommended for Production)
 ```env
@@ -40,7 +40,7 @@ CHUNK_STORAGE_DISK=public
 FINAL_STORAGE_DISK=s3
 ```
 - Chunks: `storage/app/public/chunks/` (fast local writes)
-- Final files: `s3://your-bucket/matches/` (cloud storage)
+- Final files: `s3://your-bucket/Full_Matches/` (cloud storage)
 
 ### Example 3: S3 for Everything
 ```env
@@ -48,7 +48,7 @@ CHUNK_STORAGE_DISK=s3
 FINAL_STORAGE_DISK=s3
 ```
 - Chunks: `s3://your-bucket/chunks/`
-- Final files: `s3://your-bucket/matches/`
+- Final files: `s3://your-bucket/Full_Matches/`
 
 ## S3 Configuration
 

@@ -20,6 +20,41 @@ class MatchApiController extends Controller
         $this->notificationService = $notificationService;
     }
 
+    /**
+     * Generate storage URL with proper handling for S3 (pre-signed URLs)
+     */
+    protected function generateStorageUrl(string $disk, string $path): string
+    {
+        if ($disk === 'public' || $disk === 'local') {
+            return Storage::disk($disk)->url($path);
+        }
+
+        // For S3 and other cloud storage, use pre-signed URLs if bucket is private
+        try {
+            $storage = Storage::disk($disk);
+            
+            // Check if we should use pre-signed URLs (default: true for S3)
+            $usePreSigned = env('S3_USE_PRESIGNED_URLS', true);
+            
+            if ($usePreSigned && $disk === 's3') {
+                // Generate pre-signed URL that expires in 1 hour (3600 seconds)
+                return $storage->temporaryUrl($path, now()->addHours(1));
+            }
+            
+            // Fallback to regular URL (works if bucket has public read access)
+            return $storage->url($path);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate storage URL', [
+                'disk' => $disk,
+                'path' => $path,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Fallback to regular URL attempt
+            return Storage::disk($disk)->url($path);
+        }
+    }
+
     protected function validateApiKey(Request $request): bool
     {
         $apiKey = $request->header('X-API-Key');
@@ -55,11 +90,29 @@ class MatchApiController extends Controller
         ];
 
         try {
-            if ($match->video_path && Storage::disk($disk)->exists($match->video_path)) {
-                $fileInfo['size_bytes'] = Storage::disk($disk)->size($match->video_path);
+            if ($match->video_path) {
+                try {
+                    if (Storage::disk($disk)->exists($match->video_path)) {
+                        $fileInfo['size_bytes'] = Storage::disk($disk)->size($match->video_path);
+                    }
+                } catch (\Exception $e) {
+                    // If exists() fails due to permission (e.g., missing s3:ListBucket),
+                    // we can't get the size but the file might still be accessible
+                    if (str_contains($e->getMessage(), 'AccessDenied') || str_contains($e->getMessage(), 'ListBucket')) {
+                        Log::warning('Cannot check file existence (missing s3:ListBucket permission)', [
+                            'matchId' => $id,
+                            'disk' => $disk
+                        ]);
+                    } else {
+                        throw $e; // Re-throw if it's a different error
+                    }
+                }
             }
         } catch (\Exception $e) {
-            Log::warning('Could not get file size', ['matchId' => $id]);
+            Log::warning('Could not get file size', [
+                'matchId' => $id,
+                'error' => $e->getMessage()
+            ]);
         }
 
         return response()->json(['success' => true, 'data' => $fileInfo]);
@@ -105,7 +158,7 @@ class MatchApiController extends Controller
         if ($prediction->clip_path) {
             $clipStorageDisk = env('CLIP_STORAGE_DISK', $match->storage_disk ?? 'public');
             try {
-                $clipUrl = Storage::disk($clipStorageDisk)->url($prediction->clip_path);
+                $clipUrl = $this->generateStorageUrl($clipStorageDisk, $prediction->clip_path);
             } catch (\Exception $e) {
                 Log::warning('Failed to generate clip URL for WebSocket', [
                     'clip_path' => $prediction->clip_path,

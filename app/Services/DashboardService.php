@@ -30,9 +30,10 @@ class DashboardService
                 }
 
                 // Calculate matches folder size
-                if ($finalDisk->exists('matches')) {
-                    $totalSize += $this->getDirectorySize($finalDisk, 'matches');
+                if ($finalDisk->exists('Full_Matches')) {
+                    $totalSize += $this->getDirectorySize($finalDisk, 'Full_Matches');
                 }
+
             } else {
                 // Regular user: Check only their folders
                 $userId = $user->id;
@@ -46,11 +47,11 @@ class DashboardService
                 }
 
                 // Check matches folder but only files that contain upload_user_{user_id} pattern
-                // Files are stored as: matches/{uploadId}_{fileName}
+                // Files are stored as: Full_Matches/{uploadId}_{fileName}
                 // Where uploadId contains: upload_user_{userId}_...
-                if ($finalDisk->exists('matches')) {
+                if ($finalDisk->exists('Full_Matches')) {
                     $userPattern = "_user_{$userId}_";
-                    $files = $finalDisk->files('matches');
+                    $files = $finalDisk->files('Full_Matches');
 
                     foreach ($files as $file) {
                         $fileName = basename($file);

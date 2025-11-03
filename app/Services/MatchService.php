@@ -20,16 +20,89 @@ class MatchService
     }
 
     /**
+     * Generate storage URL with proper handling for S3 (pre-signed URLs)
+     * Public method so controllers can use it
+     */
+    public function generateStorageUrl(string $disk, string $path): string
+    {
+        if ($disk === 'public' || $disk === 'local') {
+            return Storage::disk($disk)->url($path);
+        }
+
+        // For S3 and other cloud storage, use pre-signed URLs if bucket is private
+        // Pre-signed URLs expire after 1 hour (3600 seconds)
+        // For public buckets, regular url() will work, but pre-signed is safer
+        try {
+            $storage = Storage::disk($disk);
+
+            // Check if we should use pre-signed URLs (default: true for S3)
+            $usePreSigned = env('S3_USE_PRESIGNED_URLS', true);
+
+            if ($usePreSigned && $disk === 's3') {
+                // Generate pre-signed URL that expires in 1 hour (3600 seconds)
+                // You can adjust the expiration time as needed
+                try {
+                    return $storage->temporaryUrl($path, now()->addHours(1));
+                } catch (\Exception $e) {
+                    // If temporaryUrl fails (e.g., permission denied), try regular URL
+                    Log::warning('Failed to generate pre-signed URL, trying regular URL', [
+                        'disk' => $disk,
+                        'path' => $path,
+                        'error' => $e->getMessage()
+                    ]);
+                    return $storage->url($path);
+                }
+            }
+
+            // Fallback to regular URL (works if bucket has public read access)
+            return $storage->url($path);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate storage URL', [
+                'disk' => $disk,
+                'path' => $path,
+                'error' => $e->getMessage()
+            ]);
+
+            // If all else fails, construct a basic URL from bucket and path
+            if ($disk === 's3') {
+                $bucket = env('AWS_BUCKET');
+                $region = env('AWS_DEFAULT_REGION', 'us-east-1');
+                $url = env('AWS_URL');
+                if ($url) {
+                    return rtrim($url, '/') . '/' . ltrim($path, '/');
+                }
+                return "https://{$bucket}.s3.{$region}.amazonaws.com/" . ltrim($path, '/');
+            }
+
+            // Last resort fallback
+            return Storage::disk($disk)->url($path);
+        }
+    }
+
+    /**
      * Create match from file upload
      */
     public function createFromFile(User $user, string $name, $file): MatchVideo
     {
         $finalDisk = $this->finalStorageDisk;
-        $videoPath = $file->store('matches', $finalDisk);
-        
-        $videoUrl = ($finalDisk === 'public') 
-            ? Storage::disk('public')->url($videoPath)
-            : Storage::disk($finalDisk)->url($videoPath);
+
+        // Store file with public visibility for S3 (allows direct access)
+        // If using private bucket, we'll use pre-signed URLs when generating URLs
+        $videoPath = $file->store('Full_Matches', $finalDisk);
+
+        // Set visibility to public for S3 if bucket supports it
+        if ($finalDisk === 's3') {
+            try {
+                Storage::disk($finalDisk)->setVisibility($videoPath, 'public');
+            } catch (\Exception $e) {
+                Log::warning('Failed to set public visibility for S3 file', [
+                    'path' => $videoPath,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        $videoUrl = $this->generateStorageUrl($finalDisk, $videoPath);
 
         return MatchVideo::create([
             'user_id' => $user->id,
@@ -71,14 +144,7 @@ class MatchService
             throw new \Exception('Invalid upload ID');
         }
 
-        // Check concurrent upload lock
-        $lockKey = 'upload_lock_user_' . $userId;
-        $lock = Cache::get($lockKey);
-        if ($lock && $lock !== $uploadId) {
-            throw new \Exception('Another upload is in progress');
-        }
-
-        Cache::put($lockKey, $uploadId, now()->addHours(2));
+        // Note: Removed concurrent upload lock - users can now upload multiple files simultaneously
 
         $chunkDir = 'chunks/user_' . $userId . '/' . $uploadId;
         $chunkStorage = Storage::disk($this->chunkStorageDisk);
@@ -86,6 +152,21 @@ class MatchService
         if (in_array($this->chunkStorageDisk, ['public', 'local'])) {
             if (!$chunkStorage->exists($chunkDir)) {
                 $chunkStorage->makeDirectory($chunkDir, 0755, true);
+            }
+        } else {
+            // For S3 and other cloud storage, try to check if directory exists
+            // If ListBucket permission is missing, this will fail gracefully
+            try {
+                if (!$chunkStorage->exists($chunkDir)) {
+                    // Directory doesn't exist, but that's ok - we'll create it when storing chunks
+                }
+            } catch (\Exception $e) {
+                // Permission denied or other error - continue anyway
+                // S3 will create the "directory" (prefix) automatically when we put the file
+                Log::debug('Could not check if chunk directory exists (may need s3:ListBucket permission)', [
+                    'chunkDir' => $chunkDir,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
@@ -138,16 +219,16 @@ class MatchService
             throw new \Exception('Upload session not found');
         }
 
-        $totalChunks = $uploadStatus['totalChunks'];
-        $uploadedChunks = $uploadStatus['uploadedChunks'];
+        $totalChunks = (int) $uploadStatus['totalChunks'];
+        $uploadedChunks = $uploadStatus['uploadedChunks'] ?? [];
 
-        if (count($uploadedChunks) !== (int) $totalChunks) {
-            throw new \Exception('Not all chunks uploaded');
+        if (count($uploadedChunks) !== $totalChunks) {
+            throw new \Exception('Not all chunks uploaded. Expected: ' . $totalChunks . ', Uploaded: ' . count($uploadedChunks));
         }
 
         $chunkDir = 'chunks/user_' . $userId . '/' . $uploadId;
         $finalFileName = $uploadStatus['fileName'];
-        $finalPath = 'matches/' . $uploadId . '_' . $finalFileName;
+        $finalPath = 'Full_Matches/' . $uploadId . '_' . $finalFileName;
 
         $chunkStorage = Storage::disk($this->chunkStorageDisk);
         $finalStorage = Storage::disk($this->finalStorageDisk);
@@ -159,18 +240,63 @@ class MatchService
 
             for ($i = 0; $i < $totalChunks; $i++) {
                 $chunkPath = $chunkDir . '/' . $i;
-                if (!$chunkStorage->exists($chunkPath)) {
+                try {
+                    if (!$chunkStorage->exists($chunkPath)) {
+                        fclose($tempFile);
+                        @unlink($tempPath);
+                        Log::error('Chunk missing during finalization', [
+                            'uploadId' => $uploadId,
+                            'chunkIndex' => $i,
+                            'totalChunks' => $totalChunks,
+                            'uploadedChunks' => $uploadedChunks
+                        ]);
+                        throw new \Exception("Chunk {$i} is missing. Please try uploading again.");
+                    }
+                } catch (\Exception $e) {
+                    // If it's a permission error, try to get the file directly (might still exist)
+                    if (str_contains($e->getMessage(), 'AccessDenied') || str_contains($e->getMessage(), 'ListBucket')) {
+                        Log::warning('Cannot check chunk existence (may need s3:ListBucket), attempting direct read', [
+                            'chunkPath' => $chunkPath,
+                            'uploadId' => $uploadId
+                        ]);
+                        // Continue to try reading the file directly
+                    } else {
+                        // Re-throw if it's a different error or chunk is truly missing
+                        throw $e;
+                    }
+                }
+                try {
+                    $chunkContent = $chunkStorage->get($chunkPath);
+                    fwrite($tempFile, $chunkContent);
+                } catch (\Exception $e) {
                     fclose($tempFile);
                     @unlink($tempPath);
-                    throw new \Exception("Chunk {$i} is missing");
+                    Log::error('Failed to read chunk during finalization', [
+                        'uploadId' => $uploadId,
+                        'chunkIndex' => $i,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw new \Exception("Failed to read chunk {$i}: " . $e->getMessage());
                 }
-                fwrite($tempFile, $chunkStorage->get($chunkPath));
             }
 
             fclose($tempFile);
             $finalStorage->put($finalPath, file_get_contents($tempPath));
             @unlink($tempPath);
-            $videoUrl = $finalStorage->url($finalPath);
+
+            // Set visibility to public for S3 if bucket supports it
+            if ($this->finalStorageDisk === 's3') {
+                try {
+                    $finalStorage->setVisibility($finalPath, 'public');
+                } catch (\Exception $e) {
+                    Log::warning('Failed to set public visibility for S3 file', [
+                        'path' => $finalPath,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $videoUrl = $this->generateStorageUrl($this->finalStorageDisk, $finalPath);
         } else {
             $finalDir = dirname($finalPath);
             if (in_array($this->finalStorageDisk, ['public', 'local'])) {
@@ -182,20 +308,76 @@ class MatchService
             $finalFile = fopen($finalStorage->path($finalPath), 'wb');
             for ($i = 0; $i < $totalChunks; $i++) {
                 $chunkPath = $chunkDir . '/' . $i;
-                if (!$chunkStorage->exists($chunkPath)) {
+                try {
+                    if (!$chunkStorage->exists($chunkPath)) {
+                        fclose($finalFile);
+                        try {
+                            if ($finalStorage->exists($finalPath)) {
+                                $finalStorage->delete($finalPath);
+                            }
+                        } catch (\Exception $deleteErr) {
+                            // Ignore delete errors if we can't check existence
+                        }
+                        Log::error('Chunk missing during finalization', [
+                            'uploadId' => $uploadId,
+                            'chunkIndex' => $i,
+                            'totalChunks' => $totalChunks,
+                            'uploadedChunks' => $uploadedChunks
+                        ]);
+                        throw new \Exception("Chunk {$i} is missing. Please try uploading again.");
+                    }
+                } catch (\Exception $e) {
+                    // If it's a permission error, try to get the file directly (might still exist)
+                    if (str_contains($e->getMessage(), 'AccessDenied') || str_contains($e->getMessage(), 'ListBucket')) {
+                        Log::warning('Cannot check chunk existence (may need s3:ListBucket), attempting direct read', [
+                            'chunkPath' => $chunkPath,
+                            'uploadId' => $uploadId
+                        ]);
+                        // Continue to try reading the file directly
+                    } else {
+                        // Re-throw if it's a different error or chunk is truly missing
+                        fclose($finalFile);
+                        try {
+                            if ($finalStorage->exists($finalPath)) {
+                                $finalStorage->delete($finalPath);
+                            }
+                        } catch (\Exception $deleteErr) {
+                            // Ignore delete errors
+                        }
+                        throw $e;
+                    }
+                }
+                try {
+                    $chunkContent = $chunkStorage->get($chunkPath);
+                    fwrite($finalFile, $chunkContent);
+                } catch (\Exception $e) {
                     fclose($finalFile);
                     if ($finalStorage->exists($finalPath)) {
                         $finalStorage->delete($finalPath);
                     }
-                    throw new \Exception("Chunk {$i} is missing");
+                    Log::error('Failed to read chunk during finalization', [
+                        'uploadId' => $uploadId,
+                        'chunkIndex' => $i,
+                        'error' => $e->getMessage()
+                    ]);
+                    throw new \Exception("Failed to read chunk {$i}: " . $e->getMessage());
                 }
-                fwrite($finalFile, $chunkStorage->get($chunkPath));
             }
             fclose($finalFile);
 
-            $videoUrl = ($this->finalStorageDisk === 'public')
-                ? Storage::disk('public')->url($finalPath)
-                : $finalStorage->url($finalPath);
+            // Set visibility to public for S3 if bucket supports it
+            if ($this->finalStorageDisk === 's3') {
+                try {
+                    $finalStorage->setVisibility($finalPath, 'public');
+                } catch (\Exception $e) {
+                    Log::warning('Failed to set public visibility for S3 file', [
+                        'path' => $finalPath,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            $videoUrl = $this->generateStorageUrl($this->finalStorageDisk, $finalPath);
         }
 
         // Clean up
@@ -206,7 +388,6 @@ class MatchService
         }
 
         Cache::forget($uploadKey);
-        Cache::forget('upload_lock_user_' . $userId);
 
         // Create match
         $match = MatchVideo::create([

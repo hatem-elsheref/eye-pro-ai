@@ -108,18 +108,32 @@
                 </div>
 
                 <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl max-w-3xl mx-auto">
-                @if(isset($match->video_url))
-                        <video id="player" class="w-full" playsinline controls data-poster="">
-                        <source src="{{ $match->video_url }}" type="video/mp4">
-                            <source src="{{ $match->video_url }}" type="video/webm">
+                @if(isset($isExternalVideo) && $isExternalVideo && isset($embedUrl))
+                    <!-- YouTube/Vimeo Embed -->
+                    <div class="aspect-video w-full">
+                        <iframe 
+                            id="player"
+                            src="{{ $embedUrl }}"
+                            class="w-full h-full"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen
+                            loading="lazy">
+                        </iframe>
+                    </div>
+                @elseif(isset($matchVideoUrl) || isset($match->video_url))
+                    <!-- Regular Video File -->
+                    <video id="player" class="w-full" playsinline controls data-poster="">
+                        <source src="{{ $matchVideoUrl ?? $match->video_url }}" type="video/mp4">
+                        <source src="{{ $matchVideoUrl ?? $match->video_url }}" type="video/webm">
                         Your browser does not support the video tag.
                     </video>
                 @else
-                        <div class="aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                            <div class="text-center text-white">
-                                <i class="fas fa-video text-6xl opacity-30 mb-4"></i>
-                                <p class="text-lg opacity-70 font-medium">Video not available</p>
-                            </div>
+                    <div class="aspect-video flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+                        <div class="text-center text-white">
+                            <i class="fas fa-video text-6xl opacity-30 mb-4"></i>
+                            <p class="text-lg opacity-70 font-medium">{{ __('admin.video_not_available') }}</p>
+                        </div>
                     </div>
                 @endif
             </div>
