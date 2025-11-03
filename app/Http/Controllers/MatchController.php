@@ -64,7 +64,13 @@ class MatchController extends Controller
 
     public function index(Request $request)
     {
-        $query = MatchVideo::where('user_id', auth()->id());
+        $authUser = auth()->user();
+
+        $query = MatchVideo::query();
+
+        if (!$authUser->is_admin){
+            $query = $query->where('user_id', $authUser->id);
+        }
 
         if ($request->filled('search')) {
             $search = trim($request->get('search'));

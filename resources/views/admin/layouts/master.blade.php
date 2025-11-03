@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0" id="avatar-name-sidebar">
                                     <p class="text-sm font-semibold text-white truncate">{{ Auth::user()->name ?? 'User' }}</p>
-                                    <p class="text-xs text-gray-400 truncate">{{ Auth::user()->email ?? '' }}</p>
+{{--                                    <p class="text-xs text-gray-400 truncate">{{ Auth::user()->email ?? '' }}</p>--}}
                                 </div>
                             </div>
                             <form action="{{ route('logout') }}" method="POST" class="ml-2">
@@ -956,11 +956,33 @@
                             } else if (data.type === 'notification') {
                                 console.log('Received notification:', data.notification);
 
+                                const notification = data.notification;
+
+                                // Check if this is a match_upload_success notification on the match show page
+                                if (notification.type === 'match_upload_success' && notification.match_id) {
+                                    const currentPath = window.location.pathname;
+                                    const matchShowRegex = /^\/matches\/(\d+)/;
+                                    const match = currentPath.match(matchShowRegex);
+                                    
+                                    if (match) {
+                                        const currentMatchId = parseInt(match[1]);
+                                        const notificationMatchId = parseInt(notification.match_id);
+                                        
+                                        // If we're on the show page for this match, refresh immediately
+                                        if (currentMatchId === notificationMatchId) {
+                                            console.log('Match upload success notification received for current match, refreshing page...');
+                                            // Refresh the page immediately
+                                            window.location.reload();
+                                            return; // Exit early, don't show toast or refresh notifications
+                                        }
+                                    }
+                                }
+
                                 // Play sound
                                 playNotificationSound();
 
                                 // Show toast
-                                showToast(data.notification);
+                                showToast(notification);
 
                                 // Refresh notification list
                                 refreshNotifications();

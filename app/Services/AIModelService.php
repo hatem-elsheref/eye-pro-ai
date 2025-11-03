@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Log;
 class AIModelService
 {
     protected $endpoint;
+    protected $api_key;
 
     public function __construct()
     {
         $this->endpoint = env('AI_MODEL_ENDPOINT');
+        $this->api_key  = env('AI_MODEL_API_KEY');
     }
 
     /**
@@ -19,15 +21,16 @@ class AIModelService
      */
     public function startProcessing(int $matchId): array
     {
-        if (!$this->endpoint) {
-            return $this->error('AI_MODEL_ENDPOINT not configured');
+        if (!$this->isConfigured()) {
+            return $this->error('May be [AI_MODEL_ENDPOINT / AI_MODEL_API_KEY] not configured yet.');
         }
 
-
         try {
-            $response = Http::timeout(30)->post("{$this->endpoint}/start", [
-                'match_id' => $matchId
-            ]);
+            $response = Http::timeout(30)
+                ->withHeader('X-API-KEY', $this->api_key)
+                ->post("{$this->endpoint}/start", [
+                    'match_id' => $matchId
+                ]);
 
             if ($response->successful()) {
                 Log::info('AI processing started', ['matchId' => $matchId]);
@@ -46,14 +49,16 @@ class AIModelService
      */
     public function stopProcessing(int $matchId): array
     {
-        if (!$this->endpoint) {
-            return $this->error('AI_MODEL_ENDPOINT not configured');
+        if (!$this->isConfigured()) {
+            return $this->error('May be [AI_MODEL_ENDPOINT / AI_MODEL_API_KEY] not configured yet.');
         }
 
         try {
-            $response = Http::timeout(30)->post("{$this->endpoint}/stop", [
-                'match_id' => $matchId
-            ]);
+            $response = Http::timeout(30)
+                ->withHeader('X-API-KEY', $this->api_key)
+                ->post("{$this->endpoint}/stop", [
+                    'match_id' => $matchId
+                ]);
 
             if ($response->successful()) {
                 Log::info('AI processing stopped', ['matchId' => $matchId]);
@@ -72,14 +77,16 @@ class AIModelService
      */
     public function getStatus(int $matchId): array
     {
-        if (!$this->endpoint) {
-            return $this->error('AI_MODEL_ENDPOINT not configured', null, null);
+        if (!$this->isConfigured()) {
+            return $this->error('May be [AI_MODEL_ENDPOINT / AI_MODEL_API_KEY] not configured yet.');
         }
 
         try {
-            $response = Http::timeout(10)->post("{$this->endpoint}/status", [
-                'match_id' => $matchId
-            ]);
+            $response = Http::timeout(30)
+                ->withHeader('X-API-KEY', $this->api_key)
+                ->post("{$this->endpoint}/status", [
+                    'match_id' => $matchId
+                ]);
 
             if ($response->successful()) {
                 $data = $response->json();
@@ -94,6 +101,10 @@ class AIModelService
         }
     }
 
+    private function isConfigured(): bool
+    {
+        return (!empty($this->endpoint) && !empty($this->api_key));
+    }
     /**
      * Success response
      */
