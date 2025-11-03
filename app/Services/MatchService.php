@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MatchVideo;
 use App\Models\User;
+use App\Jobs\AssembleAndUploadToS3;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -230,176 +231,42 @@ class MatchService
         $finalFileName = $uploadStatus['fileName'];
         $finalPath = 'Full_Matches/' . $uploadId . '_' . $finalFileName;
 
-        $chunkStorage = Storage::disk($this->chunkStorageDisk);
-        $finalStorage = Storage::disk($this->finalStorageDisk);
-
-        // Assemble chunks
-        if ($this->shouldAssembleDirectlyInStorage()) {
-            $tempPath = sys_get_temp_dir() . '/' . $uploadId . '_' . $finalFileName;
-            $tempFile = fopen($tempPath, 'wb');
-
-            for ($i = 0; $i < $totalChunks; $i++) {
-                $chunkPath = $chunkDir . '/' . $i;
-                try {
-                    if (!$chunkStorage->exists($chunkPath)) {
-                        fclose($tempFile);
-                        @unlink($tempPath);
-                        Log::error('Chunk missing during finalization', [
-                            'uploadId' => $uploadId,
-                            'chunkIndex' => $i,
-                            'totalChunks' => $totalChunks,
-                            'uploadedChunks' => $uploadedChunks
-                        ]);
-                        throw new \Exception("Chunk {$i} is missing. Please try uploading again.");
-                    }
-                } catch (\Exception $e) {
-                    // If it's a permission error, try to get the file directly (might still exist)
-                    if (str_contains($e->getMessage(), 'AccessDenied') || str_contains($e->getMessage(), 'ListBucket')) {
-                        Log::warning('Cannot check chunk existence (may need s3:ListBucket), attempting direct read', [
-                            'chunkPath' => $chunkPath,
-                            'uploadId' => $uploadId
-                        ]);
-                        // Continue to try reading the file directly
-                    } else {
-                        // Re-throw if it's a different error or chunk is truly missing
-                        throw $e;
-                    }
-                }
-                try {
-                    $chunkContent = $chunkStorage->get($chunkPath);
-                    fwrite($tempFile, $chunkContent);
-                } catch (\Exception $e) {
-                    fclose($tempFile);
-                    @unlink($tempPath);
-                    Log::error('Failed to read chunk during finalization', [
-                        'uploadId' => $uploadId,
-                        'chunkIndex' => $i,
-                        'error' => $e->getMessage()
-                    ]);
-                    throw new \Exception("Failed to read chunk {$i}: " . $e->getMessage());
-                }
-            }
-
-            fclose($tempFile);
-            $finalStorage->put($finalPath, file_get_contents($tempPath));
-            @unlink($tempPath);
-
-            // Set visibility to public for S3 if bucket supports it
-            if ($this->finalStorageDisk === 's3') {
-                try {
-                    $finalStorage->setVisibility($finalPath, 'public');
-                } catch (\Exception $e) {
-                    Log::warning('Failed to set public visibility for S3 file', [
-                        'path' => $finalPath,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
-
-            $videoUrl = $this->generateStorageUrl($this->finalStorageDisk, $finalPath);
-        } else {
-            $finalDir = dirname($finalPath);
-            if (in_array($this->finalStorageDisk, ['public', 'local'])) {
-                if (!$finalStorage->exists($finalDir)) {
-                    $finalStorage->makeDirectory($finalDir, 0755, true);
-                }
-            }
-
-            $finalFile = fopen($finalStorage->path($finalPath), 'wb');
-            for ($i = 0; $i < $totalChunks; $i++) {
-                $chunkPath = $chunkDir . '/' . $i;
-                try {
-                    if (!$chunkStorage->exists($chunkPath)) {
-                        fclose($finalFile);
-                        try {
-                            if ($finalStorage->exists($finalPath)) {
-                                $finalStorage->delete($finalPath);
-                            }
-                        } catch (\Exception $deleteErr) {
-                            // Ignore delete errors if we can't check existence
-                        }
-                        Log::error('Chunk missing during finalization', [
-                            'uploadId' => $uploadId,
-                            'chunkIndex' => $i,
-                            'totalChunks' => $totalChunks,
-                            'uploadedChunks' => $uploadedChunks
-                        ]);
-                        throw new \Exception("Chunk {$i} is missing. Please try uploading again.");
-                    }
-                } catch (\Exception $e) {
-                    // If it's a permission error, try to get the file directly (might still exist)
-                    if (str_contains($e->getMessage(), 'AccessDenied') || str_contains($e->getMessage(), 'ListBucket')) {
-                        Log::warning('Cannot check chunk existence (may need s3:ListBucket), attempting direct read', [
-                            'chunkPath' => $chunkPath,
-                            'uploadId' => $uploadId
-                        ]);
-                        // Continue to try reading the file directly
-                    } else {
-                        // Re-throw if it's a different error or chunk is truly missing
-                        fclose($finalFile);
-                        try {
-                            if ($finalStorage->exists($finalPath)) {
-                                $finalStorage->delete($finalPath);
-                            }
-                        } catch (\Exception $deleteErr) {
-                            // Ignore delete errors
-                        }
-                        throw $e;
-                    }
-                }
-                try {
-                    $chunkContent = $chunkStorage->get($chunkPath);
-                    fwrite($finalFile, $chunkContent);
-                } catch (\Exception $e) {
-                    fclose($finalFile);
-                    if ($finalStorage->exists($finalPath)) {
-                        $finalStorage->delete($finalPath);
-                    }
-                    Log::error('Failed to read chunk during finalization', [
-                        'uploadId' => $uploadId,
-                        'chunkIndex' => $i,
-                        'error' => $e->getMessage()
-                    ]);
-                    throw new \Exception("Failed to read chunk {$i}: " . $e->getMessage());
-                }
-            }
-            fclose($finalFile);
-
-            // Set visibility to public for S3 if bucket supports it
-            if ($this->finalStorageDisk === 's3') {
-                try {
-                    $finalStorage->setVisibility($finalPath, 'public');
-                } catch (\Exception $e) {
-                    Log::warning('Failed to set public visibility for S3 file', [
-                        'path' => $finalPath,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
-
-            $videoUrl = $this->generateStorageUrl($this->finalStorageDisk, $finalPath);
-        }
-
-        // Clean up
-        try {
-            $chunkStorage->deleteDirectory($chunkDir);
-        } catch (\Exception $e) {
-            Log::warning('Failed to delete chunk directory: ' . $e->getMessage());
-        }
-
-        Cache::forget($uploadKey);
-
-        // Create match
+        // Always upload to S3 using background job for assembly and upload
         $match = MatchVideo::create([
             'user_id' => $userId,
             'name' => $matchName,
             'type' => 'file',
-            'status' => 'pending',
-            'video_url' => $videoUrl,
+            'status' => 'uploading', // Temporary status while uploading to S3
+            'video_url' => null, // Will be set by background job
             'video_path' => $finalPath,
             'file_size' => $this->formatBytes($uploadStatus['fileSize']),
-            'storage_disk' => $this->finalStorageDisk,
+            'storage_disk' => 's3', // Always use S3
         ]);
+
+        // Dispatch background job to assemble chunks and upload to S3
+        // This happens entirely in background - user doesn't wait
+        \App\Jobs\AssembleAndUploadToS3::dispatch(
+            $match->id,
+            $chunkDir,
+            $finalPath,
+            $totalChunks,
+            $this->chunkStorageDisk
+        )->onQueue('uploads'); // Use dedicated queue for uploads
+
+        Log::info('Dispatched assembly and S3 upload job', [
+            'matchId' => $match->id,
+            'uploadId' => $uploadId,
+            'finalPath' => $finalPath,
+            'totalChunks' => $totalChunks,
+            'chunkDir' => $chunkDir
+        ]);
+
+        // Send notification that upload has started
+        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService->notifyUploadStarted($match);
+
+        // Don't delete temp file or chunks yet - job will handle cleanup
+        // Don't delete cache yet - job might need it
 
         return $match;
     }

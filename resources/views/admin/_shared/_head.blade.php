@@ -536,6 +536,7 @@
         background: rgba(67, 56, 202, 0.02);
     }
     
+    
     .progress-bar {
         width: 100%;
         height: 8px;

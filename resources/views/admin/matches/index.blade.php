@@ -23,7 +23,7 @@
     </div>
     
     @if(isset($accountPending) && $accountPending)
-    <div class="bg-amber-50 border-l-4 border-amber-500 rounded-2xl p-6 shadow-lg">
+    <div class="bg-amber-50 border-l-4 border-amber-500 rounded-2xl p-6 shadow-lg alert-border-rtl">
         <div class="flex items-start space-x-4">
             <div class="flex-shrink-0">
                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 shadow-lg">
@@ -83,9 +83,24 @@
                             {{ __('admin.done') }}
                         </span>
                         @elseif($match->status === 'processing')
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
-                            <span class="h-1 w-1 rounded-full bg-amber-600 mr-1 animate-pulse"></span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-700 border border-indigo-200">
+                            <span class="h-1 w-1 rounded-full bg-indigo-600 mr-1 animate-pulse"></span>
                             {{ __('admin.processing') }}
+                        </span>
+                        @elseif($match->status === 'pending')
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                            <span class="h-1 w-1 rounded-full bg-amber-600 mr-1"></span>
+                            {{ __('admin.pending') }}
+                        </span>
+                        @elseif($match->status === 'uploading')
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-cyan-100 text-cyan-700 border border-cyan-200">
+                            <span class="h-1 w-1 rounded-full bg-cyan-600 mr-1 animate-pulse"></span>
+                            {{ __('admin.uploading') }}
+                        </span>
+                        @elseif($match->status === 'failed')
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                            <span class="h-1 w-1 rounded-full bg-red-600 mr-1"></span>
+                            {{ __('admin.failed') }}
                         </span>
                         @else
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">

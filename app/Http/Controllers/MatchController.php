@@ -73,7 +73,7 @@ class MatchController extends Controller
             }
         }
 
-        $matches = $query->latest()->paginate(10)->withQueryString();
+        $matches = $query->latest()->paginate(9)->withQueryString();
 
         return view('admin.matches.index', [
             'matches' => $matches,
@@ -123,8 +123,11 @@ class MatchController extends Controller
                 return back()->with('error', __('admin.please_provide_file_or_url'));
             }
 
-            // Send notification only (no auto-processing)
-            $this->notificationService->notifyUploadProcessing($match);
+            // For URL uploads, send upload success notification (not processing started)
+            // For file uploads, notifications are handled by the upload flow
+            if ($match->type === 'url') {
+                $this->notificationService->notifyUploadSuccess($match);
+            }
 
             return redirect()->route('matches.show', $match->id)
                 ->with('success', __('admin.match_uploaded_success'));
@@ -151,7 +154,7 @@ class MatchController extends Controller
         $matchVideoUrl = $match->video_url;
         $isExternalVideo = false;
         $embedUrl = null;
-        
+
         if ($match->type === 'file' && $match->video_path && $match->storage_disk) {
             try {
                 $matchVideoUrl = $this->generateStorageUrl($match->storage_disk, $match->video_path);
@@ -172,7 +175,7 @@ class MatchController extends Controller
                 $embedUrl = $videoInfo['embed_url'];
             }
         }
-        
+
         // Get the storage disk for clips (use same disk as match, or check for clip-specific disk)
         $clipStorageDisk = env('CLIP_STORAGE_DISK', $match->storage_disk ?? 'public');
 
@@ -275,12 +278,24 @@ class MatchController extends Controller
     public function edit($id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+        // Prevent editing while uploading
+        if ($match->status === 'uploading') {
+            return redirect()->route('matches.show', $match->id)
+                ->with('error', __('admin.cannot_edit_during_upload'));
+        }
+
         return view('admin.matches.edit', compact('match'));
     }
 
     public function update(Request $request, $id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+        // Prevent updating while uploading
+        if ($match->status === 'uploading') {
+            return back()->with('error', __('admin.cannot_edit_during_upload'));
+        }
 
         $validated = $request->validate([
             'match_name' => 'required|string|max:255',
@@ -297,6 +312,12 @@ class MatchController extends Controller
     public function destroy($id)
     {
         $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+        // Prevent deleting while uploading
+        if ($match->status === 'uploading') {
+            return back()->with('error', __('admin.cannot_delete_during_upload'));
+        }
+
         $match->delete();
 
         return redirect()->route('matches.index')
@@ -347,14 +368,15 @@ class MatchController extends Controller
                 $validated['match_name']
             );
 
-            // Send notification only (no auto-processing)
-            $this->notificationService->notifyUploadProcessing($match);
+            // Notification is sent by the background job when upload completes
+            // For S3, we always use background job, so no notification here
 
             return response()->json([
                 'success' => true,
-                'message' => __('admin.upload_completed_successfully'),
+                'message' => __('admin.upload_started_background'),
                 'matchId' => $match->id,
                 'redirectUrl' => route('matches.show', $match->id),
+                'status' => $match->status, // Include status so frontend knows if it's uploading
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to finalize upload', [
@@ -391,6 +413,14 @@ class MatchController extends Controller
     {
         try {
             $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+            // Prevent starting processing while uploading
+            if ($match->status === 'uploading') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('admin.cannot_start_during_upload')
+                ], 400);
+            }
 
             // Check if match is in pending status
             if ($match->status !== 'pending') {
@@ -448,6 +478,14 @@ class MatchController extends Controller
     {
         try {
             $match = MatchVideo::where('user_id', auth()->id())->findOrFail($id);
+
+            // Prevent stopping while uploading
+            if ($match->status === 'uploading') {
+                return response()->json([
+                    'success' => false,
+                    'message' => __('admin.cannot_stop_during_upload')
+                ], 400);
+            }
 
             // Check if match is in processing status
             if ($match->status !== 'processing') {

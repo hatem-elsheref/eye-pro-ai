@@ -8,7 +8,7 @@ return [
     'info' => 'Info!',
     'please_correct_errors' => 'Please correct the following errors:',
     'close' => 'Close',
-    
+
     // Auth
     'sign_in' => 'Sign In',
     'sign_up' => 'Sign Up',
@@ -28,7 +28,7 @@ return [
     'password_reset_link_sent' => 'Password reset link sent to your email',
     'invalid_token' => 'Invalid or expired token',
     'password_reset_success' => 'Password reset successfully',
-    
+
     // Dashboard
     'dashboard' => 'Dashboard',
     'welcome_back' => 'Welcome back, :name! 👋',
@@ -51,7 +51,7 @@ return [
     'currently_processing' => 'Currently Processing',
     'none' => 'None',
     'active' => 'Active',
-    
+
     // Matches
     'matches' => 'Matches',
     'match_details' => 'Match Details',
@@ -66,6 +66,7 @@ return [
     'upload' => 'Upload',
     'match_uploaded_success' => 'Match uploaded successfully!',
     'upload_completed_successfully' => 'Upload completed successfully!',
+    'upload_started_background' => 'Upload started! File is being uploaded to cloud storage in the background.',
     'match_updated_success' => 'Match updated successfully!',
     'match_deleted_success' => 'Match deleted successfully!',
     'failed_to_upload' => 'Failed to upload match: :error',
@@ -73,6 +74,7 @@ return [
     'account_must_be_approved' => 'Your account must be approved before you can upload matches.',
     'status' => 'Status',
     'pending' => 'Pending',
+    'uploading' => 'Uploading',
     'completed' => 'Completed',
     'failed' => 'Failed',
     'start_processing' => 'Start Processing',
@@ -189,7 +191,7 @@ return [
     'delete_confirmation_text' => 'Are you sure you want to delete this match? This action cannot be undone.',
     'delete_confirmation_yes' => 'Yes, delete it',
     'delete_confirmation_cancel' => 'Cancel',
-    
+
     // Notifications
     'notification' => 'Notification',
     'notification_processing_started_title' => 'Processing Started',
@@ -198,13 +200,21 @@ return [
     'notification_analysis_complete_message' => "AI model has finished processing your match ':match_name'. Results are now available.",
     'notification_processing_failed_title' => 'Processing Failed',
     'notification_processing_failed_message' => "Failed to process match ':match_name'. Please try again or contact support.",
-    'notification_upload_processing_title' => 'Upload Processing',
-    'notification_upload_processing_message' => "Your match ':match_name' upload is complete. Processing has started.",
+    'notification_upload_processing_title' => 'Upload Successful',
+    'notification_upload_processing_message' => "Your match ':match_name' has been uploaded successfully. You can now start processing.",
+    'notification_upload_started_title' => 'Upload Started',
+    'notification_upload_started_message' => "Your match ':match_name' is now uploading to cloud storage in the background.",
+    'notification_upload_success_title' => 'Upload Successful',
+    'notification_upload_success_message' => "Your match ':match_name' has been uploaded successfully to cloud storage. You can now start processing.",
+    'cannot_edit_during_upload' => 'Cannot edit match while it is being uploaded.',
+    'cannot_delete_during_upload' => 'Cannot delete match while it is being uploaded.',
+    'cannot_start_during_upload' => 'Cannot start processing while match is being uploaded.',
+    'cannot_stop_during_upload' => 'Cannot stop processing while match is being uploaded.',
     'notification_processing_stopped_title' => 'Processing Stopped',
     'notification_processing_stopped_message' => "Processing for match ':match_name' has been stopped.",
     'notification_processing_ended_no_predictions_title' => 'Processing Complete',
     'notification_processing_ended_no_predictions_message' => "Processing for match ':match_name' completed but no predictions were generated.",
-    
+
     // Profile
     'profile' => 'Profile',
     'profile_settings' => 'Profile Settings',
@@ -232,7 +242,7 @@ return [
     'delete_account_confirm_message' => 'Are you sure you want to delete your account?',
     'yes_delete_my_account' => 'Yes, delete my account',
     'this_action_cannot_be_undone' => 'This action cannot be undone',
-    
+
     // Support
     'support' => 'Support',
     'contact_us' => 'Contact Us',
@@ -279,7 +289,7 @@ return [
     'create_new_ticket' => 'Create New Ticket',
     'ticket_details' => 'Ticket Details',
     'confirm_resolve_ticket' => 'Are you sure you want to mark this ticket as resolved?',
-    
+
     // Admin
     'admin' => 'Admin',
     'admin_panel' => 'Admin Panel',
@@ -288,6 +298,9 @@ return [
     'users_awaiting_approval' => 'Users awaiting approval',
     'approved_users' => 'Approved Users',
     'active_users' => 'Active users',
+    'admin_overview' => 'Admin Overview',
+    'platform_statistics' => 'Platform statistics and user management',
+    'view_full_admin_panel' => 'View Full Admin Panel',
     'all_uploaded_matches' => 'All uploaded matches',
     'system_settings' => 'System Settings',
     'configure_platform_behavior' => 'Configure platform behavior',
@@ -307,10 +320,10 @@ return [
     'reject' => 'Reject',
     'approved' => 'Approved',
     'rejected' => 'Rejected',
-    
+
     // Notifications
     'notifications' => 'Notifications',
-    'new' => 'New',
+    'new' => ' New ',
     'view_all_notifications' => 'View All Notifications',
     'no_new_notifications' => 'No new notifications',
     'mark_as_read' => 'Mark as Read',
@@ -324,17 +337,17 @@ return [
     'all_caught_up' => "You're all caught up! 🎉",
     'notification_marked_read' => 'Notification marked as read.',
     'all_notifications_marked_read' => 'All notifications marked as read.',
-    
+
     // Navigation
     'main_menu' => 'Main Menu',
     'logout' => 'Logout',
-    
+
     // Language
     'language' => 'Language',
     'english' => 'English',
     'arabic' => 'العربية',
     'invalid_language' => 'Invalid language selected.',
-    
+
     // Dashboard - Additional
     'quick_actions' => 'Quick Actions',
     'recent_matches' => 'Recent Matches',
@@ -372,7 +385,7 @@ return [
     'account_needs_approval' => 'Your account needs to be approved by an administrator before you can upload matches.',
     'matches_being_analyzed' => 'Matches being analyzed',
     'nov_2025' => 'Nov 2025',
-    
+
     // Common UI
     'search' => 'Search',
     'filter' => 'Filter',
@@ -393,11 +406,11 @@ return [
     'please_wait' => 'Please wait...',
     'no_data_available' => 'No data available',
     'no_results_found' => 'No results found',
-    
+
     // User Menu
     'my_profile' => 'My Profile',
     'admin_panel' => 'Admin Panel',
-    
+
     // Support Page
     'support_center' => 'Support Center',
     'support_center_description' => 'Get help with your account or report an issue',
@@ -434,7 +447,7 @@ return [
     'faq_account_pending_answer' => 'New accounts require approval from an administrator to prevent abuse. This process typically takes 24-48 hours. You\'ll receive an email notification once approved.',
     'faq_delete_match' => 'Can I delete a match after uploading?',
     'faq_delete_match_answer' => 'Yes, you can delete any match you\'ve uploaded by going to the match details page and clicking the delete button.',
-    
+
     // Users Management
     'users_management' => 'Users Management',
     'users_management_description' => 'Manage all non-admin users and their status',

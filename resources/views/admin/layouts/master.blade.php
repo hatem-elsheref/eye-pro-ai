@@ -263,37 +263,57 @@
                                  class="absolute right-0 mt-3 w-96 rounded-2xl bg-white shadow-2xl border-2 border-gray-100 overflow-hidden"
                                  style="display: none; z-index: 9999;">
                                 <div class="p-5 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
-                                                <i class="fas fa-bell text-white text-lg"></i>
+                                    <div class="flex items-center justify-between notification-header-container">
+                                        @if(app()->getLocale() === 'ar')
+                                            {{-- RTL: Badge first, then title --}}
+                                            <div class="flex items-center space-x-3 notification-title-container">
+                                                <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
+                                                    <i class="fas fa-bell text-white text-lg"></i>
+                                                </div>
+                                                <h3 class="text-xl font-extrabold text-gray-900" style="margin-right:5px ">{{ __('admin.notifications') }}</h3>
                                             </div>
-                                            <h3 class="text-xl font-extrabold text-gray-900">{{ __('admin.notifications') }}</h3>
-                                        </div>
-                                <span id="notificationHeaderBadge" class="relative inline-flex items-center justify-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
-                                    <span class="absolute -top-1 -right-1 flex items-center justify-center h-3 w-3">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
-                                    </span>
-                                    <span id="notificationHeaderCount" class="flex items-center justify-center">{{ $unreadCount }}</span> {{ __('admin.new') }}
-                                </span>
+
+                                            <span id="notificationHeaderBadge" class="relative inline-flex items-center justify-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse notification-new-badge" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
+                                                <span class="absolute -top-1 -right-1 flex items-center justify-center h-3 w-3">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
+                                                </span>
+                                                <span id="notificationHeaderCount" class="flex items-center justify-center">{{ $unreadCount }} </span> {{ __('admin.new') }}
+                                            </span>
+
+                                        @else
+                                            {{-- LTR: Title first, then badge --}}
+                                            <div class="flex items-center space-x-3 notification-title-container">
+                                                <div class="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
+                                                    <i class="fas fa-bell text-white text-lg"></i>
+                                                </div>
+                                                <h3 class="text-xl font-extrabold text-gray-900">{{ __('admin.notifications') }}</h3>
+                                            </div>
+                                            <span id="notificationHeaderBadge" class="relative inline-flex items-center justify-center px-4 py-2 rounded-xl font-extrabold text-sm text-white shadow-xl animate-pulse notification-new-badge" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);{{ $unreadCount > 0 ? '' : 'display: none;' }}">
+                                                <span class="absolute -top-1 -right-1 flex items-center justify-center h-3 w-3">
+                                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400"></span>
+                                                </span>
+                                                <span id="notificationHeaderCount" class="flex items-center justify-center">{{ $unreadCount }} </span> {{ __('admin.new') }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div id="notificationsList" class="max-h-96 overflow-y-auto">
                                     @forelse($notifications as $notification)
                                         @php
                                             $notifType = $notification->data['type'] ?? $notification->type;
-                                            
+
                                             // Use translation keys if available
                                             $titleKey = $notification->data['title_key'] ?? null;
                                             $messageKey = $notification->data['message_key'] ?? null;
-                                            
+
                                             if ($titleKey) {
                                                 $title = __($titleKey);
                                             } else {
                                                 $title = $notification->data['title'] ?? __('admin.notification');
                                             }
-                                            
+
                                             if ($messageKey) {
                                                 $matchName = $notification->data['match_name'] ?? '';
                                                 $message = __($messageKey, ['match_name' => $matchName]);
@@ -304,8 +324,8 @@
                                         <a href="{{ route('notifications.index') }}" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 {{ !$loop->last ? 'border-b border-gray-100' : '' }} group {{ $notification->read_at ? 'opacity-60' : '' }}">
                                             <div class="flex-shrink-0">
                                                 @if($notifType === 'account_approved')
-                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-user-check text-blue-600 text-xl"></i>
+                                                <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-user-check text-green-600 text-xl"></i>
                                                 </div>
                                                 @elseif($notifType === 'account_rejected')
                                                 <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -315,29 +335,37 @@
                                                 <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                                     <i class="fas fa-check-circle text-green-600 text-xl"></i>
                                                 </div>
+                                                @elseif($notifType === 'match_upload_started')
+                                                <div class="h-12 w-12 rounded-xl bg-cyan-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-cloud-upload-alt text-cyan-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_upload_success')
+                                                <div class="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                                </div>
                                                 @elseif($notifType === 'match_upload_processing')
                                                 <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-upload text-blue-600 text-xl"></i>
+                                                    <i class="fas fa-spinner fa-spin text-blue-600 text-xl"></i>
+                                                </div>
+                                                @elseif($notifType === 'match_processing_started')
+                                                <div class="h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-play-circle text-indigo-600 text-xl"></i>
                                                 </div>
                                                 @elseif($notifType === 'match_processing_failed')
                                                 <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+                                                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
                                                 </div>
                                                 @elseif($notifType === 'match_processing_ended_no_predictions')
-                                                <div class="h-12 w-12 rounded-xl bg-yellow-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+                                                <div class="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-exclamation-triangle text-amber-600 text-xl"></i>
                                                 </div>
                                                 @elseif($notifType === 'match_processing_stopped')
-                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-stop-circle text-blue-600 text-xl"></i>
+                                                <div class="h-12 w-12 rounded-xl bg-orange-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                                    <i class="fas fa-pause-circle text-orange-600 text-xl"></i>
                                                 </div>
                                                 @elseif($notifType === 'match_processing_stopped_failed')
                                                 <div class="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                                                     <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
-                                                </div>
-                                                @elseif($notifType === 'match_processing_started')
-                                                <div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                                    <i class="fas fa-play-circle text-blue-600 text-xl"></i>
                                                 </div>
                                                 @else
                                                 <div class="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -556,6 +584,7 @@
             }
         }
 
+
         /* Toast Notification Styles */
         .toast-container {
             position: fixed;
@@ -579,22 +608,44 @@
             gap: 16px;
             animation: slideInRight 0.3s ease-out;
             border-left: 4px solid #60a5fa;
+            border-right: 0;
+        }
+
+        [dir='rtl'] .toast {
+            border-left: 0;
+            border-right: 4px solid #60a5fa;
         }
 
         .toast.success {
             border-left-color: #10b981;
         }
 
+        [dir='rtl'] .toast.success {
+            border-right-color: #10b981;
+        }
+
         .toast.error {
             border-left-color: #ef4444;
+        }
+
+        [dir='rtl'] .toast.error {
+            border-right-color: #ef4444;
         }
 
         .toast.warning {
             border-left-color: #f59e0b;
         }
 
+        [dir='rtl'] .toast.warning {
+            border-right-color: #f59e0b;
+        }
+
         .toast.info {
             border-left-color: #60a5fa;
+        }
+
+        [dir='rtl'] .toast.info {
+            border-right-color: #60a5fa;
         }
 
         @keyframes slideInRight {

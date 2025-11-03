@@ -25,7 +25,7 @@
         </div>
         
         @if(session('status'))
-        <div class="mb-6 rounded-xl bg-green-50 border-l-4 border-green-500 p-4">
+        <div class="mb-6 rounded-xl bg-green-50 border-l-4 border-green-500 p-4 alert-border-rtl">
             <div class="flex items-center space-x-2">
                 <i class="fas fa-check-circle text-green-600"></i>
                 <p class="text-sm text-green-700 font-medium">{{ session('status') }}</p>

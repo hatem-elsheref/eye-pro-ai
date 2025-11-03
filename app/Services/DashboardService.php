@@ -4,71 +4,47 @@ namespace App\Services;
 
 use App\Models\MatchVideo;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
+use App\Services\AdminService;
 use Carbon\Carbon;
 
 class DashboardService
 {
+    protected $adminService;
+
+    public function __construct(AdminService $adminService)
+    {
+        $this->adminService = $adminService;
+    }
     /**
-     * Calculate storage used by checking folder sizes
+     * Calculate storage used from database (sum of file_size for matches)
+     * Only counts matches with type='file' and status NOT in ['uploading', 'failed']
      */
     protected function calculateStorageUsed(User $user, bool $isAdmin): int
     {
         $totalSize = 0;
-        $chunkStorageDisk = env('CHUNK_STORAGE_DISK', 'public');
-        $finalStorageDisk = env('FINAL_STORAGE_DISK', env('FILESYSTEM_DISK', 'public'));
 
         try {
-            if ($isAdmin) {
-                // Admin: Check size of entire chunks and matches folders
-                $chunkDisk = Storage::disk($chunkStorageDisk);
-                $finalDisk = Storage::disk($finalStorageDisk);
+            // Build query for matches with type='file' and status not in ['uploading', 'failed']
+            $query = MatchVideo::where('type', 'file')
+                ->whereNotIn('status', ['uploading', 'failed']);
 
-                // Calculate chunks folder size
-                if ($chunkDisk->exists('chunks')) {
-                    $totalSize += $this->getDirectorySize($chunkDisk, 'chunks');
-                }
+            // Filter by user if not admin
+            if (!$isAdmin) {
+                $query->where('user_id', $user->id);
+            }
 
-                // Calculate matches folder size
-                if ($finalDisk->exists('Full_Matches')) {
-                    $totalSize += $this->getDirectorySize($finalDisk, 'Full_Matches');
-                }
+            // Get all matches and sum their file sizes
+            $matches = $query->get(['id', 'file_size']);
 
-            } else {
-                // Regular user: Check only their folders
-                $userId = $user->id;
-                $chunkDisk = Storage::disk($chunkStorageDisk);
-                $finalDisk = Storage::disk($finalStorageDisk);
-
-                // Check chunks/user_{user_id} folder
-                $userChunkDir = "chunks/user_{$userId}";
-                if ($chunkDisk->exists($userChunkDir)) {
-                    $totalSize += $this->getDirectorySize($chunkDisk, $userChunkDir);
-                }
-
-                // Check matches folder but only files that contain upload_user_{user_id} pattern
-                // Files are stored as: Full_Matches/{uploadId}_{fileName}
-                // Where uploadId contains: upload_user_{userId}_...
-                if ($finalDisk->exists('Full_Matches')) {
-                    $userPattern = "_user_{$userId}_";
-                    $files = $finalDisk->files('Full_Matches');
-
-                    foreach ($files as $file) {
-                        $fileName = basename($file);
-                        // Check if filename contains the user pattern
-                        if (str_contains($fileName, $userPattern)) {
-                            try {
-                                $totalSize += $finalDisk->size($file);
-                            } catch (\Exception $e) {
-                                // Skip if file doesn't exist or can't be read
-                                continue;
-                            }
-                        }
-                    }
+            foreach ($matches as $match) {
+                if ($match->file_size) {
+                    // Parse file_size from human-readable format (e.g., "500 MB") to bytes
+                    $sizeInBytes = $this->parseFileSizeToBytes($match->file_size);
+                    $totalSize += $sizeInBytes;
                 }
             }
         } catch (\Exception $e) {
-            \Log::warning('Error calculating storage used', [
+            \Log::warning('Error calculating storage used from database', [
                 'userId' => $user->id,
                 'isAdmin' => $isAdmin,
                 'error' => $e->getMessage()
@@ -79,32 +55,40 @@ class DashboardService
     }
 
     /**
-     * Get total size of a directory recursively
+     * Parse human-readable file size (e.g., "500 MB", "1.5 GB") to bytes
      */
-    protected function getDirectorySize($disk, string $directory): int
+    protected function parseFileSizeToBytes(string $fileSize): int
     {
-        $size = 0;
+        // Remove whitespace and convert to uppercase
+        $fileSize = trim(strtoupper($fileSize));
 
-        try {
-            // Get all files in directory recursively
-            $files = $disk->allFiles($directory);
-
-            foreach ($files as $file) {
-                try {
-                    $size += $disk->size($file);
-                } catch (\Exception $e) {
-                    // Skip files that can't be read
-                    continue;
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::warning('Error getting directory size', [
-                'directory' => $directory,
-                'error' => $e->getMessage()
-            ]);
+        // If already in bytes (numeric only), return as is
+        if (is_numeric($fileSize)) {
+            return (int) $fileSize;
         }
 
-        return $size;
+        // Extract number and unit
+        preg_match('/^([\d.]+)\s*([A-Z]+)$/', $fileSize, $matches);
+
+        if (count($matches) !== 3) {
+            return 0; // Invalid format
+        }
+
+        $number = (float) $matches[1];
+        $unit = $matches[2];
+
+        // Convert to bytes based on unit
+        $multipliers = [
+            'B' => 1,
+            'KB' => 1024,
+            'MB' => 1024 * 1024,
+            'GB' => 1024 * 1024 * 1024,
+            'TB' => 1024 * 1024 * 1024 * 1024,
+        ];
+
+        $multiplier = $multipliers[$unit] ?? 1;
+
+        return (int) ($number * $multiplier);
     }
 
     /**
@@ -128,19 +112,22 @@ class DashboardService
     {
         $isAdmin = $user->is_admin ?? false;
 
-        // Build query - admins see all, users see only their own
-        $matchesQuery = MatchVideo::query();
+        // Build base query - admins see all, users see only their own
+        $baseQuery = MatchVideo::query();
         if (!$isAdmin) {
-            $matchesQuery->where('user_id', $user->id);
+            $baseQuery->where('user_id', $user->id);
         }
 
-        $totalMatches = $matchesQuery->count();
+        // Total matches count
+        $totalMatches = (clone $baseQuery)->count();
 
         // Processing matches count
-        $processingQuery = clone $matchesQuery;
-        $processingCount = $processingQuery->where('status', 'processing')->count();
+        $processingCount = (clone $baseQuery)
+            ->where('status', 'processing')
+            ->count();
 
-        // Calculate storage used by checking folder sizes directly
+        // Calculate storage used from database
+        // Only counts matches with type='file' and status not in ['uploading', 'failed']
         $totalStorageUsed = $this->calculateStorageUsed($user, $isAdmin);
         $storageUsedFormatted = $this->formatBytes($totalStorageUsed);
 
@@ -149,42 +136,27 @@ class DashboardService
         $storagePercentage = $storageLimit > 0 ? ($totalStorageUsed / $storageLimit) * 100 : 0;
         $storageLimitFormatted = $this->formatBytes($storageLimit);
 
-        // Recent matches
-        $recentMatchesQuery = MatchVideo::query();
-        if (!$isAdmin) {
-            $recentMatchesQuery->where('user_id', $user->id);
-        }
-        $recentMatches = $recentMatchesQuery->latest()->take(5)->get();
+        // Recent matches (latest 5)
+        $recentMatches = (clone $baseQuery)
+            ->latest()
+            ->take(5)
+            ->get();
 
         // Activity Overview - Last 30 days
         $thirtyDaysAgo = Carbon::now()->subDays(30);
-        $activityQuery = MatchVideo::query();
-        if (!$isAdmin) {
-            $activityQuery->where('user_id', $user->id);
-        }
 
-        // Uploads this month
-        $uploadsThisMonth = (clone $activityQuery)
+        // Uploads this month (last 30 days)
+        $uploadsThisMonth = (clone $baseQuery)
             ->where('created_at', '>=', $thirtyDaysAgo)
             ->count();
 
-        // Completed matches
-        $completedCount = (clone $matchesQuery)
+        // Completed matches count
+        $completedCount = (clone $baseQuery)
             ->where('status', 'completed')
             ->count();
 
-        // Processing matches (already calculated above)
-        $processingMatches = $processingCount;
-
-        // Average processing time (mock for now, could be calculated from timestamps)
-        $avgProcessingTime = '2.5m'; // This could be calculated from actual processing times
-
-        // Calculate uploads trend
-        $previousMonthQuery = MatchVideo::query();
-        if (!$isAdmin) {
-            $previousMonthQuery->where('user_id', $user->id);
-        }
-        $uploadsPreviousMonth = $previousMonthQuery
+        // Calculate uploads trend (comparing this month vs previous month)
+        $uploadsPreviousMonth = (clone $baseQuery)
             ->whereBetween('created_at', [
                 Carbon::now()->subDays(60),
                 $thirtyDaysAgo
@@ -198,7 +170,7 @@ class DashboardService
             $uploadTrend = 100; // 100% increase if went from 0 to something
         }
 
-        return [
+        $result = [
             'totalMatches' => $totalMatches,
             'processingCount' => $processingCount,
             'storageUsed' => $storageUsedFormatted,
@@ -210,10 +182,17 @@ class DashboardService
             'accountPending' => !$user->is_approved,
             'uploadsThisMonth' => $uploadsThisMonth,
             'completedCount' => $completedCount,
-            'avgProcessingTime' => $avgProcessingTime,
             'uploadTrend' => round($uploadTrend, 0),
             'isAdmin' => $isAdmin,
         ];
+
+        // If admin, add admin stats
+        if ($isAdmin) {
+            $adminStats = $this->adminService->getDashboardStats();
+            $result = array_merge($result, $adminStats);
+        }
+
+        return $result;
     }
 }
 

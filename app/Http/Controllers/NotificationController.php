@@ -72,8 +72,8 @@ class NotificationController extends Controller
             
             if ($notifType === 'account_approved') {
                 $icon = 'fa-user-check';
-                $iconBg = 'bg-blue-100';
-                $iconColor = 'text-blue-600';
+                $iconBg = 'bg-green-100';
+                $iconColor = 'text-green-600';
             } elseif ($notifType === 'account_rejected') {
                 $icon = 'fa-user-times';
                 $iconBg = 'bg-red-100';
@@ -82,30 +82,38 @@ class NotificationController extends Controller
                 $icon = 'fa-check-circle';
                 $iconBg = 'bg-green-100';
                 $iconColor = 'text-green-600';
+            } elseif ($notifType === 'match_upload_started') {
+                $icon = 'fa-cloud-upload-alt';
+                $iconBg = 'bg-cyan-100';
+                $iconColor = 'text-cyan-600';
+            } elseif ($notifType === 'match_upload_success') {
+                $icon = 'fa-check-circle';
+                $iconBg = 'bg-green-100';
+                $iconColor = 'text-green-600';
             } elseif ($notifType === 'match_upload_processing') {
-                $icon = 'fa-upload';
+                $icon = 'fa-spinner';
                 $iconBg = 'bg-blue-100';
                 $iconColor = 'text-blue-600';
+            } elseif ($notifType === 'match_processing_started') {
+                $icon = 'fa-play-circle';
+                $iconBg = 'bg-indigo-100';
+                $iconColor = 'text-indigo-600';
             } elseif ($notifType === 'match_processing_failed') {
-                $icon = 'fa-exclamation-circle';
+                $icon = 'fa-times-circle';
                 $iconBg = 'bg-red-100';
                 $iconColor = 'text-red-600';
             } elseif ($notifType === 'match_processing_ended_no_predictions') {
                 $icon = 'fa-exclamation-triangle';
-                $iconBg = 'bg-yellow-100';
-                $iconColor = 'text-yellow-600';
+                $iconBg = 'bg-amber-100';
+                $iconColor = 'text-amber-600';
             } elseif ($notifType === 'match_processing_stopped') {
-                $icon = 'fa-stop-circle';
-                $iconBg = 'bg-blue-100';
-                $iconColor = 'text-blue-600';
+                $icon = 'fa-pause-circle';
+                $iconBg = 'bg-orange-100';
+                $iconColor = 'text-orange-600';
             } elseif ($notifType === 'match_processing_stopped_failed') {
                 $icon = 'fa-exclamation-circle';
                 $iconBg = 'bg-red-100';
                 $iconColor = 'text-red-600';
-            } elseif ($notifType === 'match_processing_started') {
-                $icon = 'fa-play-circle';
-                $iconBg = 'bg-blue-100';
-                $iconColor = 'text-blue-600';
             }
             
             return [

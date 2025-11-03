@@ -100,9 +100,24 @@
                         {{ __('admin.match_video') }}
                     </h2>
                     @if(isset($match->status) && $match->status === 'processing')
-                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                        <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
                             <i class="fas fa-spinner fa-spin mr-1"></i>
                             {{ __('admin.processing') }}
+                        </span>
+                    @elseif(isset($match->status) && $match->status === 'pending')
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
+                            <i class="fas fa-clock mr-1"></i>
+                            {{ __('admin.pending') }}
+                        </span>
+                    @elseif(isset($match->status) && $match->status === 'uploading')
+                        <span class="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-semibold">
+                            <i class="fas fa-cloud-upload-alt fa-spin mr-1"></i>
+                            {{ __('admin.uploading') }}
+                        </span>
+                    @elseif(isset($match->status) && $match->status === 'failed')
+                        <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                            <i class="fas fa-times-circle mr-1"></i>
+                            {{ __('admin.failed') }}
                         </span>
                     @endif
                 </div>
@@ -156,12 +171,24 @@
                                     <i class="fas fa-check-circle text-green-600 text-xs"></i>
                                 </div>
                             @elseif(isset($match->status) && $match->status === 'processing')
-                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-spinner fa-spin text-blue-600 text-xs"></i>
+                                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-spinner fa-spin text-indigo-600 text-xs"></i>
+                                </div>
+                            @elseif(isset($match->status) && $match->status === 'pending')
+                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-amber-600 text-xs"></i>
+                                </div>
+                            @elseif(isset($match->status) && $match->status === 'uploading')
+                                <div class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-cloud-upload-alt fa-spin text-cyan-600 text-xs"></i>
+                                </div>
+                            @elseif(isset($match->status) && $match->status === 'failed')
+                                <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-times-circle text-red-600 text-xs"></i>
                                 </div>
                             @else
-                                <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                    <i class="fas fa-clock text-yellow-600 text-xs"></i>
+                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clock text-amber-600 text-xs"></i>
                                 </div>
                             @endif
                         </div>
@@ -761,18 +788,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (statusCard) {
                             const iconContainer = statusCard.querySelector('.w-8.h-8');
                             if (iconContainer) {
-                                iconContainer.className = 'w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center';
-                                iconContainer.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-600 text-xs"></i>';
+                                iconContainer.className = 'w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center';
+                                iconContainer.innerHTML = '<i class="fas fa-spinner fa-spin text-indigo-600 text-xs"></i>';
                             }
-                            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-blue-300 hover:border-blue-400 transition-colors';
+                            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-indigo-300 hover:border-indigo-400 transition-colors';
                         }
                         if (statusText) {
                             statusText.textContent = 'Processing';
                         }
                         
                         // Update video header badge if exists
-                        const videoBadge = document.querySelector('.info-card .bg-blue-100');
+                        const videoBadge = document.querySelector('.px-3.py-1.bg-indigo-100, .px-3.py-1.bg-cyan-100, .px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
                         if (videoBadge) {
+                            videoBadge.className = 'px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold';
                             videoBadge.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing';
                         }
 
@@ -804,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                         // Update video header badge if exists
-                        const videoBadge = document.querySelector('.info-card .bg-blue-100');
+                        const videoBadge = document.querySelector('.px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
                         if (videoBadge) {
                             videoBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Completed';
                             videoBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';

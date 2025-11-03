@@ -299,28 +299,6 @@
     left: 0 !important;
 }
 
-/* Notification dropdown header - reverse order in RTL */
-[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.justify-between,
-[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.justify-between {
-    direction: rtl;
-}
-
-/* Add spacing between icon and title in notification header */
-[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-3,
-[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-3 {
-    gap: 0.75rem !important;
-}
-
-[dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-center.space-x-3 > * + *,
-[dir="rtl"] .absolute.left-0.mt-3.w-96 .flex.items-center.space-x-3 > * + * {
-    margin-left: 0 !important;
-}
-
-/* "New" badge positioning in RTL - appears on left side after reverse */
-[dir="rtl"] .absolute.right-0.mt-3.w-96 #notificationHeaderBadge,
-[dir="rtl"] .absolute.left-0.mt-3.w-96 #notificationHeaderBadge {
-    order: -1; /* Ensure badge appears first (on left) */
-}
 
 /* Notification items - reverse order in RTL: icon on right, text on left */
 [dir="rtl"] .absolute.right-0.mt-3.w-96 .flex.items-start.space-x-4,

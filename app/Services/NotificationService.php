@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\MatchVideo;
 use App\Models\User;
 use App\Notifications\MatchUploadProcessing;
+use App\Notifications\MatchUploadStarted;
+use App\Notifications\MatchUploadSuccess;
 use App\Notifications\MatchAnalysisComplete;
 use App\Notifications\MatchProcessingFailed;
 use App\Notifications\MatchProcessingStarted;
@@ -59,6 +61,46 @@ class NotificationService
             WebSocketHelper::sendNotification($match->user->id, $data);
         } catch (\Exception $e) {
             Log::error('Failed to send upload notification', [
+                'matchId' => $match->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Notify user that file upload to S3 has started
+     */
+    public function notifyUploadStarted(MatchVideo $match): void
+    {
+        try {
+            $notification = new MatchUploadStarted($match);
+            $match->user->notify($notification);
+            
+            // Send via WebSocket for real-time updates
+            $data = $notification->toArray($match->user);
+            WebSocketHelper::sendNotification($match->user->id, $data);
+        } catch (\Exception $e) {
+            Log::error('Failed to send upload started notification', [
+                'matchId' => $match->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Notify user that file upload to S3 has completed successfully
+     */
+    public function notifyUploadSuccess(MatchVideo $match): void
+    {
+        try {
+            $notification = new MatchUploadSuccess($match);
+            $match->user->notify($notification);
+            
+            // Send via WebSocket for real-time updates
+            $data = $notification->toArray($match->user);
+            WebSocketHelper::sendNotification($match->user->id, $data);
+        } catch (\Exception $e) {
+            Log::error('Failed to send upload success notification', [
                 'matchId' => $match->id,
                 'error' => $e->getMessage()
             ]);

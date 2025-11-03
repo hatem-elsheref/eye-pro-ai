@@ -10,21 +10,41 @@
     <div class="relative overflow-hidden rounded-2xl p-6 shadow-lg border border-blue-200" style="background: linear-gradient(135deg, #60a5fa 0%, #818cf8 100%);">
         <div class="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white opacity-10"></div>
         <div class="absolute bottom-0 left-0 -mb-6 -ml-6 h-32 w-32 rounded-full bg-white opacity-10"></div>
-        <div class="relative z-10 flex items-center justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.notifications') }}</h1>
-                <p class="text-sm text-blue-50 font-medium">{{ __('admin.stay_updated_activity') }}</p>
-            </div>
-            @if(isset($unreadCount) && $unreadCount > 0)
-            <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/30 backdrop-blur-sm border border-red-300/50 unread-badge-container">
-                <span class="text-white font-bold text-sm">{{ $unreadCount }} {{ __('admin.unread') }}</span>
-                <i class="fas fa-circle text-red-200 text-xs unread-dot"></i>
-            </div>
+        <div class="relative z-10 flex items-center justify-between notification-header-container">
+            @if(app()->getLocale() === 'ar')
+                {{-- RTL: Badge first, then title --}}
+                @if(isset($unreadCount) && $unreadCount > 0)
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/30 backdrop-blur-sm border border-red-300/50 unread-badge-container notification-new-badge">
+                    <span class="text-white font-bold text-sm">{{ $unreadCount }} {{ __('admin.unread') }}</span>
+                    <i class="fas fa-circle text-red-200 text-xs unread-dot"></i>
+                </div>
+                @else
+                <div class="hidden md:flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 notification-new-badge">
+                    <span class="text-white font-bold text-sm">{{ __('admin.all_read') }}</span>
+                    <i class="fas fa-check-double text-white text-sm"></i>
+                </div>
+                @endif
+                <div class="notification-title-container">
+                    <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.notifications') }}</h1>
+                    <p class="text-sm text-blue-50 font-medium">{{ __('admin.stay_updated_activity') }}</p>
+                </div>
             @else
-            <div class="hidden md:flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30">
-                <span class="text-white font-bold text-sm">{{ __('admin.all_read') }}</span>
-                <i class="fas fa-check-double text-white text-sm"></i>
-            </div>
+                {{-- LTR: Title first, then badge --}}
+                <div class="notification-title-container">
+                    <h1 class="text-2xl font-bold text-white mb-1">{{ __('admin.notifications') }}</h1>
+                    <p class="text-sm text-blue-50 font-medium">{{ __('admin.stay_updated_activity') }}</p>
+                </div>
+                @if(isset($unreadCount) && $unreadCount > 0)
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/30 backdrop-blur-sm border border-red-300/50 unread-badge-container notification-new-badge">
+                    <span class="text-white font-bold text-sm">{{ $unreadCount }} {{ __('admin.unread') }}</span>
+                    <i class="fas fa-circle text-red-200 text-xs unread-dot"></i>
+                </div>
+                @else
+                <div class="hidden md:flex items-center space-x-2 px-4 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 notification-new-badge">
+                    <span class="text-white font-bold text-sm">{{ __('admin.all_read') }}</span>
+                    <i class="fas fa-check-double text-white text-sm"></i>
+                </div>
+                @endif
             @endif
         </div>
     </div>
@@ -66,49 +86,57 @@
                         @php
                             $notifType = $notification->data['type'] ?? $notification->type;
                         @endphp
-                        @if($notifType === 'match_upload_processing')
+                        @if($notifType === 'account_approved')
                         <div class="h-14 w-14 rounded-2xl bg-green-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-upload text-green-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_analysis_complete')
-                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-check-circle text-blue-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_processing_failed')
-                        <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_processing_ended_no_predictions')
-                        <div class="h-14 w-14 rounded-2xl bg-yellow-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_processing_stopped')
-                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-stop-circle text-blue-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_processing_stopped_failed')
-                        <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'match_processing_started')
-                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-play-circle text-blue-600 text-2xl"></i>
-                        </div>
-                        @elseif($notifType === 'account_approved')
-                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-user-check text-blue-600 text-2xl"></i>
+                            <i class="fas fa-user-check text-green-600 text-2xl"></i>
                         </div>
                         @elseif($notifType === 'account_rejected')
                         <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
                             <i class="fas fa-user-times text-red-600 text-2xl"></i>
                         </div>
-                        @elseif($notifType === 'match_uploaded')
+                        @elseif($notifType === 'match_analysis_complete')
+                        <div class="h-14 w-14 rounded-2xl bg-green-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_upload_started')
+                        <div class="h-14 w-14 rounded-2xl bg-cyan-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-cloud-upload-alt text-cyan-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_upload_success')
+                        <div class="h-14 w-14 rounded-2xl bg-green-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_upload_processing')
                         <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-upload text-blue-600 text-2xl"></i>
+                            <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_started')
+                        <div class="h-14 w-14 rounded-2xl bg-indigo-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-play-circle text-indigo-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_failed')
+                        <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_ended_no_predictions')
+                        <div class="h-14 w-14 rounded-2xl bg-amber-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-exclamation-triangle text-amber-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_stopped')
+                        <div class="h-14 w-14 rounded-2xl bg-orange-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-pause-circle text-orange-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_processing_stopped_failed')
+                        <div class="h-14 w-14 rounded-2xl bg-red-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
+                        </div>
+                        @elseif($notifType === 'match_uploaded')
+                        <div class="h-14 w-14 rounded-2xl bg-green-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
                         </div>
                         @else
-                        <div class="h-14 w-14 rounded-2xl bg-blue-100 flex items-center justify-center shadow-lg">
-                            <i class="fas fa-bell text-blue-600 text-2xl"></i>
+                        <div class="h-14 w-14 rounded-2xl bg-gray-100 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-bell text-gray-600 text-2xl"></i>
                         </div>
                         @endif
                     </div>

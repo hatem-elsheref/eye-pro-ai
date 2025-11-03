@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class MatchUploadProcessing extends Notification
+class MatchUploadStarted extends Notification
 {
     use Queueable;
 
@@ -40,13 +40,13 @@ class MatchUploadProcessing extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title_key' => 'admin.notification_upload_processing_title',
-            'message_key' => 'admin.notification_upload_processing_message',
-            'title' => __('admin.notification_upload_processing_title', ['match_name' => $this->match->name]),
-            'message' => __('admin.notification_upload_processing_message', ['match_name' => $this->match->name]),
+            'title_key' => 'admin.notification_upload_started_title',
+            'message_key' => 'admin.notification_upload_started_message',
+            'title' => __('admin.notification_upload_started_title'),
+            'message' => __('admin.notification_upload_started_message', ['match_name' => $this->match->name]),
             'match_id' => $this->match->id,
             'match_name' => $this->match->name,
-            'type' => 'match_upload_processing',
+            'type' => 'match_upload_started',
         ];
     }
 }
