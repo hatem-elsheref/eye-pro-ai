@@ -250,7 +250,7 @@ class MatchService
             $finalPath,
             $totalChunks,
             $this->chunkStorageDisk
-        )->onQueue('uploads'); // Use dedicated queue for uploads
+        )->onQueue('uploads')->delay(now()->addSeconds(5)); // Use dedicated queue for uploads
 
         Log::info('Dispatched assembly and S3 upload job', [
             'matchId' => $match->id,
