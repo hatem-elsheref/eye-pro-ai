@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\MatchVideo;
 use App\Models\User;
-use App\Jobs\AssembleAndUploadToS3;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;

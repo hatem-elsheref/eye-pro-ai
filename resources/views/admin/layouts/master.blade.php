@@ -692,6 +692,12 @@
     <!-- WebSocket Notification Handler -->
     <script>
         (function() {
+            // Prevent multiple initializations
+            if (window.__notificationWebSocketInitialized) {
+                return;
+            }
+            window.__notificationWebSocketInitialized = true;
+
             @auth
             const userId = {{ auth()->id() }};
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -702,6 +708,7 @@
             let reconnectAttempts = 0;
             const maxReconnectAttempts = 10;
             let reconnectTimeout = null;
+            let isConnecting = false;
 
             // Create audio context for notification sound
             let audioContext = null;
@@ -928,15 +935,36 @@
 
             // Function to connect to WebSocket
             function connectWebSocket() {
-                if (notificationWs && notificationWs.readyState === WebSocket.OPEN) {
-                    return; // Already connected
+                // Prevent multiple simultaneous connection attempts
+                if (isConnecting) {
+                    console.log('WebSocket connection already in progress, skipping...');
+                    return;
                 }
+
+                // If already connected or connecting, don't create another connection
+                if (notificationWs) {
+                    if (notificationWs.readyState === WebSocket.OPEN) {
+                        console.log('WebSocket already connected');
+                        return; // Already connected
+                    }
+                    if (notificationWs.readyState === WebSocket.CONNECTING) {
+                        console.log('WebSocket already connecting');
+                        return; // Already connecting
+                    }
+                    // If in closing or closed state, close it properly first
+                    if (notificationWs.readyState === WebSocket.CLOSING || notificationWs.readyState === WebSocket.CLOSED) {
+                        notificationWs = null;
+                    }
+                }
+
+                isConnecting = true;
 
                 try {
                     notificationWs = new WebSocket(wsUrl);
 
                     notificationWs.onopen = function() {
                         console.log('Notification WebSocket connected');
+                        isConnecting = false;
                         reconnectAttempts = 0;
 
                         // Subscribe to notifications channel
@@ -994,11 +1022,19 @@
 
                     notificationWs.onerror = function(error) {
                         console.error('Notification WebSocket error:', error);
+                        isConnecting = false;
                     };
 
                     notificationWs.onclose = function(event) {
-                        console.log('Notification WebSocket closed');
+                        console.log('Notification WebSocket closed', event.code, event.reason);
+                        isConnecting = false;
                         notificationWs = null;
+
+                        // Don't reconnect if it was a normal closure (code 1000) or page is unloading
+                        if (event.code === 1000) {
+                            console.log('WebSocket closed normally');
+                            return;
+                        }
 
                         // Reconnect with exponential backoff
                         if (reconnectAttempts < maxReconnectAttempts) {
@@ -1016,6 +1052,7 @@
 
                 } catch (error) {
                     console.error('Error connecting to WebSocket:', error);
+                    isConnecting = false;
 
                     // Retry connection
                     if (reconnectAttempts < maxReconnectAttempts) {
@@ -1038,18 +1075,26 @@
             // Reconnect when page becomes visible (user switched tabs back)
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden && (!notificationWs || notificationWs.readyState !== WebSocket.OPEN)) {
-                    clearTimeout(reconnectTimeout);
-                    connectWebSocket();
+                    // Only reconnect if not already connecting
+                    if (!isConnecting) {
+                        clearTimeout(reconnectTimeout);
+                        connectWebSocket();
+                    }
                 }
             });
 
-            // Cleanup on page unload
+            // Cleanup on page unload - close connection properly
             window.addEventListener('beforeunload', function() {
+                isConnecting = false;
                 if (reconnectTimeout) {
                     clearTimeout(reconnectTimeout);
+                    reconnectTimeout = null;
                 }
                 if (notificationWs) {
-                    notificationWs.close();
+                    // Close with code 1000 (normal closure) to prevent reconnection
+                    notificationWs.onclose = null; // Remove close handler to prevent reconnect
+                    notificationWs.close(1000, 'Page unloading');
+                    notificationWs = null;
                 }
             });
             @endauth

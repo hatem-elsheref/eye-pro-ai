@@ -32,7 +32,7 @@ function createNotificationChannelName(userId) {
 
 // WebSocket connection handling
 wss.on('connection', (ws, req) => {
-    console.log('New WebSocket connection');
+   // console.log('New WebSocket connection');
 
     let channel = null;
 
@@ -94,7 +94,7 @@ wss.on('connection', (ws, req) => {
                 connections.delete(channel);
             }
         }
-        console.log(`Client disconnected from channel: ${channel || 'unknown'}`);
+       // console.log(`Client disconnected from channel: ${channel || 'unknown'}`);
     });
 
     // Store user ID if provided for notifications
@@ -107,7 +107,7 @@ wss.on('connection', (ws, req) => {
     }
 
     ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
+        //console.error('WebSocket error:', error);
     });
 });
 
@@ -131,7 +131,7 @@ app.post('/api/notification', (req, res) => {
         const channelConnections = connections.get(channel);
 
         if (!channelConnections || channelConnections.size === 0) {
-            console.log(`No active connections for notification channel: ${channel}`);
+           // console.log(`No active connections for notification channel: ${channel}`);
             return res.status(200).json({
                 success: true,
                 message: 'Notification received but no active listeners',
@@ -170,7 +170,7 @@ app.post('/api/notification', (req, res) => {
             channelConnections.delete(ws);
         });
 
-        console.log(`Sent notification to ${sentCount} client(s) in channel: ${channel}`);
+        //console.log(`Sent notification to ${sentCount} client(s) in channel: ${channel}`);
 
         res.json({
             success: true,
@@ -209,7 +209,7 @@ app.post('/api/prediction', (req, res) => {
         const channelConnections = connections.get(channel);
 
         if (!channelConnections || channelConnections.size === 0) {
-            console.log(`No active connections for channel: ${channel}`);
+           // console.log(`No active connections for channel: ${channel}`);
             return res.status(200).json({
                 success: true,
                 message: 'Prediction received but no active listeners',
@@ -249,7 +249,7 @@ app.post('/api/prediction', (req, res) => {
             channelConnections.delete(ws);
         });
 
-        console.log(`Sent prediction to ${sentCount} client(s) in channel: ${channel}`);
+        //console.log(`Sent prediction to ${sentCount} client(s) in channel: ${channel}`);
 
         res.json({
             success: true,
@@ -288,7 +288,7 @@ app.post('/api/processing/complete', (req, res) => {
         const channelConnections = connections.get(channel);
 
         if (!channelConnections || channelConnections.size === 0) {
-            console.log(`No active connections for channel: ${channel}`);
+           // console.log(`No active connections for channel: ${channel}`);
             return res.status(200).json({
                 success: true,
                 message: 'Processing complete notification received but no active listeners',
@@ -327,7 +327,7 @@ app.post('/api/processing/complete', (req, res) => {
             channelConnections.delete(ws);
         });
 
-        console.log(`Sent processing complete to ${sentCount} client(s) in channel: ${channel}`);
+        //console.log(`Sent processing complete to ${sentCount} client(s) in channel: ${channel}`);
 
         res.json({
             success: true,
@@ -337,7 +337,7 @@ app.post('/api/processing/complete', (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error processing completion notification:', error);
+       // console.error('Error processing completion notification:', error);
         res.status(500).json({
             success: false,
             message: 'Internal server error',
@@ -366,7 +366,7 @@ app.post('/api/analysis/result', (req, res) => {
         const channelConnections = connections.get(channel);
 
         if (!channelConnections || channelConnections.size === 0) {
-            console.log(`No active connections for channel: ${channel}`);
+            //console.log(`No active connections for channel: ${channel}`);
             return res.status(200).json({
                 success: true,
                 message: 'Result received but no active listeners',
@@ -406,7 +406,7 @@ app.post('/api/analysis/result', (req, res) => {
             channelConnections.delete(ws);
         });
 
-        console.log(`Sent analysis result to ${sentCount} client(s) in channel: ${channel}`);
+        //console.log(`Sent analysis result to ${sentCount} client(s) in channel: ${channel}`);
 
         res.json({
             success: true,
