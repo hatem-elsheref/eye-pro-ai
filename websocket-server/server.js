@@ -131,7 +131,7 @@ app.post('/api/notification', (req, res) => {
         const channelConnections = connections.get(channel);
 
         if (!channelConnections || channelConnections.size === 0) {
-           // console.log(`No active connections for notification channel: ${channel}`);
+            console.log(`No active connections for notification channel: ${channel}`);
             return res.status(200).json({
                 success: true,
                 message: 'Notification received but no active listeners',
