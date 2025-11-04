@@ -20,7 +20,7 @@ class WebSocketHelper
         $websocketUrl = env('WEBSOCKET_URL', 'http://localhost:3001');
 
         try {
-            $response = Http::timeout(10)->post("{$websocketUrl}/api/analysis/result", [
+            $response = Http::timeout(30)->post("{$websocketUrl}/api/analysis/result", [
                 'userId' => $userId,
                 'matchId' => $matchId,
                 'analysis' => $analysis
@@ -140,7 +140,7 @@ class WebSocketHelper
         $websocketUrl = env('WEBSOCKET_URL', 'http://localhost:3001');
 
         try {
-            $response = Http::timeout(10)->post("{$websocketUrl}/api/processing/complete", [
+            $response = Http::timeout(30)->post("{$websocketUrl}/api/processing/complete", [
                 'userId' => $userId,
                 'matchId' => $matchId
             ]);
@@ -198,7 +198,7 @@ class WebSocketHelper
         $websocketUrl = env('WEBSOCKET_URL', 'http://localhost:3001');
 
         try {
-            $response = Http::timeout(10)->post("{$websocketUrl}/api/notification", [
+            $response = Http::timeout(30)->post("{$websocketUrl}/api/notification", [
                 'userId' => $userId,
                 'notification' => $notification
             ]);
