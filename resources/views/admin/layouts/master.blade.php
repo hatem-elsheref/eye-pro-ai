@@ -692,11 +692,21 @@
     <!-- WebSocket Notification Handler -->
     <script>
         (function() {
-            // Prevent multiple initializations
+            // Prevent multiple initializations - check immediately
             if (window.__notificationWebSocketInitialized) {
+                console.log('WebSocket notification handler already initialized, skipping...');
                 return;
             }
+            
+            // Set flag immediately to prevent race conditions
             window.__notificationWebSocketInitialized = true;
+            
+            // Check if there's already a WebSocket connection from a previous script execution
+            if (window.__notificationWebSocket && 
+                window.__notificationWebSocket.readyState === WebSocket.OPEN) {
+                console.log('WebSocket connection already exists and is open, reusing...');
+                return;
+            }
 
             @auth
             const userId = {{ auth()->id() }};
@@ -705,11 +715,11 @@
             const wsUrl = `${wsProtocol}//${wsHost}/ws`;
 
             let notificationWs = null;
-            let reconnectAttempts = 0;
-            const maxReconnectAttempts = 10;
             let reconnectTimeout = null;
-            let isConnecting = false;
             let isReloading = false;
+            
+            // Store WebSocket instance globally to prevent duplicates
+            window.__notificationWebSocket = null;
 
             // Create audio context for notification sound
             let audioContext = null;
@@ -936,37 +946,31 @@
 
             // Function to connect to WebSocket
             function connectWebSocket() {
-                // Prevent multiple simultaneous connection attempts
-                if (isConnecting) {
-                    console.log('WebSocket connection already in progress, skipping...');
+                // Check if already connected
+                if (notificationWs && notificationWs.readyState === WebSocket.OPEN) {
+                    console.log('WebSocket already connected');
                     return;
                 }
 
-                // If already connected or connecting, don't create another connection
-                if (notificationWs) {
-                    if (notificationWs.readyState === WebSocket.OPEN) {
-                        console.log('WebSocket already connected');
-                        return; // Already connected
-                    }
-                    if (notificationWs.readyState === WebSocket.CONNECTING) {
-                        console.log('WebSocket already connecting');
-                        return; // Already connecting
-                    }
-                    // If in closing or closed state, close it properly first
-                    if (notificationWs.readyState === WebSocket.CLOSING || notificationWs.readyState === WebSocket.CLOSED) {
-                        notificationWs = null;
-                    }
+                // Check if already connecting
+                if (notificationWs && notificationWs.readyState === WebSocket.CONNECTING) {
+                    console.log('WebSocket already connecting');
+                    return;
                 }
 
-                isConnecting = true;
+                // Clear any existing connection
+                if (notificationWs) {
+                    notificationWs = null;
+                    window.__notificationWebSocket = null;
+                }
 
                 try {
                     notificationWs = new WebSocket(wsUrl);
+                    // Store globally to prevent duplicates
+                    window.__notificationWebSocket = notificationWs;
 
                     notificationWs.onopen = function() {
                         console.log('Notification WebSocket connected');
-                        isConnecting = false;
-                        reconnectAttempts = 0;
 
                         // Subscribe to notifications channel
                         notificationWs.send(JSON.stringify({
@@ -1042,13 +1046,20 @@
 
                     notificationWs.onerror = function(error) {
                         console.error('Notification WebSocket error:', error);
-                        isConnecting = false;
                     };
 
                     notificationWs.onclose = function(event) {
                         console.log('Notification WebSocket closed', event.code, event.reason);
-                        isConnecting = false;
+                        
+                        // Reset all values to null/zero
                         notificationWs = null;
+                        window.__notificationWebSocket = null;
+                        
+                        // Clear any existing reconnect timeout
+                        if (reconnectTimeout) {
+                            clearTimeout(reconnectTimeout);
+                            reconnectTimeout = null;
+                        }
 
                         // Don't reconnect if we're intentionally reloading the page
                         if (isReloading) {
@@ -1062,32 +1073,37 @@
                             return;
                         }
 
-                        // Reconnect with exponential backoff
-                        if (reconnectAttempts < maxReconnectAttempts) {
-                            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-                            reconnectAttempts++;
-                            console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
-
-                            reconnectTimeout = setTimeout(() => {
-                                connectWebSocket();
-                            }, delay);
-                        } else {
-                            console.warn('Max reconnection attempts reached');
-                        }
+                        // Simple reconnect: wait 2 seconds and reconnect
+                        console.log('Reconnecting in 2 seconds...');
+                        reconnectTimeout = setTimeout(() => {
+                            // Reset all values and start from zero
+                            notificationWs = null;
+                            window.__notificationWebSocket = null;
+                            reconnectTimeout = null;
+                            
+                            // Reconnect
+                            connectWebSocket();
+                        }, 2000); // 2 seconds
                     };
 
                 } catch (error) {
                     console.error('Error connecting to WebSocket:', error);
-                    isConnecting = false;
-
-                    // Retry connection
-                    if (reconnectAttempts < maxReconnectAttempts) {
-                        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-                        reconnectAttempts++;
-                        reconnectTimeout = setTimeout(() => {
-                            connectWebSocket();
-                        }, delay);
+                    
+                    // Reset all values
+                    notificationWs = null;
+                    window.__notificationWebSocket = null;
+                    
+                    // Simple reconnect: wait 2 seconds and try again
+                    if (reconnectTimeout) {
+                        clearTimeout(reconnectTimeout);
                     }
+                    
+                    reconnectTimeout = setTimeout(() => {
+                        notificationWs = null;
+                        window.__notificationWebSocket = null;
+                        reconnectTimeout = null;
+                        connectWebSocket();
+                    }, 2000); // 2 seconds
                 }
             }
 
@@ -1104,18 +1120,14 @@
             // Reconnect when page becomes visible (user switched tabs back)
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden && (!notificationWs || notificationWs.readyState !== WebSocket.OPEN)) {
-                    // Only reconnect if not already connecting
-                    if (!isConnecting) {
-                        clearTimeout(reconnectTimeout);
-                        connectWebSocket();
-                    }
+                    clearTimeout(reconnectTimeout);
+                    connectWebSocket();
                 }
             });
 
             // Cleanup on page unload - close connection properly
             window.addEventListener('beforeunload', function() {
                 isReloading = true; // Mark as reloading to prevent reconnection
-                isConnecting = false;
                 if (reconnectTimeout) {
                     clearTimeout(reconnectTimeout);
                     reconnectTimeout = null;
@@ -1126,6 +1138,9 @@
                     notificationWs.close(1000, 'Page unloading');
                     notificationWs = null;
                 }
+                // Clear global references
+                window.__notificationWebSocket = null;
+                window.__notificationWebSocketInitialized = false;
             });
             @endauth
         })();
