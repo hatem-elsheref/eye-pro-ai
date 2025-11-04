@@ -946,6 +946,14 @@
 
             // Function to connect to WebSocket
             function connectWebSocket() {
+                // Check global WebSocket first
+                if (window.__notificationWebSocket && 
+                    window.__notificationWebSocket.readyState === WebSocket.OPEN) {
+                    console.log('Using existing open WebSocket connection');
+                    notificationWs = window.__notificationWebSocket;
+                    return;
+                }
+
                 // Check if already connected
                 if (notificationWs && notificationWs.readyState === WebSocket.OPEN) {
                     console.log('WebSocket already connected');
@@ -960,10 +968,19 @@
 
                 // Clear any existing connection
                 if (notificationWs) {
+                    try {
+                        notificationWs.close();
+                    } catch(e) {}
                     notificationWs = null;
+                }
+                
+                // Clear global if it's not valid
+                if (window.__notificationWebSocket && 
+                    window.__notificationWebSocket.readyState !== WebSocket.OPEN) {
                     window.__notificationWebSocket = null;
                 }
 
+                console.log('Creating new WebSocket connection to:', wsUrl);
                 try {
                     notificationWs = new WebSocket(wsUrl);
                     // Store globally to prevent duplicates
@@ -971,6 +988,7 @@
 
                     notificationWs.onopen = function() {
                         console.log('Notification WebSocket connected');
+                        console.log('Sending subscription for userId:', userId);
 
                         // Subscribe to notifications channel
                         notificationWs.send(JSON.stringify({
@@ -983,9 +1001,11 @@
                     notificationWs.onmessage = function(event) {
                         try {
                             const data = JSON.parse(event.data);
+                            console.log('WebSocket message received:', data.type);
 
                             if (data.type === 'subscribed') {
                                 console.log('Subscribed to notifications channel:', data.channel);
+                                console.log('Ready to receive notifications');
                             } else if (data.type === 'notification') {
                                 console.log('Received notification:', data.notification);
 
@@ -1051,6 +1071,36 @@
                     notificationWs.onclose = function(event) {
                         console.log('Notification WebSocket closed', event.code, event.reason);
                         
+                        // Don't reconnect if we're intentionally reloading the page
+                        if (isReloading) {
+                            console.log('Page is reloading, skipping reconnection');
+                            notificationWs = null;
+                            window.__notificationWebSocket = null;
+                            return;
+                        }
+
+                        // Don't reconnect if it was a normal closure (code 1000)
+                        if (event.code === 1000) {
+                            console.log('WebSocket closed normally');
+                            notificationWs = null;
+                            window.__notificationWebSocket = null;
+                            return;
+                        }
+
+                        // For code 1006 (abnormal closure), check if there's already a connection
+                        // This often happens when server closes duplicate connections
+                        if (event.code === 1006) {
+                            console.log('WebSocket closed abnormally (1006)');
+                            // Check if there's already a valid connection
+                            if (window.__notificationWebSocket && 
+                                window.__notificationWebSocket !== notificationWs &&
+                                window.__notificationWebSocket.readyState === WebSocket.OPEN) {
+                                console.log('Another connection already exists, skipping reconnect');
+                                notificationWs = null;
+                                return;
+                            }
+                        }
+                        
                         // Reset all values to null/zero
                         notificationWs = null;
                         window.__notificationWebSocket = null;
@@ -1059,18 +1109,6 @@
                         if (reconnectTimeout) {
                             clearTimeout(reconnectTimeout);
                             reconnectTimeout = null;
-                        }
-
-                        // Don't reconnect if we're intentionally reloading the page
-                        if (isReloading) {
-                            console.log('Page is reloading, skipping reconnection');
-                            return;
-                        }
-
-                        // Don't reconnect if it was a normal closure (code 1000)
-                        if (event.code === 1000) {
-                            console.log('WebSocket closed normally');
-                            return;
                         }
 
                         // Simple reconnect: wait 2 seconds and reconnect
