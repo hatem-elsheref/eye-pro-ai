@@ -709,6 +709,7 @@
             const maxReconnectAttempts = 10;
             let reconnectTimeout = null;
             let isConnecting = false;
+            let isReloading = false;
 
             // Create audio context for notification sound
             let audioContext = null;
@@ -986,6 +987,12 @@
 
                                 const notification = data.notification;
 
+                                // Play sound
+                                playNotificationSound();
+
+                                // Show toast
+                                showToast(notification);
+
                                 // Check if this is a match_upload_success notification on the match show page
                                 if (notification.type === 'match_upload_success' && notification.match_id) {
                                     const currentPath = window.location.pathname;
@@ -996,23 +1003,36 @@
                                         const currentMatchId = parseInt(match[1]);
                                         const notificationMatchId = parseInt(notification.match_id);
                                         
-                                        // If we're on the show page for this match, refresh immediately
+                                        // If we're on the show page for this match, refresh after showing toast
                                         if (currentMatchId === notificationMatchId) {
-                                            console.log('Match upload success notification received for current match, refreshing page...');
-                                            // Refresh the page immediately
-                                            window.location.reload();
-                                            return; // Exit early, don't show toast or refresh notifications
+                                            console.log('Match upload success notification received for current match, will refresh page after toast...');
+                                            
+                                            // Mark that we're reloading to prevent reconnection
+                                            isReloading = true;
+                                            
+                                            // Wait less than 1 second (800ms) to let user see the toast, then refresh
+                                            setTimeout(() => {
+                                                // Close WebSocket connection properly before reloading
+                                                if (reconnectTimeout) {
+                                                    clearTimeout(reconnectTimeout);
+                                                    reconnectTimeout = null;
+                                                }
+                                                if (notificationWs) {
+                                                    notificationWs.onclose = null; // Remove close handler to prevent reconnect
+                                                    notificationWs.close(1000, 'Page reloading');
+                                                    notificationWs = null;
+                                                }
+                                                
+                                                // Reload the page
+                                                window.location.reload();
+                                            }, 800); // Wait 800ms (less than 1 second) to show toast
+                                            
+                                            return; // Exit early, don't refresh notifications list (page will reload)
                                         }
                                     }
                                 }
 
-                                // Play sound
-                                playNotificationSound();
-
-                                // Show toast
-                                showToast(notification);
-
-                                // Refresh notification list
+                                // Refresh notification list (only if not on match show page with upload success)
                                 refreshNotifications();
                             }
                         } catch (error) {
@@ -1030,7 +1050,13 @@
                         isConnecting = false;
                         notificationWs = null;
 
-                        // Don't reconnect if it was a normal closure (code 1000) or page is unloading
+                        // Don't reconnect if we're intentionally reloading the page
+                        if (isReloading) {
+                            console.log('Page is reloading, skipping reconnection');
+                            return;
+                        }
+
+                        // Don't reconnect if it was a normal closure (code 1000)
                         if (event.code === 1000) {
                             console.log('WebSocket closed normally');
                             return;
@@ -1065,7 +1091,10 @@
                 }
             }
 
-            // Connect when page loads
+            // Connect when page loads - but only if not already initialized
+            // Reset reloading flag on new page load
+            isReloading = false;
+            
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', connectWebSocket);
             } else {
@@ -1085,6 +1114,7 @@
 
             // Cleanup on page unload - close connection properly
             window.addEventListener('beforeunload', function() {
+                isReloading = true; // Mark as reloading to prevent reconnection
                 isConnecting = false;
                 if (reconnectTimeout) {
                     clearTimeout(reconnectTimeout);
