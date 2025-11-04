@@ -1072,10 +1072,9 @@
 
                                 // Refresh notification list (only if not on match show page with upload success)
                                 refreshNotifications();
+                            } else {
+                                console.log('Unknown message type received:', data.type, data);
                             }
-                        } else {
-                            console.log('Unknown message type received:', data.type, data);
-                        }
                         } catch (error) {
                             console.error('❌ Error parsing WebSocket message:', error);
                             console.error('Raw message that failed:', event.data);
