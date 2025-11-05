@@ -265,7 +265,7 @@ function generateUploadId() {
     return 'upload_user_' + userId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, fileSize, totalChunks, retries = 3) {
+async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, fileSize, totalChunks, retries = 5) {
     const formData = new FormData();
     formData.append('uploadId', uploadId);
     formData.append('chunkIndex', chunkIndex);
@@ -276,43 +276,81 @@ async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, file
 
     for (let attempt = 0; attempt < retries; attempt++) {
         try {
-            const response = await fetch('{{ route("matches.upload.chunk") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
-                },
-                body: formData
-            });
+            // Create AbortController for timeout handling
+            // For 512KB chunks, 60 seconds should be more than enough even on very slow connections
+            // This avoids proxy/load balancer timeouts (typically 10-30s) while still being reasonable
+            const controller = new AbortController();
+            const timeoutMs = 60000; // 60 seconds timeout for 512KB chunks
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            let response;
+            try {
+                response = await fetch('{{ route("matches.upload.chunk") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
+                    },
+                    body: formData,
+                    signal: controller.signal
+                });
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                if (fetchError.name === 'AbortError') {
+                    throw new Error('Request timeout - server took too long to respond');
+                }
+                throw fetchError;
+            }
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Handle specific HTTP status codes
+                if (response.status === 504) {
+                    throw new Error('Gateway timeout - server is taking too long to respond');
+                } else if (response.status === 503) {
+                    throw new Error('Service unavailable - server is temporarily overloaded');
+                } else if (response.status === 500) {
+                    throw new Error('Server error - please try again');
+                } else if (response.status === 409) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.message || 'Another upload is in progress');
+                } else if (response.status === 403) {
+                    const result = await response.json().catch(() => ({}));
+                    throw new Error(result.message || 'Unauthorized access to upload session');
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             }
 
             const result = await response.json();
             if (result.success) {
                 return result;
             } else {
-                // Handle concurrent upload error (409)
-                if (response.status === 409) {
-                    throw new Error(result.message || 'Another upload is in progress');
-                }
-                // Handle unauthorized access (403)
-                if (response.status === 403) {
-                    throw new Error(result.message || 'Unauthorized access to upload session');
-                }
                 throw new Error(result.message || 'Upload failed');
             }
         } catch (error) {
             console.error(`Chunk ${chunkIndex} upload attempt ${attempt + 1} failed:`, error);
+            
             // Don't retry on 403 or 409 errors
             if (error.message.includes('Another upload') || error.message.includes('Unauthorized')) {
                 throw error;
             }
+            
             if (attempt === retries - 1) {
-                throw error;
+                // Format error message for user
+                let errorMessage = error.message || 'Failed to upload chunk';
+                if (error.message.includes('timeout') || error.message.includes('Gateway timeout')) {
+                    errorMessage = 'Server timeout - chunk upload failed. Please try resuming the upload.';
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    errorMessage = 'Network error - please check your connection and try again.';
+                }
+                throw new Error(errorMessage);
             }
-            // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            
+            // Wait before retry with longer delays for timeout errors
+            const isTimeoutError = error.message.includes('timeout') || error.message.includes('Gateway timeout');
+            const baseDelay = isTimeoutError ? 5000 : 1000; // 5 seconds for timeout, 1 second for others
+            const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
 }
@@ -343,8 +381,10 @@ async function handleFileSelect(input) {
         <small class="text-gray-500">${formatBytes(fileSize)}</small>
     `;
 
-    // Calculate chunks (2MB per chunk)
-    const chunkSize = 2 * 1024 * 1024;
+    // Calculate chunks (512KB per chunk - smaller size prevents timeout on slow connections)
+    // 512KB = 512 * 1024 bytes = 524,288 bytes
+    // This size should upload in 5-10 seconds even on slow connections, avoiding proxy/load balancer timeouts
+    const chunkSize = 512 * 1024; // 512KB
     const totalChunks = Math.ceil(fileSize / chunkSize);
 
     // Check for existing upload ID in localStorage (user-specific)
@@ -357,6 +397,8 @@ async function handleFileSelect(input) {
             const saved = JSON.parse(savedUpload);
             uploadId = saved.uploadId;
             uploadedChunks = saved.uploadedChunks || [];
+            // Ensure chunks are sorted numerically
+            uploadedChunks.sort((a, b) => a - b);
 
             // Verify upload still exists on server
             try {
@@ -365,6 +407,8 @@ async function handleFileSelect(input) {
                     const statusData = await statusResponse.json();
                     if (statusData.success) {
                         uploadedChunks = statusData.uploadStatus.uploadedChunks || [];
+                        // Ensure chunks from server are sorted (should be, but just in case)
+                        uploadedChunks.sort((a, b) => a - b);
                     }
                 }
             } catch (error) {
@@ -412,8 +456,29 @@ async function handleFileSelect(input) {
         connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>' + translations.noConnection + '</span>';
     }
 
+    // Calculate initial uploaded bytes accurately (accounting for variable chunk sizes)
+    let uploadedBytes = 0;
+    uploadedChunks.forEach(chunkIdx => {
+        const start = chunkIdx * chunkSize;
+        const end = Math.min(start + chunkSize, fileSize);
+        uploadedBytes += (end - start);
+    });
+
+    // Calculate initial progress percentage
+    const initialProgress = uploadedChunks.length > 0 ? (uploadedChunks.length / totalChunks) * 100 : 0;
+    
+    // Set initial progress display
+    if (uploadedChunks.length > 0) {
+        progressFill.style.width = initialProgress + '%';
+        progressPercent.textContent = Math.round(initialProgress) + '%';
+        chunkInfo.innerHTML = `
+            <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
+            <span>${uploadedChunks.length}/${totalChunks} ${translations.chunks}</span>
+        `;
+    }
+
     const startTime = Date.now();
-    let uploadedBytes = uploadedChunks.length * chunkSize;
+    const resumeTime = Date.now(); // Track time for resume speed calculation
 
     // Upload chunks sequentially
     try {
@@ -434,8 +499,15 @@ async function handleFileSelect(input) {
 
             const result = await uploadChunk(file, i, chunkBlob, uploadId, file.name, fileSize, totalChunks);
 
-            uploadedChunks.push(i);
-            uploadedBytes = (uploadedChunks.length / totalChunks) * fileSize;
+            // Calculate actual bytes uploaded for this chunk
+            const chunkBytes = chunkBlob.size;
+            uploadedBytes += chunkBytes;
+            
+            // Add chunk index if not already present and sort to maintain order
+            if (!uploadedChunks.includes(i)) {
+                uploadedChunks.push(i);
+                uploadedChunks.sort((a, b) => a - b); // Sort numerically
+            }
 
             // Update localStorage
             localStorage.setItem(storageKey, JSON.stringify({
@@ -447,8 +519,9 @@ async function handleFileSelect(input) {
 
             // Update progress
             const progress = (uploadedChunks.length / totalChunks) * 100;
-            const elapsed = (Date.now() - startTime) / 1000;
-            const speed = uploadedBytes / elapsed;
+            // Calculate speed based on actual upload time (not including skipped chunks)
+            const elapsed = (Date.now() - resumeTime) / 1000;
+            const speed = elapsed > 0 ? uploadedBytes / elapsed : 0;
 
             progressFill.style.width = progress + '%';
             progressPercent.textContent = Math.round(progress) + '%';

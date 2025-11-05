@@ -332,6 +332,9 @@ class MatchController extends Controller
 
     public function uploadChunk(Request $request)
     {
+        // Increase execution time limit for chunk uploads (2 minutes)
+        set_time_limit(120);
+        
         try {
             $validated = $request->validate([
                 'uploadId' => 'required|string',
@@ -350,13 +353,22 @@ class MatchController extends Controller
                 'uploadId' => $request->input('uploadId'),
                 'chunkIndex' => $request->input('chunkIndex'),
                 'error' => $e->getMessage(),
-                'userId' => auth()->id()
+                'userId' => auth()->id(),
+                'trace' => $e->getTraceAsString()
             ]);
+
+            // Return appropriate status code based on error type
+            $statusCode = 400;
+            if (str_contains($e->getMessage(), 'timeout') || str_contains($e->getMessage(), 'Gateway')) {
+                $statusCode = 504;
+            } elseif (str_contains($e->getMessage(), 'Service unavailable')) {
+                $statusCode = 503;
+            }
 
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 400);
+            ], $statusCode);
         }
     }
 
