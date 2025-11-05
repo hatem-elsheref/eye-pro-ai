@@ -161,7 +161,7 @@ class MatchController extends Controller
         $isExternalVideo = false;
         $embedUrl = null;
 
-        if ($match->type === 'file' && $match->video_path && $match->storage_disk) {
+        if ($match->status === 'pending' && $match->type === 'file' && $match->video_path && $match->storage_disk) {
             try {
                 $matchVideoUrl = $this->generateStorageUrl($match->storage_disk, $match->video_path);
             } catch (\Exception $e) {
@@ -334,7 +334,7 @@ class MatchController extends Controller
     {
         // Increase execution time limit for chunk uploads (2 minutes)
         set_time_limit(120);
-        
+
         try {
             $validated = $request->validate([
                 'uploadId' => 'required|string',

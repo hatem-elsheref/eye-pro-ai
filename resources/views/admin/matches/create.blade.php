@@ -391,6 +391,9 @@ async function handleFileSelect(input) {
     const userId = {{ auth()->id() ?? 0 }};
     const storageKey = 'upload_user_' + userId + '_' + file.name + '_' + fileSize;
     const savedUpload = localStorage.getItem(storageKey);
+    
+    // Variable to store progress from backend (server is source of truth)
+    let serverProgress = null;
 
     if (savedUpload) {
         try {
@@ -412,27 +415,39 @@ async function handleFileSelect(input) {
                 uploadedChunks.sort((a, b) => a - b);
             }
 
-            // Verify upload still exists on server
+            // ALWAYS verify upload status from server when resuming (server is source of truth)
             if (uploadId) {
                 try {
+                    console.log('Checking server for current upload status...');
                     const statusResponse = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
                     if (statusResponse.ok) {
                         const statusData = await statusResponse.json();
-                        if (statusData.success) {
+                        if (statusData.success && statusData.uploadStatus) {
                             let serverChunks = statusData.uploadStatus.uploadedChunks || [];
                             // Filter out invalid chunk indices from server
                             serverChunks = serverChunks.filter(idx => idx >= 0 && idx < totalChunks);
                             serverChunks.sort((a, b) => a - b);
                             uploadedChunks = serverChunks;
+                            // Get progress from backend response
+                            serverProgress = statusData.progress !== undefined ? Math.min(100, statusData.progress) : null;
+                            console.log(`Server reports ${uploadedChunks.length} chunks already uploaded. Progress: ${serverProgress !== null ? serverProgress.toFixed(2) + '%' : 'N/A'}`);
+                        } else {
+                            console.log('Server session not found, starting fresh');
+                            uploadId = generateUploadId();
+                            uploadedChunks = [];
                         }
+                    } else {
+                        console.log('Server session expired, starting fresh');
+                        uploadId = generateUploadId();
+                        uploadedChunks = [];
                     }
                 } catch (error) {
-                    console.log('Upload session expired, starting fresh');
-                    uploadId = generateUploadId();
-                    uploadedChunks = [];
+                    console.log('Failed to check server status, using local data:', error);
+                    // On error, keep local data but it will be verified during upload
                 }
             }
         } catch (error) {
+            console.log('Error parsing saved upload, starting fresh:', error);
             uploadId = generateUploadId();
             uploadedChunks = [];
         }
@@ -481,8 +496,8 @@ async function handleFileSelect(input) {
         uploadedBytes += (end - start);
     });
 
-    // Calculate initial progress percentage (cap at 100%)
-    const initialProgress = uploadedChunks.length > 0 ? Math.min(100, (uploadedChunks.length / totalChunks) * 100) : 0;
+    // Calculate initial progress percentage (use backend progress if available, otherwise calculate)
+    const initialProgress = serverProgress !== null ? serverProgress : (uploadedChunks.length > 0 ? Math.min(100, (uploadedChunks.length / totalChunks) * 100) : 0);
     
     // Set initial progress display
     if (uploadedChunks.length > 0) {
@@ -494,18 +509,42 @@ async function handleFileSelect(input) {
             <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
             <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
         `;
+        console.log(`Initial progress from backend: ${initialProgress.toFixed(2)}%`);
     }
 
     const startTime = Date.now();
     const resumeTime = Date.now(); // Track time for resume speed calculation
 
-    // Upload chunks sequentially
-    try {
+    // IMPORTANT: Always re-upload the last chunk that was attempted (in case it failed mid-upload)
+    // This ensures the last chunk is completely uploaded before continuing
+    const lastUploadedChunk = uploadedChunks.length > 0 ? Math.max(...uploadedChunks) : -1;
+    let startFromChunk = 0;
+    
+    // Strategy: Re-upload the last chunk to ensure it's complete, then continue from next
+    if (lastUploadedChunk >= 0) {
+        // Re-upload the last chunk (the one that likely failed or was incomplete)
+        startFromChunk = lastUploadedChunk;
+        console.log(`Will re-upload last chunk ${lastUploadedChunk} to ensure it's complete, then continue`);
+    } else {
+        // No chunks uploaded yet, find first missing chunk
         for (let i = 0; i < totalChunks; i++) {
-            // Skip if already uploaded
-            if (uploadedChunks.includes(i)) {
-                continue;
+            if (!uploadedChunks.includes(i)) {
+                startFromChunk = i;
+                break;
             }
+        }
+    }
+    
+    console.log(`Resume: Last uploaded chunk: ${lastUploadedChunk}, Starting from chunk: ${startFromChunk} (re-uploading to ensure completeness)`);
+    console.log(`Uploaded chunks from server:`, uploadedChunks);
+    console.log(`Will upload chunks ${startFromChunk} to ${totalChunks - 1}`);
+
+    // Upload chunks sequentially starting from the chunk that needs re-upload
+    try {
+        // Start from the chunk that needs uploading/re-uploading
+        for (let i = startFromChunk; i < totalChunks; i++) {
+            // Re-upload the chunk even if it's in uploadedChunks (to ensure it's complete)
+            // The backend will handle duplicates and only store if needed
 
             const start = i * chunkSize;
             const end = Math.min(start + chunkSize, fileSize);
@@ -516,19 +555,22 @@ async function handleFileSelect(input) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
 
+            console.log(`Uploading chunk ${i} (${formatBytes(chunkBlob.size)})...`);
             const result = await uploadChunk(file, i, chunkBlob, uploadId, file.name, fileSize, totalChunks);
 
-            // Calculate actual bytes uploaded for this chunk
-            const chunkBytes = chunkBlob.size;
-            uploadedBytes += chunkBytes;
+            // Use backend response as source of truth for uploaded chunks and progress
+            if (result.uploadedChunks && Array.isArray(result.uploadedChunks)) {
+                uploadedChunks = result.uploadedChunks.filter(idx => idx >= 0 && idx < totalChunks);
+                uploadedChunks.sort((a, b) => a - b);
+            }
             
-            // Add chunk index if not already present and sort to maintain order
+            // Calculate actual bytes uploaded for this chunk (for speed calculation)
+            const chunkBytes = chunkBlob.size;
             if (!uploadedChunks.includes(i)) {
-                uploadedChunks.push(i);
-                uploadedChunks.sort((a, b) => a - b); // Sort numerically
+                uploadedBytes += chunkBytes;
             }
 
-            // Update localStorage (include chunkSize)
+            // Update localStorage with server data (include chunkSize)
             localStorage.setItem(storageKey, JSON.stringify({
                 uploadId: uploadId,
                 fileName: file.name,
@@ -537,22 +579,26 @@ async function handleFileSelect(input) {
                 uploadedChunks: uploadedChunks
             }));
 
-            // Update progress (cap at 100% to prevent showing >100%)
-            const progress = Math.min(100, (uploadedChunks.length / totalChunks) * 100);
+            // Use progress from backend response (server is source of truth)
+            const progress = result.progress !== undefined ? Math.min(100, result.progress) : Math.min(100, (uploadedChunks.length / totalChunks) * 100);
+            
             // Calculate speed based on actual upload time (not including skipped chunks)
             const elapsed = (Date.now() - resumeTime) / 1000;
             const speed = elapsed > 0 ? uploadedBytes / elapsed : 0;
 
+            // Update UI with backend progress
             progressFill.style.width = progress + '%';
             progressPercent.textContent = Math.round(progress) + '%';
             uploadSpeed.textContent = `${translations.speed}: ${formatSpeed(speed)}`;
             
-            // Ensure chunk count doesn't exceed total (sanitize display)
+            // Use backend data for chunk count
             const validChunkCount = Math.min(uploadedChunks.length, totalChunks);
             chunkInfo.innerHTML = `
                 <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
                 <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
             `;
+            
+            console.log(`Chunk ${i} uploaded. Progress from backend: ${progress.toFixed(2)}%, Uploaded chunks: ${validChunkCount}/${totalChunks}`);
         }
 
         // All chunks uploaded, finalize
