@@ -395,26 +395,42 @@ async function handleFileSelect(input) {
     if (savedUpload) {
         try {
             const saved = JSON.parse(savedUpload);
-            uploadId = saved.uploadId;
-            uploadedChunks = saved.uploadedChunks || [];
-            // Ensure chunks are sorted numerically
-            uploadedChunks.sort((a, b) => a - b);
-
-            // Verify upload still exists on server
-            try {
-                const statusResponse = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
-                if (statusResponse.ok) {
-                    const statusData = await statusResponse.json();
-                    if (statusData.success) {
-                        uploadedChunks = statusData.uploadStatus.uploadedChunks || [];
-                        // Ensure chunks from server are sorted (should be, but just in case)
-                        uploadedChunks.sort((a, b) => a - b);
-                    }
-                }
-            } catch (error) {
-                console.log('Upload session expired, starting fresh');
+            
+            // Check if chunk size matches (important: chunk size change invalidates old upload data)
+            const savedChunkSize = saved.chunkSize;
+            if (savedChunkSize && savedChunkSize !== chunkSize) {
+                console.log('Chunk size changed, clearing old upload data');
+                localStorage.removeItem(storageKey);
                 uploadId = generateUploadId();
                 uploadedChunks = [];
+            } else {
+                uploadId = saved.uploadId;
+                uploadedChunks = saved.uploadedChunks || [];
+                // Filter out invalid chunk indices (must be 0 to totalChunks-1)
+                uploadedChunks = uploadedChunks.filter(idx => idx >= 0 && idx < totalChunks);
+                // Ensure chunks are sorted numerically
+                uploadedChunks.sort((a, b) => a - b);
+            }
+
+            // Verify upload still exists on server
+            if (uploadId) {
+                try {
+                    const statusResponse = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
+                    if (statusResponse.ok) {
+                        const statusData = await statusResponse.json();
+                        if (statusData.success) {
+                            let serverChunks = statusData.uploadStatus.uploadedChunks || [];
+                            // Filter out invalid chunk indices from server
+                            serverChunks = serverChunks.filter(idx => idx >= 0 && idx < totalChunks);
+                            serverChunks.sort((a, b) => a - b);
+                            uploadedChunks = serverChunks;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Upload session expired, starting fresh');
+                    uploadId = generateUploadId();
+                    uploadedChunks = [];
+                }
             }
         } catch (error) {
             uploadId = generateUploadId();
@@ -425,11 +441,12 @@ async function handleFileSelect(input) {
         uploadedChunks = [];
     }
 
-    // Save upload info to localStorage
+    // Save upload info to localStorage (include chunkSize to detect mismatches)
     localStorage.setItem(storageKey, JSON.stringify({
         uploadId: uploadId,
         fileName: file.name,
         fileSize: fileSize,
+        chunkSize: chunkSize, // Store chunk size to detect mismatches
         uploadedChunks: uploadedChunks
     }));
 
@@ -464,16 +481,18 @@ async function handleFileSelect(input) {
         uploadedBytes += (end - start);
     });
 
-    // Calculate initial progress percentage
-    const initialProgress = uploadedChunks.length > 0 ? (uploadedChunks.length / totalChunks) * 100 : 0;
+    // Calculate initial progress percentage (cap at 100%)
+    const initialProgress = uploadedChunks.length > 0 ? Math.min(100, (uploadedChunks.length / totalChunks) * 100) : 0;
     
     // Set initial progress display
     if (uploadedChunks.length > 0) {
-        progressFill.style.width = initialProgress + '%';
-        progressPercent.textContent = Math.round(initialProgress) + '%';
+        progressFill.style.width = Math.min(100, initialProgress) + '%';
+        progressPercent.textContent = Math.round(Math.min(100, initialProgress)) + '%';
+        // Ensure chunk count doesn't exceed total (sanitize display)
+        const validChunkCount = Math.min(uploadedChunks.length, totalChunks);
         chunkInfo.innerHTML = `
             <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-            <span>${uploadedChunks.length}/${totalChunks} ${translations.chunks}</span>
+            <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
         `;
     }
 
@@ -509,16 +528,17 @@ async function handleFileSelect(input) {
                 uploadedChunks.sort((a, b) => a - b); // Sort numerically
             }
 
-            // Update localStorage
+            // Update localStorage (include chunkSize)
             localStorage.setItem(storageKey, JSON.stringify({
                 uploadId: uploadId,
                 fileName: file.name,
                 fileSize: fileSize,
+                chunkSize: chunkSize, // Store chunk size to detect mismatches
                 uploadedChunks: uploadedChunks
             }));
 
-            // Update progress
-            const progress = (uploadedChunks.length / totalChunks) * 100;
+            // Update progress (cap at 100% to prevent showing >100%)
+            const progress = Math.min(100, (uploadedChunks.length / totalChunks) * 100);
             // Calculate speed based on actual upload time (not including skipped chunks)
             const elapsed = (Date.now() - resumeTime) / 1000;
             const speed = elapsed > 0 ? uploadedBytes / elapsed : 0;
@@ -526,9 +546,12 @@ async function handleFileSelect(input) {
             progressFill.style.width = progress + '%';
             progressPercent.textContent = Math.round(progress) + '%';
             uploadSpeed.textContent = `${translations.speed}: ${formatSpeed(speed)}`;
+            
+            // Ensure chunk count doesn't exceed total (sanitize display)
+            const validChunkCount = Math.min(uploadedChunks.length, totalChunks);
             chunkInfo.innerHTML = `
                 <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-                <span>${uploadedChunks.length}/${totalChunks} ${translations.chunks}</span>
+                <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
             `;
         }
 
@@ -567,11 +590,12 @@ async function handleFileSelect(input) {
         }
 
         if (showResumeButton) {
-            // Save current state for resume
+            // Save current state for resume (include chunkSize)
             localStorage.setItem(storageKey, JSON.stringify({
                 uploadId: uploadId,
                 fileName: file.name,
                 fileSize: fileSize,
+                chunkSize: chunkSize, // Store chunk size to detect mismatches
                 uploadedChunks: uploadedChunks
             }));
 
