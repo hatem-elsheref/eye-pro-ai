@@ -81,12 +81,12 @@ class MatchApiController extends Controller
 
         $disk = $match->storage_disk ?? 'public';
         $fileInfo = [
-            'id' => $match->id,
-            'name' => $match->name,
-            'path' => $match->video_path,
-            'disk' => $disk,
-            'size' => $match->file_size,
-            'url' => $match->video_url,
+            'id'      => $match->id,
+            'name'    => $match->name,
+            'path'    => $match->video_path,
+            'disk'    => $disk,
+            'size'    => $match->file_size,
+            'url'     => $match->video_url,
             'results' => $match->predictions
         ];
 
