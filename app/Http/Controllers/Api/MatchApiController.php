@@ -9,6 +9,7 @@ use App\Models\Prediction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use App\Helpers\WebSocketHelper;
 
 class MatchApiController extends Controller
@@ -121,6 +122,8 @@ class MatchApiController extends Controller
 
     /**
      * Store a new prediction from AI model
+     * 
+     * Requires all fields: clip_path, relative_time, prediction_0, prediction_1, first_model_prop
      */
     public function storePrediction(Request $request, $id)
     {
@@ -128,27 +131,85 @@ class MatchApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $validated = $request->validate([
-            'clip_path'         => 'nullable|string',
-            'relative_time'     => 'nullable|string',
-            'first_model_prop'  => 'nullable|numeric',
-            'prediction_0'      => 'nullable|array',
-            'prediction_1'      => 'nullable|array',
-        ]);
+        // Validate all required fields - all must be present
+        try {
+            $validated = $request->validate([
+                'clip_path'         => 'required|string|min:1',
+                'relative_time'     => 'required|string|min:1',
+                'first_model_prop'  => 'required|numeric|min:0|max:1',
+                'prediction_0'      => 'required|array|min:1',
+                'prediction_1'      => 'required|array|min:1',
+            ], [
+            'clip_path.required' => 'clip_path is required',
+            'clip_path.string' => 'clip_path must be a string',
+            'clip_path.min' => 'clip_path cannot be empty',
+            'relative_time.required' => 'relative_time is required',
+            'relative_time.string' => 'relative_time must be a string',
+            'relative_time.min' => 'relative_time cannot be empty',
+            'first_model_prop.required' => 'first_model_prop is required',
+            'first_model_prop.numeric' => 'first_model_prop must be a number',
+            'first_model_prop.min' => 'first_model_prop must be between 0 and 1',
+            'first_model_prop.max' => 'first_model_prop must be between 0 and 1',
+            'prediction_0.required' => 'prediction_0 (JSON 1) is required',
+            'prediction_0.array' => 'prediction_0 must be a valid JSON object/array',
+            'prediction_0.min' => 'prediction_0 cannot be empty',
+            'prediction_1.required' => 'prediction_1 (JSON 2) is required',
+            'prediction_1.array' => 'prediction_1 must be a valid JSON object/array',
+            'prediction_1.min' => 'prediction_1 cannot be empty',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log validation errors for debugging
+            Log::warning('Prediction validation failed', [
+                'match_id' => $id,
+                'errors' => $e->errors(),
+                'request_data' => $request->except(['prediction_0', 'prediction_1']) // Don't log full JSON to avoid huge logs
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed: Missing required fields',
+                'errors' => $e->errors()
+            ], 422);
+        }
 
         $match = MatchVideo::find($id);
         if (!$match) {
             return response()->json(['success' => false, 'message' => 'Match not found'], 404);
         }
 
-        // Create prediction
+        // Additional validation: ensure prediction_0 and prediction_1 are valid JSON structures
+        if (empty($validated['prediction_0']) || !is_array($validated['prediction_0'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'prediction_0 must be a valid non-empty JSON object/array'
+            ], 422);
+        }
+
+        if (empty($validated['prediction_1']) || !is_array($validated['prediction_1'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'prediction_1 must be a valid non-empty JSON object/array'
+            ], 422);
+        }
+
+        // All validations passed - create prediction with all required data
         $prediction = Prediction::create([
             'match_id'         => $match->id,
-            'clip_path'        => $validated['clip_path'] ?? null,
-            'relative_time'    => $validated['relative_time'] ?? null,
-            'first_model_prop' => $validated['first_model_prop'] ?? null,
-            'prediction_0'     => $validated['prediction_0'] ?? null,
-            'prediction_1'     => $validated['prediction_1'] ?? null,
+            'clip_path'        => $validated['clip_path'],
+            'relative_time'    => $validated['relative_time'],
+            'first_model_prop' => $validated['first_model_prop'],
+            'prediction_0'     => $validated['prediction_0'],
+            'prediction_1'     => $validated['prediction_1'],
+        ]);
+
+        Log::info('Prediction stored successfully', [
+            'match_id' => $match->id,
+            'prediction_id' => $prediction->id,
+            'clip_path' => $prediction->clip_path,
+            'relative_time' => $prediction->relative_time,
+            'first_model_prop' => $prediction->first_model_prop,
+            'has_prediction_0' => !empty($prediction->prediction_0),
+            'has_prediction_1' => !empty($prediction->prediction_1),
         ]);
 
         // Format prediction with labels for WebSocket
