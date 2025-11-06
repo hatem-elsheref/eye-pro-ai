@@ -689,547 +689,216 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
-    <!-- WebSocket Notification Handler -->
+    <!-- Simplified WebSocket Notification Handler -->
     <script>
-        (function() {
-            // Prevent multiple initializations - check immediately
-            if (window.__notificationWebSocketInitialized) {
-                console.log('WebSocket notification handler already initialized, skipping...');
-                return;
+@auth
+(function() {
+    // Prevent duplicate initialization
+    if (window.__wsNotifications) return;
+    window.__wsNotifications = true;
+
+    const userId = {{ auth()->id() }};
+    const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//{{ env("WEBSOCKET_HOST", "localhost:3001") }}/ws`;
+    
+    let ws = null;
+    let reconnectTimer = null;
+    const RECONNECT_DELAY = 2000;
+
+    // Notification type styles (simplified mapping)
+    const notificationStyles = {
+        'account_approved': { icon: 'fa-user-check', bg: 'bg-green-100', text: 'text-green-600', class: 'success' },
+        'account_rejected': { icon: 'fa-user-times', bg: 'bg-red-100', text: 'text-red-600', class: 'error' },
+        'match_analysis_complete': { icon: 'fa-check-circle', bg: 'bg-green-100', text: 'text-green-600', class: 'success' },
+        'match_upload_success': { icon: 'fa-check-circle', bg: 'bg-green-100', text: 'text-green-600', class: 'success' },
+        'match_upload_processing': { icon: 'fa-upload', bg: 'bg-blue-100', text: 'text-blue-600', class: 'info' },
+        'match_processing_failed': { icon: 'fa-exclamation-circle', bg: 'bg-red-100', text: 'text-red-600', class: 'error' },
+        'match_processing_ended_no_predictions': { icon: 'fa-exclamation-triangle', bg: 'bg-yellow-100', text: 'text-yellow-600', class: 'warning' },
+        'match_processing_stopped': { icon: 'fa-stop-circle', bg: 'bg-blue-100', text: 'text-blue-600', class: 'info' },
+        'match_processing_stopped_failed': { icon: 'fa-exclamation-circle', bg: 'bg-red-100', text: 'text-red-600', class: 'error' },
+        'match_processing_started': { icon: 'fa-play-circle', bg: 'bg-blue-100', text: 'text-blue-600', class: 'info' }
+    };
+
+    // Play notification sound
+    function playSound() {
+        try {
+            const audio = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audio.createOscillator();
+            const gain = audio.createGain();
+            osc.connect(gain);
+            gain.connect(audio.destination);
+            osc.frequency.setValueAtTime(800, audio.currentTime);
+            osc.frequency.setValueAtTime(1000, audio.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audio.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.3);
+            osc.start();
+            osc.stop(audio.currentTime + 0.3);
+        } catch (e) {}
+    }
+
+    // Show toast notification
+    function showToast(notification) {
+        const container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        const style = notificationStyles[notification.type] || { icon: 'fa-bell', bg: 'bg-blue-100', text: 'text-blue-600', class: 'info' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${style.class}`;
+        toast.innerHTML = `
+            <div class="toast-icon ${style.bg}">
+                <i class="fas ${style.icon} ${style.text}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">${notification.title || '{{ __('admin.notification') }}'}</div>
+                <div class="toast-message">${notification.message || ''}</div>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    }
+
+    // Update notification badge
+    function updateBadge(count) {
+        const badge = document.querySelector('.notification-badge');
+        const headerBadge = document.getElementById('notificationHeaderBadge');
+        const headerCount = document.getElementById('notificationHeaderCount');
+        
+        if (badge) {
+            const span = badge.querySelector('span:last-child');
+            if (span) span.textContent = count > 99 ? '99+' : count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+        if (headerBadge && headerCount) {
+            headerCount.textContent = count;
+            headerBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+    }
+
+    // Refresh notifications
+    function refreshNotifications() {
+        fetch('/notifications/list', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            updateBadge(data.unreadCount || 0);
+            const list = document.getElementById('notificationsList');
+            if (list) {
+                list.innerHTML = (data.notifications || []).length === 0 
+                    ? '<div class="p-8 text-center"><i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i><p class="text-sm text-gray-500">No new notifications</p></div>'
+                    : (data.notifications || []).map(n => `
+                        <a href="/notifications" class="flex items-start space-x-4 p-5 hover:bg-blue-50 ${n.read_at ? 'opacity-60' : ''}">
+                            <div class="h-12 w-12 rounded-xl ${n.iconBg} flex items-center justify-center">
+                                <i class="fas ${n.icon} ${n.iconColor} text-xl"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-gray-900">${n.title}</p>
+                                <p class="text-xs text-gray-600 mt-1">${n.message}</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-clock"></i> ${n.created_at}</p>
+                            </div>
+                        </a>
+                    `).join('');
             }
-            
-            // Set flag immediately to prevent race conditions
-            window.__notificationWebSocketInitialized = true;
-            
-            // Check if there's already a WebSocket connection from a previous script execution
-            if (window.__notificationWebSocket && 
-                window.__notificationWebSocket.readyState === WebSocket.OPEN) {
-                console.log('WebSocket connection already exists and is open, reusing...');
-                return;
+            if (window.location.pathname.includes('/notifications')) {
+                setTimeout(() => window.location.reload(), 1000);
             }
-
-            @auth
-            const userId = {{ auth()->id() }};
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsHost = '{{ env("WEBSOCKET_HOST", "localhost:3001") }}';
-            const wsUrl = `${wsProtocol}//${wsHost}/ws`;
-
-            let notificationWs = null;
-            let reconnectTimeout = null;
-            let isReloading = false;
-            
-            // Store WebSocket instance globally to prevent duplicates
-            window.__notificationWebSocket = null;
-
-            // Create audio context for notification sound
-            let audioContext = null;
-            try {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            } catch (e) {
-                console.warn('Audio context not supported:', e);
+        })
+        .catch(() => {
+            if (window.location.pathname.includes('/notifications')) {
+                setTimeout(() => window.location.reload(), 1000);
             }
+        });
+    }
 
-            // Function to play notification sound
-            function playNotificationSound() {
-                if (!audioContext) return;
+    // Connect WebSocket
+    function connect() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        
+        try {
+            ws = new WebSocket(wsUrl);
+            window.__notificationWebSocket = ws;
 
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'subscribe', userId: userId, subscribeType: 'notifications' }));
+            };
+
+            ws.onmessage = (event) => {
                 try {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-
-                    // Pleasant notification sound (two-tone chime)
-                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
-
-                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-                    oscillator.start(audioContext.currentTime);
-                    oscillator.stop(audioContext.currentTime + 0.3);
-                } catch (e) {
-                    console.warn('Could not play sound:', e);
-                }
-            }
-
-            // Function to show toast notification
-            function showToast(notification) {
-                const container = document.getElementById('toastContainer');
-                if (!container) return;
-
-                // Notifications from API already have translated text
-                const title = notification.title || '{{ __('admin.notification') }}';
-                const message = notification.message || '';
-                const type = notification.type || 'info';
-
-                // Determine icon and color based on type
-                let iconClass = 'fas fa-bell';
-                let bgClass = 'bg-blue-100';
-                let textClass = 'text-blue-600';
-                let toastClass = 'info';
-
-                if (type === 'account_approved') {
-                    iconClass = 'fas fa-user-check';
-                    bgClass = 'bg-green-100';
-                    textClass = 'text-green-600';
-                    toastClass = 'success';
-                } else if (type === 'account_rejected') {
-                    iconClass = 'fas fa-user-times';
-                    bgClass = 'bg-red-100';
-                    textClass = 'text-red-600';
-                    toastClass = 'error';
-                } else if (type === 'match_analysis_complete') {
-                    iconClass = 'fas fa-check-circle';
-                    bgClass = 'bg-green-100';
-                    textClass = 'text-green-600';
-                    toastClass = 'success';
-                } else if (type === 'match_upload_processing') {
-                    iconClass = 'fas fa-upload';
-                    bgClass = 'bg-blue-100';
-                    textClass = 'text-blue-600';
-                    toastClass = 'info';
-                } else if (type === 'match_processing_failed') {
-                    iconClass = 'fas fa-exclamation-circle';
-                    bgClass = 'bg-red-100';
-                    textClass = 'text-red-600';
-                    toastClass = 'error';
-                } else if (type === 'match_processing_ended_no_predictions') {
-                    iconClass = 'fas fa-exclamation-triangle';
-                    bgClass = 'bg-yellow-100';
-                    textClass = 'text-yellow-600';
-                    toastClass = 'warning';
-                } else if (type === 'match_processing_stopped') {
-                    iconClass = 'fas fa-stop-circle';
-                    bgClass = 'bg-blue-100';
-                    textClass = 'text-blue-600';
-                    toastClass = 'info';
-                } else if (type === 'match_processing_stopped_failed') {
-                    iconClass = 'fas fa-exclamation-circle';
-                    bgClass = 'bg-red-100';
-                    textClass = 'text-red-600';
-                    toastClass = 'error';
-                } else if (type === 'match_processing_started') {
-                    iconClass = 'fas fa-play-circle';
-                    bgClass = 'bg-blue-100';
-                    textClass = 'text-blue-600';
-                    toastClass = 'info';
-                }
-
-                const toast = document.createElement('div');
-                toast.className = `toast ${toastClass}`;
-                toast.innerHTML = `
-                    <div class="toast-icon ${bgClass}">
-                        <i class="${iconClass} ${textClass}"></i>
-                    </div>
-                    <div class="toast-content">
-                        <div class="toast-title">${title}</div>
-                        <div class="toast-message">${message}</div>
-                    </div>
-                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-
-                container.appendChild(toast);
-
-                // Auto-remove after 5 seconds
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.style.animation = 'slideInRight 0.3s ease-out reverse';
-                        setTimeout(() => toast.remove(), 300);
-                    }
-                }, 5000);
-            }
-
-            // Helper function to escape HTML
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            // Function to refresh notification list
-            function refreshNotifications() {
-                // Fetch updated notification list and count via AJAX
-                fetch('/notifications/list', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const count = data.unreadCount || 0;
-                    const notifications = data.notifications || [];
-
-                    // Update notification badge count on button
-                    const badge = document.querySelector('.notification-badge');
-                    if (badge) {
-                        const countSpan = badge.querySelector('span:last-child');
-                        if (countSpan) {
-                            countSpan.textContent = count > 99 ? '99+' : count;
-                        }
-                        if (count > 0) {
-                            badge.style.display = 'flex';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-
-                    // Update header badge count
-                    const headerBadge = document.getElementById('notificationHeaderBadge');
-                    const headerCount = document.getElementById('notificationHeaderCount');
-                    if (headerBadge && headerCount) {
-                        headerCount.textContent = count;
-                        if (count > 0) {
-                            headerBadge.style.display = 'inline-flex';
-                        } else {
-                            headerBadge.style.display = 'none';
-                        }
-                    }
-
-                    // Update notification list in dropdown
-                    const listContainer = document.getElementById('notificationsList');
-                    if (listContainer) {
-                        if (notifications.length === 0) {
-                            listContainer.innerHTML = `
-                                <div class="p-8 text-center">
-                                    <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
-                                    <p class="text-sm text-gray-500">No new notifications</p>
-                                </div>
-                            `;
-                        } else {
-                            listContainer.innerHTML = notifications.map((notif, index) => `
-                                <a href="/notifications" class="flex items-start space-x-4 p-5 hover:bg-blue-50 transition-all duration-200 ${index < notifications.length - 1 ? 'border-b border-gray-100' : ''} group ${notif.read_at ? 'opacity-60' : ''}">
-                                    <div class="flex-shrink-0">
-                                        <div class="h-12 w-12 rounded-xl ${notif.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                            <i class="fas ${notif.icon} ${notif.iconColor} text-xl"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-bold text-gray-900">${escapeHtml(notif.title)}</p>
-                                        <p class="text-xs text-gray-600 mt-1">${escapeHtml(notif.message)}</p>
-                                        <p class="text-xs text-gray-400 mt-2 flex items-center space-x-1">
-                                            <i class="fas fa-clock"></i>
-                                            <span>${escapeHtml(notif.created_at)}</span>
-                                        </p>
-                                    </div>
-                                </a>
-                            `).join('');
-                        }
-                    }
-
-                    // Dispatch event for other components to react
-                    window.dispatchEvent(new CustomEvent('notifications-updated', {
-                        detail: { count: count, notifications: notifications }
-                    }));
-
-                    // If on notifications page, reload to show new notification
-                    if (window.location.pathname === '/notifications' || window.location.pathname.includes('/notifications')) {
-                        // Small delay to allow toast to be visible
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error refreshing notifications:', error);
-                    // Fallback: reload page if AJAX fails
-                    if (window.location.pathname === '/notifications' || window.location.pathname.includes('/notifications')) {
-                        setTimeout(() => window.location.reload(), 1000);
-                    }
-                });
-            }
-
-            // Function to connect to WebSocket
-            function connectWebSocket() {
-                // Check global WebSocket first
-                if (window.__notificationWebSocket && 
-                    window.__notificationWebSocket.readyState === WebSocket.OPEN) {
-                    console.log('Using existing open WebSocket connection');
-                    notificationWs = window.__notificationWebSocket;
-                    return;
-                }
-
-                // Check if already connected
-                if (notificationWs && notificationWs.readyState === WebSocket.OPEN) {
-                    console.log('WebSocket already connected');
-                    return;
-                }
-
-                // Check if already connecting
-                if (notificationWs && notificationWs.readyState === WebSocket.CONNECTING) {
-                    console.log('WebSocket already connecting');
-                    return;
-                }
-
-                // Clear any existing connection
-                if (notificationWs) {
-                    try {
-                        notificationWs.close();
-                    } catch(e) {}
-                    notificationWs = null;
-                }
-                
-                // Clear global if it's not valid
-                if (window.__notificationWebSocket && 
-                    window.__notificationWebSocket.readyState !== WebSocket.OPEN) {
-                    window.__notificationWebSocket = null;
-                }
-
-                console.log('Creating new WebSocket connection to:', wsUrl);
-                try {
-                    notificationWs = new WebSocket(wsUrl);
-                    // Store globally to prevent duplicates
-                    window.__notificationWebSocket = notificationWs;
-
-                    notificationWs.onopen = function() {
-                        console.log('Notification WebSocket connected');
-                        console.log('WebSocket readyState:', notificationWs.readyState);
-                        console.log('Sending subscription for userId:', userId);
-                        console.log('Subscription message:', JSON.stringify({
-                            type: 'subscribe',
-                            userId: userId,
-                            subscribeType: 'notifications'
-                        }));
-
-                        // Subscribe to notifications channel
-                        const subscribeMessage = JSON.stringify({
-                            type: 'subscribe',
-                            userId: userId,
-                            subscribeType: 'notifications'
-                        });
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'notification') {
+                        playSound();
+                        showToast(data.notification);
                         
-                        notificationWs.send(subscribeMessage);
-                        console.log('Subscription message sent');
-                    };
-
-                    notificationWs.onmessage = function(event) {
-                        try {
-                            console.log('Raw WebSocket message received:', event.data);
-                            const data = JSON.parse(event.data);
-                            console.log('Parsed WebSocket message:', data);
-                            console.log('Message type:', data.type);
-
-                            if (data.type === 'subscribed') {
-                                console.log('✓ Subscribed to notifications channel:', data.channel);
-                                console.log('✓ Ready to receive notifications for userId:', userId);
-                            } else if (data.type === 'notification') {
-                                console.log('✓✓✓ NOTIFICATION RECEIVED ✓✓✓');
-                                console.log('Notification data:', data.notification);
-                                console.log('Notification userId:', data.userId);
-                                console.log('Current userId:', userId);
-
-                                const notification = data.notification;
-
-                                // Play sound
-                                playNotificationSound();
-
-                                // Show toast
-                                showToast(notification);
-
-                                // Check if this is a match_upload_success notification on the match show page
-                                if (notification.type === 'match_upload_success' && notification.match_id) {
-                                    const currentPath = window.location.pathname;
-                                    const matchShowRegex = /^\/matches\/(\d+)/;
-                                    const match = currentPath.match(matchShowRegex);
-                                    
-                                    if (match) {
-                                        const currentMatchId = parseInt(match[1]);
-                                        const notificationMatchId = parseInt(notification.match_id);
-                                        
-                                        // If we're on the show page for this match, refresh after showing toast
-                                        if (currentMatchId === notificationMatchId) {
-                                            console.log('Match upload success notification received for current match, will refresh page after toast...');
-                                            
-                                            // Mark that we're reloading to prevent reconnection
-                                            isReloading = true;
-                                            
-                                            // Wait less than 1 second (800ms) to let user see the toast, then refresh
-                                            setTimeout(() => {
-                                                // Close WebSocket connection properly before reloading
-                                                if (reconnectTimeout) {
-                                                    clearTimeout(reconnectTimeout);
-                                                    reconnectTimeout = null;
-                                                }
-                                                if (notificationWs) {
-                                                    notificationWs.onclose = null; // Remove close handler to prevent reconnect
-                                                    notificationWs.close(1000, 'Page reloading');
-                                                    notificationWs = null;
-                                                }
-                                                
-                                                // Reload the page
-                                                window.location.reload();
-                                            }, 800); // Wait 800ms (less than 1 second) to show toast
-                                            
-                                            return; // Exit early, don't refresh notifications list (page will reload)
-                                        }
-                                    }
-                                }
-
-                                // Refresh notification list (only if not on match show page with upload success)
-                                refreshNotifications();
-                            } else {
-                                console.log('Unknown message type received:', data.type, data);
-                            }
-                        } catch (error) {
-                            console.error('❌ Error parsing WebSocket message:', error);
-                            console.error('Raw message that failed:', event.data);
-                        }
-                    };
-
-                    notificationWs.onerror = function(error) {
-                        console.error('Notification WebSocket error:', error);
-                    };
-
-                    notificationWs.onclose = function(event) {
-                        console.log('Notification WebSocket closed', event.code, event.reason);
-                        
-                        // Don't reconnect if we're intentionally reloading the page
-                        if (isReloading) {
-                            console.log('Page is reloading, skipping reconnection');
-                            notificationWs = null;
-                            window.__notificationWebSocket = null;
-                            return;
-                        }
-
-                        // Don't reconnect if it was a normal closure (code 1000)
-                        if (event.code === 1000) {
-                            console.log('WebSocket closed normally');
-                            notificationWs = null;
-                            window.__notificationWebSocket = null;
-                            return;
-                        }
-
-                        // For code 1006 (abnormal closure)
-                        // This often happens due to network issues or duplicate connections
-                        if (event.code === 1006) {
-                            console.log('WebSocket closed abnormally (1006) - possible network issue or duplicate connection');
-                            
-                            // Check if there's already a valid connection (might be duplicate)
-                            if (window.__notificationWebSocket && 
-                                window.__notificationWebSocket !== notificationWs &&
-                                window.__notificationWebSocket.readyState === WebSocket.OPEN) {
-                                console.log('Another connection already exists, cleaning up and keeping existing connection');
-                                notificationWs = null;
+                        // Handle match upload success notification
+                        if (data.notification.type === 'match_upload_success' && data.notification.match_id) {
+                            // If on match show page, reload to show updated status
+                            const matchId = window.location.pathname.match(/^\/matches\/(\d+)/)?.[1];
+                            if (matchId == data.notification.match_id) {
+                                setTimeout(() => window.location.reload(), 800);
                                 return;
                             }
                             
-                            // If this is the only connection, it closed abnormally
-                            // Reset and wait before reconnecting to avoid rapid reconnects
-                            notificationWs = null;
-                            window.__notificationWebSocket = null;
-                            
-                            // Clear any existing reconnect timeout
-                            if (reconnectTimeout) {
-                                clearTimeout(reconnectTimeout);
-                                reconnectTimeout = null;
+                            // If on create page, redirect to the match show page
+                            if (window.location.pathname.includes('/matches/create')) {
+                                setTimeout(() => {
+                                    window.location.href = `/matches/${data.notification.match_id}`;
+                                }, 1500);
+                                return;
                             }
-
-                            // Wait 2 seconds before reconnecting (to avoid rapid reconnects)
-                            console.log('Will reconnect in 2 seconds...');
-                            reconnectTimeout = setTimeout(() => {
-                                // Double check no connection exists before reconnecting
-                                if (!window.__notificationWebSocket || 
-                                    window.__notificationWebSocket.readyState !== WebSocket.OPEN) {
-                                    console.log('Reconnecting...');
-                                    notificationWs = null;
-                                    window.__notificationWebSocket = null;
-                                    reconnectTimeout = null;
-                                    connectWebSocket();
-                                } else {
-                                    console.log('Connection already exists, skipping reconnect');
-                                    reconnectTimeout = null;
-                                }
-                            }, 2000);
-                            return;
                         }
                         
-                        // For other error codes, reset and reconnect
-                        // Reset all values to null/zero
-                        notificationWs = null;
-                        window.__notificationWebSocket = null;
-                        
-                        // Clear any existing reconnect timeout
-                        if (reconnectTimeout) {
-                            clearTimeout(reconnectTimeout);
-                            reconnectTimeout = null;
-                        }
-
-                        // Simple reconnect: wait 2 seconds and reconnect
-                        console.log('Reconnecting in 2 seconds...');
-                        reconnectTimeout = setTimeout(() => {
-                            // Reset all values and start from zero
-                            notificationWs = null;
-                            window.__notificationWebSocket = null;
-                            reconnectTimeout = null;
-                            
-                            // Reconnect
-                            connectWebSocket();
-                        }, 2000); // 2 seconds
-                    };
-
-                } catch (error) {
-                    console.error('Error connecting to WebSocket:', error);
-                    
-                    // Reset all values
-                    notificationWs = null;
-                    window.__notificationWebSocket = null;
-                    
-                    // Simple reconnect: wait 2 seconds and try again
-                    if (reconnectTimeout) {
-                        clearTimeout(reconnectTimeout);
+                        refreshNotifications();
                     }
-                    
-                    reconnectTimeout = setTimeout(() => {
-                        notificationWs = null;
-                        window.__notificationWebSocket = null;
-                        reconnectTimeout = null;
-                        connectWebSocket();
-                    }, 2000); // 2 seconds
+                } catch (e) {
+                    console.error('WebSocket message error:', e);
                 }
-            }
+            };
 
-            // Connect when page loads - but only if not already initialized
-            // Reset reloading flag on new page load
-            isReloading = false;
-            
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', connectWebSocket);
-            } else {
-                connectWebSocket();
-            }
+            ws.onerror = () => {
+                console.error('WebSocket error');
+            };
 
-            // Reconnect when page becomes visible (user switched tabs back)
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden && (!notificationWs || notificationWs.readyState !== WebSocket.OPEN)) {
-                    clearTimeout(reconnectTimeout);
-                    connectWebSocket();
+            ws.onclose = () => {
+                ws = null;
+                if (!document.hidden) {
+                    reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
                 }
-            });
+            };
+        } catch (e) {
+            console.error('WebSocket connection error:', e);
+            reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
+        }
+    }
 
-            // Cleanup on page unload - close connection properly
-            window.addEventListener('beforeunload', function() {
-                isReloading = true; // Mark as reloading to prevent reconnection
-                if (reconnectTimeout) {
-                    clearTimeout(reconnectTimeout);
-                    reconnectTimeout = null;
-                }
-                if (notificationWs) {
-                    // Close with code 1000 (normal closure) to prevent reconnection
-                    notificationWs.onclose = null; // Remove close handler to prevent reconnect
-                    notificationWs.close(1000, 'Page unloading');
-                    notificationWs = null;
-                }
-                // Clear global references
-                window.__notificationWebSocket = null;
-                window.__notificationWebSocketInitialized = false;
-            });
-            @endauth
-        })();
+    // Initialize
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', connect);
+    } else {
+        connect();
+    }
+
+    // Reconnect when page becomes visible
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && (!ws || ws.readyState !== WebSocket.OPEN)) {
+            clearTimeout(reconnectTimer);
+            connect();
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        if (reconnectTimer) clearTimeout(reconnectTimer);
+        if (ws) {
+            ws.onclose = null;
+            ws.close(1000);
+        }
+        window.__notificationWebSocket = null;
+        window.__wsNotifications = false;
+    });
+})();
+@endauth
     </script>
 </body>
 </html>

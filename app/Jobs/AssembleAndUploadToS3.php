@@ -159,12 +159,35 @@ class AssembleAndUploadToS3 implements ShouldQueue
                 }
             }
 
-            Log::info('Chunks assembled via streaming, starting S3 upload', [
+            Log::info('Chunks assembled via streaming, cleaning up chunks before S3 upload', [
                 'matchId' => $this->matchId,
                 'finalPath' => $this->finalPath,
                 'tempFilePath' => $tempFilePath,
                 'totalBytes' => $totalBytesWritten,
                 'fileSizeMB' => round($totalBytesWritten / 1024 / 1024, 2)
+            ]);
+
+            // Delete chunks immediately after assembly to free up storage
+            // Chunks are no longer needed - we have the assembled temp file
+            try {
+                if ($chunkStorage->exists($this->chunkDir)) {
+                    $chunkStorage->deleteDirectory($this->chunkDir);
+                    Log::info('Chunks deleted successfully after assembly', [
+                        'matchId' => $this->matchId,
+                        'chunkDir' => $this->chunkDir
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to delete chunk directory after assembly (will retry later)', [
+                    'chunkDir' => $this->chunkDir,
+                    'error' => $e->getMessage()
+                ]);
+                // Don't throw - continue with S3 upload even if chunk cleanup fails
+            }
+
+            Log::info('Starting S3 upload from temp file', [
+                'matchId' => $this->matchId,
+                'tempFilePath' => $tempFilePath
             ]);
 
             // Stream upload to S3 from temp file
@@ -207,29 +230,39 @@ class AssembleAndUploadToS3 implements ShouldQueue
                     'videoUrl' => $videoUrl
                 ]);
 
-                // Clean up temp file
+                // Clean up temp file immediately after S3 upload
+                // Temp file is no longer needed - file is now on S3
                 try {
                     if (file_exists($tempFullPath)) {
                         unlink($tempFullPath);
+                        Log::info('Temp file deleted successfully after S3 upload', [
+                            'matchId' => $this->matchId,
+                            'tempFilePath' => $tempFullPath
+                        ]);
                     }
                     // Also try to remove parent directory if empty
                     if (file_exists($tempFullDir) && count(scandir($tempFullDir)) === 2) { // 2 = . and ..
                         rmdir($tempFullDir);
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Failed to delete temp file after upload', [
+                    Log::warning('Failed to delete temp file after S3 upload', [
                         'tempFilePath' => $tempFullPath,
                         'error' => $e->getMessage()
                     ]);
                 }
 
-                // Clean up chunks
+                // Chunks should already be deleted after assembly, but try again as fallback
+                // This ensures cleanup even if previous deletion failed
                 try {
                     if ($chunkStorage->exists($this->chunkDir)) {
                         $chunkStorage->deleteDirectory($this->chunkDir);
+                        Log::info('Chunks deleted in fallback cleanup after S3 upload', [
+                            'matchId' => $this->matchId,
+                            'chunkDir' => $this->chunkDir
+                        ]);
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Failed to delete chunk directory after upload', [
+                    Log::warning('Failed to delete chunk directory in fallback cleanup', [
                         'chunkDir' => $this->chunkDir,
                         'error' => $e->getMessage()
                     ]);

@@ -32,15 +32,15 @@ class MatchApiController extends Controller
         // For S3 and other cloud storage, use pre-signed URLs if bucket is private
         try {
             $storage = Storage::disk($disk);
-            
+
             // Check if we should use pre-signed URLs (default: true for S3)
             $usePreSigned = env('S3_USE_PRESIGNED_URLS', true);
-            
+
             if ($usePreSigned && $disk === 's3') {
                 // Generate pre-signed URL that expires in 1 hour (3600 seconds)
                 return $storage->temporaryUrl($path, now()->addHours(1));
             }
-            
+
             // Fallback to regular URL (works if bucket has public read access)
             return $storage->url($path);
         } catch (\Exception $e) {
@@ -49,7 +49,7 @@ class MatchApiController extends Controller
                 'path' => $path,
                 'error' => $e->getMessage()
             ]);
-            
+
             // Fallback to regular URL attempt
             return Storage::disk($disk)->url($path);
         }
@@ -74,7 +74,7 @@ class MatchApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         }
 
-        $match = MatchVideo::find($id);
+        $match = MatchVideo::query()->with('predictions')->find($id);
         if (!$match) {
             return response()->json(['success' => false, 'message' => 'Match not found'], 404);
         }
@@ -87,6 +87,7 @@ class MatchApiController extends Controller
             'disk' => $disk,
             'size' => $match->file_size,
             'url' => $match->video_url,
+            'results' => $match->predictions
         ];
 
         try {
@@ -152,7 +153,7 @@ class MatchApiController extends Controller
 
         // Format prediction with labels for WebSocket
         $locale = app()->getLocale();
-        
+
         // Generate URL from clip_path if it exists
         $clipUrl = null;
         if ($prediction->clip_path) {
@@ -167,7 +168,7 @@ class MatchApiController extends Controller
                 ]);
             }
         }
-        
+
         $formattedPrediction = [
             'id' => $prediction->id,
             'match_id' => $prediction->match_id,

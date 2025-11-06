@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const predictionsData = @json($predictionsData);
     const hasPredictions = {{ $hasPredictions ? 'true' : 'false' }};
-    const matchStatus = '{{ $matchStatus }}';
+    let matchStatus = '{{ $matchStatus }}'; // Make it mutable so we can update it
     let allPredictions = hasPredictions ? predictionsData : [];
 
     // Render predictions function
@@ -592,12 +592,82 @@ document.addEventListener('DOMContentLoaded', function() {
         return html || '<pre class="text-xs">' + JSON.stringify(prediction, null, 2) + '</pre>';
     }
 
+    // Function to fetch predictions from server via AJAX (fallback if WebSocket fails)
+    function fetchPredictionsFromServer() {
+        const currentMatchId = {{ $match->id ?? 0 }};
+        
+        // Simply reload the page to get fresh predictions
+        // This is a fallback - WebSocket should handle real-time updates
+        console.log('Fetching predictions from server (fallback)...');
+        
+        // Option 1: Reload page (simplest, ensures everything is synced)
+        // window.location.reload();
+        
+        // Option 2: Fetch and parse (more complex but no page reload)
+        fetch(`/matches/${currentMatchId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Try to extract predictions from the page HTML
+            const match = html.match(/const predictionsData = (\[[\s\S]*?\]);/);
+            if (match) {
+                try {
+                    const fetchedPredictions = JSON.parse(match[1]);
+                    if (fetchedPredictions && fetchedPredictions.length > 0) {
+                        // Merge with existing predictions (avoid duplicates)
+                        let updated = false;
+                        fetchedPredictions.forEach(pred => {
+                            const exists = allPredictions.some(existing => 
+                                existing.id === pred.id || 
+                                (existing.relative_time === pred.relative_time && existing.clip_path === pred.clip_path)
+                            );
+                            if (!exists) {
+                                allPredictions.push(pred);
+                                updated = true;
+                            }
+                        });
+                        
+                        if (updated) {
+                            // Re-render with all predictions
+                            renderPredictions(allPredictions);
+                            console.log('Predictions updated from server via AJAX');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing predictions from server:', e);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching predictions from server:', error);
+        });
+    }
+
     // If predictions exist, render them directly
     if (hasPredictions) {
         renderPredictions(allPredictions);
     } else {
         // No predictions - render empty state (with status check)
         renderPredictions([]);
+        
+        // If processing, also set up periodic polling as fallback (every 10 seconds)
+        if (matchStatus === 'processing') {
+            const pollInterval = setInterval(() => {
+                if (matchStatus === 'processing' && allPredictions.length === 0) {
+                    fetchPredictionsFromServer();
+                } else {
+                    clearInterval(pollInterval);
+                }
+            }, 10000); // Poll every 10 seconds
+            
+            // Clear interval when page unloads
+            window.addEventListener('beforeunload', () => {
+                clearInterval(pollInterval);
+            });
+        }
     }
 
     // Connect to WebSocket only if processing (not if completed)
@@ -637,23 +707,59 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.type === 'subscribed') {
                             console.log('Subscribed to channel:', data.channel);
                         } else if (data.type === 'prediction') {
-                            // Received new prediction - add to array and re-render
-                            console.log('Received prediction:', data.prediction);
-                            allPredictions.push(data.prediction);
+                            // Received new prediction - add to array and re-render immediately
+                            console.log('Received prediction via WebSocket:', data.prediction);
+                            
+                            // Check if prediction already exists (avoid duplicates)
+                            const exists = allPredictions.some(p => 
+                                p.id === data.prediction.id || 
+                                (p.relative_time === data.prediction.relative_time && p.clip_path === data.prediction.clip_path)
+                            );
+                            
+                            if (!exists) {
+                                allPredictions.push(data.prediction);
+                            }
+                            
+                            // Immediately render predictions - this will hide loading state and show predictions
                             renderPredictions(allPredictions);
-                            // Keep connection open for more predictions
-                        } else if (data.type === 'processing_complete') {
-                            // Processing is complete - hide loading indicator
-                            console.log('Processing complete');
-                            const analysisContainer = document.getElementById('analysisLoadingContainer');
-                            if (analysisContainer && allPredictions.length > 0) {
-                                // Update status to show completion
+                            
+                            // Update status badge if this is the first prediction
+                            if (allPredictions.length === 1) {
                                 const statusText = document.getElementById('statusText');
                                 if (statusText) {
-                                    statusText.textContent = 'Completed';
+                                    statusText.textContent = 'Processing';
                                 }
-                                // Status already updated in renderPredictions
                             }
+                            
+                            // Keep connection open for more predictions
+                        } else if (data.type === 'processing_complete') {
+                            // Processing is complete - update status and fetch any remaining predictions
+                            console.log('Processing complete via WebSocket');
+                            
+                            // Update match status
+                            matchStatus = 'completed';
+                            currentMatchStatus = 'completed';
+                            
+                            // Update status display
+                            const statusText = document.getElementById('statusText');
+                            if (statusText) {
+                                statusText.textContent = 'Completed';
+                            }
+                            
+                            // Update status card
+                            const statusCard = document.getElementById('statusCard');
+                            if (statusCard) {
+                                const iconContainer = statusCard.querySelector('.w-8.h-8');
+                                if (iconContainer) {
+                                    iconContainer.className = 'w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center';
+                                    iconContainer.innerHTML = '<i class="fas fa-check-circle text-green-600 text-xs"></i>';
+                                }
+                                statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-green-300 hover:border-green-400 transition-colors';
+                            }
+                            
+                            // Fetch all predictions from server to ensure we have everything
+                            fetchPredictionsFromServer();
+                            
                             // Don't close connection, keep it open for any late predictions
                         }
                     } catch (error) {
@@ -806,6 +912,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         // Update current status immediately
                         currentMatchStatus = 'processing';
+                        matchStatus = 'processing'; // Update matchStatus for renderPredictions
+
+                        // Update the analysis container to show processing state
+                        const analysisContainer = document.getElementById('analysisLoadingContainer');
+                        if (analysisContainer) {
+                            analysisContainer.innerHTML = `
+                                <div class="space-y-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 bg-purple-200 rounded-lg animate-pulse"></div>
+                                        <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                                        <div class="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+                                        <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                                    </div>
+                                    <div class="mt-6">
+                                        <div class="h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg border-2 border-dashed border-purple-200 flex items-center justify-center">
+                                            <div class="text-center">
+                                                <i class="fas fa-chart-line text-3xl text-purple-300 mb-2"></i>
+                                                <p class="text-sm text-purple-400 font-medium">Analyzing match data...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-center gap-2 pt-4">
+                                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }
 
                         Swal.fire({
                             icon: 'success',
@@ -813,6 +951,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             text: 'Match has been sent to AI model. Processing is now in progress.',
                             timer: 3000,
                             showConfirmButton: false
+                        }).then(() => {
+                            // Refresh page after 1 second to ensure all data is synced
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
                         });
                     } else {
                         // Processing stopped - hide the button (status is now completed)
@@ -858,6 +1001,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         confirmButtonColor: '#ef4444'
                     });
                     
+                    // If start failed, restore pending state in analysis container
+                    if (action === 'start') {
+                        matchStatus = 'pending'; // Reset to pending
+                        const analysisContainer = document.getElementById('analysisLoadingContainer');
+                        if (analysisContainer) {
+                            analysisContainer.innerHTML = `
+                                <div class="space-y-4">
+                                    <div class="text-center py-8">
+                                        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full mb-4 shadow-lg">
+                                            <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                                        </div>
+                                        <p class="text-gray-800 font-bold text-base mb-1">${translations.matchPendingMessage || 'This match is pending and has not been processed yet.'}</p>
+                                        <p class="text-xs text-gray-500">${translations.nothingRunningBackground || 'Nothing is running in the background. Please start processing to analyze this match.'}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
                     // Restore button
                     processingBtn.innerHTML = originalHTML;
                 }
@@ -870,6 +1032,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     text: action === 'start' ? 'Failed to start processing. Please try again.' : 'Failed to stop processing. Please try again.',
                     confirmButtonColor: '#ef4444'
                 });
+                
+                // If start failed, restore pending state in analysis container
+                if (action === 'start') {
+                    matchStatus = 'pending'; // Reset to pending
+                    const analysisContainer = document.getElementById('analysisLoadingContainer');
+                    if (analysisContainer) {
+                        analysisContainer.innerHTML = `
+                            <div class="space-y-4">
+                                <div class="text-center py-8">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full mb-4 shadow-lg">
+                                        <i class="fas fa-clock text-2xl text-yellow-600"></i>
+                                    </div>
+                                    <p class="text-gray-800 font-bold text-base mb-1">${translations.matchPendingMessage || 'This match is pending and has not been processed yet.'}</p>
+                                    <p class="text-xs text-gray-500">${translations.nothingRunningBackground || 'Nothing is running in the background. Please start processing to analyze this match.'}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
                 
                 // Restore button
                 processingBtn.innerHTML = originalHTML;

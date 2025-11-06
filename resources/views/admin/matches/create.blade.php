@@ -222,7 +222,7 @@ const translations = {
     ok: '{{ __('admin.ok') }}'
 };
 
-let uploadId = null;
+let uploadId = null; // Global variable - accessible by form submission handler
 let uploadedChunks = [];
 let currentUpload = null;
 let isOnline = navigator.onLine;
@@ -265,7 +265,8 @@ function generateUploadId() {
     return 'upload_user_' + userId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, fileSize, totalChunks, retries = 5) {
+// Simplified chunk upload with retry
+async function uploadChunk(chunkIndex, chunkBlob, uploadId, fileName, fileSize, totalChunks) {
     const formData = new FormData();
     formData.append('uploadId', uploadId);
     formData.append('chunkIndex', chunkIndex);
@@ -274,198 +275,106 @@ async function uploadChunk(file, chunkIndex, chunkBlob, uploadId, fileName, file
     formData.append('fileName', fileName);
     formData.append('fileSize', fileSize);
 
-    for (let attempt = 0; attempt < retries; attempt++) {
-        try {
-            // Create AbortController for timeout handling
-            // For 512KB chunks, 60 seconds should be more than enough even on very slow connections
-            // This avoids proxy/load balancer timeouts (typically 10-30s) while still being reasonable
-            const controller = new AbortController();
-            const timeoutMs = 60000; // 60 seconds timeout for 512KB chunks
-            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const errorMessages = {
+        504: 'Gateway timeout - server is taking too long to respond',
+        503: 'Service unavailable - server is temporarily overloaded',
+        500: 'Server error - please try again',
+        403: 'Unauthorized access to upload session',
+        409: 'Another upload is in progress'
+    };
 
-            let response;
-            try {
-                response = await fetch('{{ route("matches.upload.chunk") }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
-                    },
-                    body: formData,
-                    signal: controller.signal
-                });
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-                if (fetchError.name === 'AbortError') {
-                    throw new Error('Request timeout - server took too long to respond');
-                }
-                throw fetchError;
-            }
+    for (let attempt = 0; attempt < 5; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+            const response = await fetch('{{ route("matches.upload.chunk") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                                   document.querySelector('input[name="_token"]')?.value,
+                },
+                body: formData,
+                signal: controller.signal
+            });
+
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                // Handle specific HTTP status codes
-                if (response.status === 504) {
-                    throw new Error('Gateway timeout - server is taking too long to respond');
-                } else if (response.status === 503) {
-                    throw new Error('Service unavailable - server is temporarily overloaded');
-                } else if (response.status === 500) {
-                    throw new Error('Server error - please try again');
-                } else if (response.status === 409) {
-                    const result = await response.json().catch(() => ({}));
-                    throw new Error(result.message || 'Another upload is in progress');
-                } else if (response.status === 403) {
-                    const result = await response.json().catch(() => ({}));
-                    throw new Error(result.message || 'Unauthorized access to upload session');
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const result = await response.json().catch(() => ({}));
+                throw new Error(errorMessages[response.status] || result.message || `HTTP error! status: ${response.status}`);
             }
 
             const result = await response.json();
-            if (result.success) {
-                return result;
-            } else {
-                throw new Error(result.message || 'Upload failed');
-            }
+            if (result.success) return result;
+            throw new Error(result.message || 'Upload failed');
         } catch (error) {
-            console.error(`Chunk ${chunkIndex} upload attempt ${attempt + 1} failed:`, error);
-            
-            // Don't retry on 403 or 409 errors
-            if (error.message.includes('Another upload') || error.message.includes('Unauthorized')) {
+            if (error.message.includes('Unauthorized') || error.message.includes('Another upload')) {
                 throw error;
             }
-            
-            if (attempt === retries - 1) {
-                // Format error message for user
-                let errorMessage = error.message || 'Failed to upload chunk';
-                if (error.message.includes('timeout') || error.message.includes('Gateway timeout')) {
-                    errorMessage = 'Server timeout - chunk upload failed. Please try resuming the upload.';
-                } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                    errorMessage = 'Network error - please check your connection and try again.';
-                }
-                throw new Error(errorMessage);
+            if (attempt === 4) {
+                const msg = error.message.includes('timeout') 
+                    ? 'Server timeout - chunk upload failed. Please try resuming the upload.'
+                    : error.message || 'Failed to upload chunk';
+                throw new Error(msg);
             }
-            
-            // Wait before retry with longer delays for timeout errors
-            const isTimeoutError = error.message.includes('timeout') || error.message.includes('Gateway timeout');
-            const baseDelay = isTimeoutError ? 5000 : 1000; // 5 seconds for timeout, 1 second for others
-            const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
-            await new Promise(resolve => setTimeout(resolve, delay));
+            await new Promise(r => setTimeout(r, (error.message.includes('timeout') ? 5000 : 1000) * Math.pow(2, attempt)));
         }
     }
 }
 
-async function handleFileSelect(input) {
-    if (!input.files || input.files.length === 0) return;
+// Get server status (simplified)
+async function getServerStatus(uploadId, totalChunks) {
+    try {
+        const response = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.uploadStatus) {
+                const chunks = (data.uploadStatus.uploadedChunks || []).filter(i => i >= 0 && i < totalChunks).sort((a, b) => a - b);
+                return { chunks, progress: data.progress || null };
+            }
+        }
+    } catch (e) {}
+    return { chunks: [], progress: null };
+}
 
-    // Only allow one file
-    if (input.files.length > 1) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'Multiple Files',
-            text: 'Please upload only one file at a time. Only the first file will be used.',
-            confirmButtonColor: '#60a5fa'
-        });
-    }
+// Simplified file upload handler
+async function handleFileSelect(input) {
+    if (!input.files?.[0]) return;
 
     const file = input.files[0];
-
-    // Reset input to ensure only one file
-    const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
-    input.files = dataTransfer.files;
     const fileSize = file.size;
+    const chunkSize = 512 * 1024; // 512KB
+    const totalChunks = Math.ceil(fileSize / chunkSize);
+    const userId = {{ auth()->id() ?? 0 }};
+    const storageKey = `upload_user_${userId}_${file.name}_${fileSize}`;
 
     document.getElementById('fileName').innerHTML = `
         <strong class="text-orange-700">${file.name}</strong><br>
         <small class="text-gray-500">${formatBytes(fileSize)}</small>
     `;
 
-    // Calculate chunks (512KB per chunk - smaller size prevents timeout on slow connections)
-    // 512KB = 512 * 1024 bytes = 524,288 bytes
-    // This size should upload in 5-10 seconds even on slow connections, avoiding proxy/load balancer timeouts
-    const chunkSize = 512 * 1024; // 512KB
-    const totalChunks = Math.ceil(fileSize / chunkSize);
-
-    // Check for existing upload ID in localStorage (user-specific)
-    const userId = {{ auth()->id() ?? 0 }};
-    const storageKey = 'upload_user_' + userId + '_' + file.name + '_' + fileSize;
-    const savedUpload = localStorage.getItem(storageKey);
-    
-    // Variable to store progress from backend (server is source of truth)
-    let serverProgress = null;
-
-    if (savedUpload) {
-        try {
-            const saved = JSON.parse(savedUpload);
-            
-            // Check if chunk size matches (important: chunk size change invalidates old upload data)
-            const savedChunkSize = saved.chunkSize;
-            if (savedChunkSize && savedChunkSize !== chunkSize) {
-                console.log('Chunk size changed, clearing old upload data');
-                localStorage.removeItem(storageKey);
-                uploadId = generateUploadId();
-                uploadedChunks = [];
-            } else {
-                uploadId = saved.uploadId;
-                uploadedChunks = saved.uploadedChunks || [];
-                // Filter out invalid chunk indices (must be 0 to totalChunks-1)
-                uploadedChunks = uploadedChunks.filter(idx => idx >= 0 && idx < totalChunks);
-                // Ensure chunks are sorted numerically
-                uploadedChunks.sort((a, b) => a - b);
-            }
-
-            // ALWAYS verify upload status from server when resuming (server is source of truth)
-            if (uploadId) {
-                try {
-                    console.log('Checking server for current upload status...');
-                    const statusResponse = await fetch(`{{ route('matches.upload.status', ':id') }}`.replace(':id', uploadId));
-                    if (statusResponse.ok) {
-                        const statusData = await statusResponse.json();
-                        if (statusData.success && statusData.uploadStatus) {
-                            let serverChunks = statusData.uploadStatus.uploadedChunks || [];
-                            // Filter out invalid chunk indices from server
-                            serverChunks = serverChunks.filter(idx => idx >= 0 && idx < totalChunks);
-                            serverChunks.sort((a, b) => a - b);
-                            uploadedChunks = serverChunks;
-                            // Get progress from backend response
-                            serverProgress = statusData.progress !== undefined ? Math.min(100, statusData.progress) : null;
-                            console.log(`Server reports ${uploadedChunks.length} chunks already uploaded. Progress: ${serverProgress !== null ? serverProgress.toFixed(2) + '%' : 'N/A'}`);
-                        } else {
-                            console.log('Server session not found, starting fresh');
-                            uploadId = generateUploadId();
-                            uploadedChunks = [];
-                        }
-                    } else {
-                        console.log('Server session expired, starting fresh');
-                        uploadId = generateUploadId();
-                        uploadedChunks = [];
-                    }
-                } catch (error) {
-                    console.log('Failed to check server status, using local data:', error);
-                    // On error, keep local data but it will be verified during upload
-                }
-            }
-        } catch (error) {
-            console.log('Error parsing saved upload, starting fresh:', error);
-            uploadId = generateUploadId();
-            uploadedChunks = [];
-        }
+    // Load state (update global uploadId variable)
+    uploadedChunks = [];
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (saved.chunkSize === chunkSize && saved.uploadId) {
+        uploadId = saved.uploadId; // Update global variable
+        uploadedChunks = (saved.uploadedChunks || []).filter(i => i >= 0 && i < totalChunks).sort((a, b) => a - b);
     } else {
-        uploadId = generateUploadId();
-        uploadedChunks = [];
+        uploadId = generateUploadId(); // Update global variable
     }
 
-    // Save upload info to localStorage (include chunkSize to detect mismatches)
-    localStorage.setItem(storageKey, JSON.stringify({
-        uploadId: uploadId,
-        fileName: file.name,
-        fileSize: fileSize,
-        chunkSize: chunkSize, // Store chunk size to detect mismatches
-        uploadedChunks: uploadedChunks
-    }));
+    // Get server status (source of truth)
+    const serverStatus = await getServerStatus(uploadId, totalChunks);
+    if (serverStatus.chunks.length > 0) {
+        uploadedChunks = serverStatus.chunks;
+    }
 
-    // Show progress
+    // Find starting chunk (re-upload last to ensure completeness)
+    const lastChunk = uploadedChunks.length > 0 ? Math.max(...uploadedChunks) : -1;
+    const startFromChunk = lastChunk >= 0 ? lastChunk : 0;
+
+    // Setup UI
     const progressDiv = document.getElementById('uploadProgress');
     const progressFill = document.getElementById('progressFill');
     const progressPercent = document.getElementById('progressPercent');
@@ -475,221 +384,109 @@ async function handleFileSelect(input) {
     const connectionStatus = document.getElementById('connectionStatus');
 
     progressDiv.classList.remove('hidden');
-    connectionStatus.classList.remove('hidden');
+    connectionStatus?.classList.remove('hidden');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>' + translations.uploading + '</span>';
 
     // Update connection status
-    if (isOnline) {
-        connectionStatus.classList.add('bg-green-50', 'text-green-700');
-        connectionStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>' + translations.connected + '</span>';
-    } else {
-        connectionStatus.classList.add('bg-red-50', 'text-red-700');
-        connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>' + translations.noConnection + '</span>';
+    if (connectionStatus) {
+        if (isOnline) {
+            connectionStatus.classList.add('bg-green-50', 'text-green-700');
+            connectionStatus.innerHTML = '<i class="fas fa-wifi text-green-500 text-xs"></i><span>' + translations.connected + '</span>';
+        } else {
+            connectionStatus.classList.add('bg-red-50', 'text-red-700');
+            connectionStatus.innerHTML = '<i class="fas fa-wifi-slash text-red-500 text-xs"></i><span>' + translations.noConnection + '</span>';
+        }
     }
 
-    // Calculate initial uploaded bytes accurately (accounting for variable chunk sizes)
-    let uploadedBytes = 0;
-    uploadedChunks.forEach(chunkIdx => {
-        const start = chunkIdx * chunkSize;
-        const end = Math.min(start + chunkSize, fileSize);
-        uploadedBytes += (end - start);
-    });
-
-    // Calculate initial progress percentage (use backend progress if available, otherwise calculate)
-    const initialProgress = serverProgress !== null ? serverProgress : (uploadedChunks.length > 0 ? Math.min(100, (uploadedChunks.length / totalChunks) * 100) : 0);
+    // Initial progress
+    const initialProgress = serverStatus.progress !== null 
+        ? serverStatus.progress 
+        : (uploadedChunks.length / totalChunks) * 100;
     
-    // Set initial progress display
     if (uploadedChunks.length > 0) {
         progressFill.style.width = Math.min(100, initialProgress) + '%';
         progressPercent.textContent = Math.round(Math.min(100, initialProgress)) + '%';
-        // Ensure chunk count doesn't exceed total (sanitize display)
-        const validChunkCount = Math.min(uploadedChunks.length, totalChunks);
-        chunkInfo.innerHTML = `
-            <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-            <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
-        `;
-        console.log(`Initial progress from backend: ${initialProgress.toFixed(2)}%`);
+        chunkInfo.innerHTML = `<i class="fas fa-sync fa-spin text-orange-500 text-xs"></i> <span>${Math.min(uploadedChunks.length, totalChunks)}/${totalChunks} ${translations.chunks}</span>`;
     }
 
-    const startTime = Date.now();
-    const resumeTime = Date.now(); // Track time for resume speed calculation
+    const resumeTime = Date.now();
+    let uploadedBytes = uploadedChunks.reduce((sum, idx) => {
+        const start = idx * chunkSize;
+        const end = Math.min(start + chunkSize, fileSize);
+        return sum + (end - start);
+    }, 0);
 
-    // IMPORTANT: Always re-upload the last chunk that was attempted (in case it failed mid-upload)
-    // This ensures the last chunk is completely uploaded before continuing
-    const lastUploadedChunk = uploadedChunks.length > 0 ? Math.max(...uploadedChunks) : -1;
-    let startFromChunk = 0;
-    
-    // Strategy: Re-upload the last chunk to ensure it's complete, then continue from next
-    if (lastUploadedChunk >= 0) {
-        // Re-upload the last chunk (the one that likely failed or was incomplete)
-        startFromChunk = lastUploadedChunk;
-        console.log(`Will re-upload last chunk ${lastUploadedChunk} to ensure it's complete, then continue`);
-    } else {
-        // No chunks uploaded yet, find first missing chunk
-        for (let i = 0; i < totalChunks; i++) {
-            if (!uploadedChunks.includes(i)) {
-                startFromChunk = i;
-                break;
-            }
-        }
-    }
-    
-    console.log(`Resume: Last uploaded chunk: ${lastUploadedChunk}, Starting from chunk: ${startFromChunk} (re-uploading to ensure completeness)`);
-    console.log(`Uploaded chunks from server:`, uploadedChunks);
-    console.log(`Will upload chunks ${startFromChunk} to ${totalChunks - 1}`);
-
-    // Upload chunks sequentially starting from the chunk that needs re-upload
+    // Upload chunks
     try {
-        // Start from the chunk that needs uploading/re-uploading
         for (let i = startFromChunk; i < totalChunks; i++) {
-            // Re-upload the chunk even if it's in uploadedChunks (to ensure it's complete)
-            // The backend will handle duplicates and only store if needed
+            if (uploadedChunks.includes(i) && i !== lastChunk) continue;
+
+            while (!isOnline) await new Promise(r => setTimeout(r, 1000));
 
             const start = i * chunkSize;
             const end = Math.min(start + chunkSize, fileSize);
             const chunkBlob = file.slice(start, end);
 
-            // Wait for connection if offline
-            while (!isOnline) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+            const result = await uploadChunk(i, chunkBlob, uploadId, file.name, fileSize, totalChunks);
 
-            console.log(`Uploading chunk ${i} (${formatBytes(chunkBlob.size)})...`);
-            const result = await uploadChunk(file, i, chunkBlob, uploadId, file.name, fileSize, totalChunks);
-
-            // Use backend response as source of truth for uploaded chunks and progress
-            if (result.uploadedChunks && Array.isArray(result.uploadedChunks)) {
-                uploadedChunks = result.uploadedChunks.filter(idx => idx >= 0 && idx < totalChunks);
-                uploadedChunks.sort((a, b) => a - b);
+            // Update from server
+            if (result.uploadedChunks) {
+                uploadedChunks = result.uploadedChunks.filter(idx => idx >= 0 && idx < totalChunks).sort((a, b) => a - b);
             }
-            
-            // Calculate actual bytes uploaded for this chunk (for speed calculation)
-            const chunkBytes = chunkBlob.size;
             if (!uploadedChunks.includes(i)) {
-                uploadedBytes += chunkBytes;
+                uploadedBytes += chunkBlob.size;
             }
 
-            // Update localStorage with server data (include chunkSize)
+            // Save state
             localStorage.setItem(storageKey, JSON.stringify({
-                uploadId: uploadId,
-                fileName: file.name,
-                fileSize: fileSize,
-                chunkSize: chunkSize, // Store chunk size to detect mismatches
-                uploadedChunks: uploadedChunks
+                uploadId, fileName: file.name, fileSize, chunkSize, uploadedChunks
             }));
 
-            // Use progress from backend response (server is source of truth)
-            const progress = result.progress !== undefined ? Math.min(100, result.progress) : Math.min(100, (uploadedChunks.length / totalChunks) * 100);
-            
-            // Calculate speed based on actual upload time (not including skipped chunks)
+            // Update UI
+            const progress = result.progress !== undefined ? result.progress : (uploadedChunks.length / totalChunks) * 100;
             const elapsed = (Date.now() - resumeTime) / 1000;
             const speed = elapsed > 0 ? uploadedBytes / elapsed : 0;
 
-            // Update UI with backend progress
-            progressFill.style.width = progress + '%';
-            progressPercent.textContent = Math.round(progress) + '%';
+            progressFill.style.width = Math.min(100, progress) + '%';
+            progressPercent.textContent = Math.round(Math.min(100, progress)) + '%';
             uploadSpeed.textContent = `${translations.speed}: ${formatSpeed(speed)}`;
-            
-            // Use backend data for chunk count
-            const validChunkCount = Math.min(uploadedChunks.length, totalChunks);
-            chunkInfo.innerHTML = `
-                <i class="fas fa-sync fa-spin text-orange-500 text-xs"></i>
-                <span>${validChunkCount}/${totalChunks} ${translations.chunks}</span>
-            `;
-            
-            console.log(`Chunk ${i} uploaded. Progress from backend: ${progress.toFixed(2)}%, Uploaded chunks: ${validChunkCount}/${totalChunks}`);
+            chunkInfo.innerHTML = `<i class="fas fa-sync fa-spin text-orange-500 text-xs"></i> <span>${Math.min(uploadedChunks.length, totalChunks)}/${totalChunks} ${translations.chunks}</span>`;
         }
 
-        // All chunks uploaded, finalize
-        chunkInfo.innerHTML = `
-            <i class="fas fa-check-circle text-green-600 text-xs"></i>
-            <span>${translations.chunksUploaded.replace(':current', totalChunks).replace(':total', totalChunks)}</span>
-        `;
-
-        // Clear localStorage
+        // Complete
+        chunkInfo.innerHTML = `<i class="fas fa-check-circle text-green-600 text-xs"></i> <span>${translations.chunksUploaded.replace(':current', totalChunks).replace(':total', totalChunks)}</span>`;
         localStorage.removeItem(storageKey);
-
-        // Update button to show ready for finalization
         submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-check text-base"></i></div> <span>' + translations.readyToContinue + '</span>';
         submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
         submitBtn.disabled = false;
 
     } catch (error) {
-        console.error('Upload error:', error);
-
-        // Check if it's an unauthorized error
-        const isUnauthorizedError = error.message.includes('Unauthorized') || error.message.includes('Invalid upload ID');
-
-        let errorTitle = translations.uploadPaused;
-        let errorMessage = error.message;
-        let showResumeButton = true;
-
-        if (isUnauthorizedError) {
-            errorTitle = translations.unauthorizedAccess;
-            errorMessage = translations.unauthorizedAccessMessage;
-            showResumeButton = false;
-            // Clear localStorage and start fresh
+        const isUnauthorized = error.message.includes('Unauthorized') || error.message.includes('Invalid upload ID');
+        
+        if (isUnauthorized) {
             localStorage.removeItem(storageKey);
-            uploadId = generateUploadId();
-            uploadedChunks = [];
-        }
-
-        if (showResumeButton) {
-            // Save current state for resume (include chunkSize)
-            localStorage.setItem(storageKey, JSON.stringify({
-                uploadId: uploadId,
-                fileName: file.name,
-                fileSize: fileSize,
-                chunkSize: chunkSize, // Store chunk size to detect mismatches
-                uploadedChunks: uploadedChunks
-            }));
-
-            const isRTL = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
-            const borderSide = isRTL ? 'border-right' : 'border-left';
-            const iconMargin = isRTL ? 'margin-left: 0.5rem; margin-right: 0;' : 'margin-right: 0.5rem; margin-left: 0;';
-            const textAlign = isRTL ? 'right' : 'left';
-
             Swal.fire({
                 icon: 'warning',
-                title: errorTitle,
-                html: `
-                    <div style="text-align: ${textAlign}; padding: 0.5rem 0; direction: ${isRTL ? 'rtl' : 'ltr'};">
-                        <p style="font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                            ${translations.uploadFailed}: <strong style="color: #ef4444;">${errorMessage}</strong>
-                        </p>
-                        <div style="background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.75rem; ${borderSide}: 3px solid #f59e0b;">
-                            <p style="font-size: 0.875rem; color: #6b7280; margin: 0; display: flex; align-items: center; flex-direction: ${isRTL ? 'row-reverse' : 'row'};">
-                                <i class="fas fa-info-circle" style="${iconMargin} color: #f59e0b;"></i>
-                                ${translations.uploadedChunks.replace(':uploaded', uploadedChunks.length).replace(':total', totalChunks)}
-                            </p>
-                        </div>
-                        <p style="font-size: 0.875rem; color: #6b7280; margin: 0; line-height: 1.5;">
-                            ${translations.resumeFromWhereLeftOff}
-                        </p>
-                    </div>
-                `,
-                confirmButtonColor: '#60a5fa',
-                confirmButtonText: translations.ok,
-                width: '32rem',
-                padding: '2rem'
+                title: translations.unauthorizedAccess,
+                text: translations.unauthorizedAccessMessage,
+                confirmButtonColor: '#60a5fa'
             });
-
-            submitBtn.disabled = false;
+        } else {
+            localStorage.setItem(storageKey, JSON.stringify({
+                uploadId, fileName: file.name, fileSize, chunkSize, uploadedChunks
+            }));
+            Swal.fire({
+                icon: 'warning',
+                title: translations.uploadPaused,
+                html: `<p style="font-weight: 600; color: #374151; margin-bottom: 0.75rem;">${translations.uploadFailed}: <strong style="color: #ef4444;">${error.message}</strong></p><p style="font-size: 0.875rem; color: #6b7280;">${translations.uploadedChunks.replace(':uploaded', uploadedChunks.length).replace(':total', totalChunks)}</p><p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;">${translations.resumeFromWhereLeftOff}</p>`,
+                confirmButtonColor: '#60a5fa'
+            });
             submitBtn.setAttribute('data-resume', 'true');
             submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-redo text-base"></i></div> <span>' + translations.resumeUpload + '</span>';
             submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)';
-        } else {
-            Swal.fire({
-                icon: isUnauthorizedError ? 'warning' : 'error',
-                title: errorTitle,
-                text: errorMessage,
-                confirmButtonColor: '#60a5fa',
-                confirmButtonText: translations.ok
-            });
-            submitBtn.innerHTML = '<i class="fas fa-upload mr-2"></i> Upload Video';
-            submitBtn.disabled = false;
         }
+        submitBtn.disabled = false;
     }
 }
 
@@ -801,44 +598,58 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         return true;
     }
 
-    // If file upload and chunks are uploaded, finalize
-    if (videoFile && uploadId) {
+    // If file upload - always prevent default to handle chunked upload
+    if (videoFile) {
         e.preventDefault();
+        
+        // If chunks are uploaded, finalize (NOT re-uploading file)
+        // All chunks are already on server, we just need to assemble them and create match record
+        if (uploadId) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>' + translations.finalizing + '</span>';
 
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-spinner fa-spin text-base"></i></div> <span>' + translations.finalizing + '</span>';
+            try {
+                // Send finalize request (only uploadId and match_name, NOT the file)
+                // Server will assemble chunks and create match record
+                const formData = new FormData();
+                formData.append('uploadId', uploadId);
+                formData.append('match_name', matchName);
 
-        try {
-            const formData = new FormData();
-            formData.append('uploadId', uploadId);
-            formData.append('match_name', matchName);
+                const response = await fetch('{{ route("matches.upload.finalize") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
+                    },
+                    body: formData
+                });
 
-            const response = await fetch('{{ route("matches.upload.finalize") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value,
-                },
-                body: formData
-            });
+                const result = await response.json();
 
-            const result = await response.json();
-
-            if (result.success) {
-                window.location.href = result.redirectUrl;
-            } else {
-                throw new Error(result.message || 'Finalization failed');
+                if (result.success) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    throw new Error(result.message || 'Finalization failed');
+                }
+            } catch (error) {
+                console.error('Finalization error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Finalization Failed',
+                    text: error.message || 'Failed to finalize upload. Please try again.',
+                    confirmButtonColor: '#ef4444'
+                });
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-arrow-right text-base"></i></div> <span>' + translations.uploadContinue + '</span>';
             }
-        } catch (error) {
-            console.error('Finalization error:', error);
+        } else {
+            // File selected but chunks not uploaded yet - show message
             Swal.fire({
-                icon: 'error',
-                title: 'Finalization Failed',
-                text: error.message || 'Failed to finalize upload. Please try again.',
-                confirmButtonColor: '#ef4444'
+                icon: 'info',
+                title: 'Upload Required',
+                text: 'Please wait for the file upload to complete before continuing.',
+                confirmButtonColor: '#60a5fa'
             });
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<div class="h-8 w-8 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-arrow-right text-base"></i></div> <span>' + translations.uploadContinue + '</span>';
         }
     }
 });
