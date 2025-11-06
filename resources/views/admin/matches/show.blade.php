@@ -670,8 +670,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Connect to WebSocket only if processing (not if completed)
-    if (matchStatus === 'processing') {
+    // Connect to WebSocket if processing or pending (to receive completion notifications)
+    // Also connect if processing to receive predictions
+    if (matchStatus === 'processing' || matchStatus === 'pending') {
         // Connect to WebSocket for real-time updates
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsHost = '{{ env("WEBSOCKET_HOST", "localhost:3001") }}';
@@ -734,31 +735,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Keep connection open for more predictions
                         } else if (data.type === 'processing_complete') {
                             // Processing is complete - update status and fetch any remaining predictions
-                            console.log('Processing complete via WebSocket');
+                            console.log('Processing complete via WebSocket (match channel)');
                             
-                            // Update match status
-                            matchStatus = 'completed';
-                            currentMatchStatus = 'completed';
-                            
-                            // Update status display
-                            const statusText = document.getElementById('statusText');
-                            if (statusText) {
-                                statusText.textContent = 'Completed';
+                            // Use the global function to update status
+                            if (window.updateMatchStatusToCompleted) {
+                                window.updateMatchStatusToCompleted();
                             }
-                            
-                            // Update status card
-                            const statusCard = document.getElementById('statusCard');
-                            if (statusCard) {
-                                const iconContainer = statusCard.querySelector('.w-8.h-8');
-                                if (iconContainer) {
-                                    iconContainer.className = 'w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center';
-                                    iconContainer.innerHTML = '<i class="fas fa-check-circle text-green-600 text-xs"></i>';
-                                }
-                                statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-green-300 hover:border-green-400 transition-colors';
-                            }
-                            
-                            // Fetch all predictions from server to ensure we have everything
-                            fetchPredictionsFromServer();
                             
                             // Don't close connection, keep it open for any late predictions
                         }
@@ -858,6 +840,51 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusText = document.getElementById('statusText');
     const matchId = {{ $match->id ?? 0 }};
     let currentMatchStatus = '{{ isset($match->status) ? $match->status : "pending" }}';
+    
+    // Function to update match status to completed (called from notification handler)
+    window.updateMatchStatusToCompleted = function() {
+        console.log('Updating match status to completed via notification');
+        
+        // Update status variables
+        currentMatchStatus = 'completed';
+        matchStatus = 'completed';
+        
+        // Update status card
+        if (statusCard) {
+            const iconContainer = statusCard.querySelector('.w-8.h-8');
+            if (iconContainer) {
+                iconContainer.className = 'w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center';
+                iconContainer.innerHTML = '<i class="fas fa-check-circle text-green-600 text-xs"></i>';
+            }
+            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-green-300 hover:border-green-400 transition-colors';
+        }
+        
+        // Update status text
+        if (statusText) {
+            statusText.textContent = 'Completed';
+        }
+        
+        // Update video header badge
+        const videoBadge = document.querySelector('.px-3.py-1.bg-indigo-100, .px-3.py-1.bg-cyan-100, .px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
+        if (videoBadge) {
+            videoBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Completed';
+            videoBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';
+        }
+        
+        // Hide processing button
+        if (processingBtn) {
+            processingBtn.style.display = 'none';
+        }
+        
+        // Fetch and render predictions if not already rendered
+        fetchPredictionsFromServer();
+        
+        // Update analysis container if no predictions yet
+        const analysisContainer = document.getElementById('analysisLoadingContainer');
+        if (analysisContainer && allPredictions.length === 0) {
+            renderPredictions([]); // This will show "no predictions" message for completed status
+        }
+    };
 
     if (processingBtn) {
         processingBtn.addEventListener('click', function() {

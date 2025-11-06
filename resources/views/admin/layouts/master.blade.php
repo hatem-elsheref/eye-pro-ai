@@ -849,6 +849,22 @@
                             }
                         }
                         
+                        // Handle match analysis complete notification
+                        if (data.notification.type === 'match_analysis_complete' && data.notification.match_id) {
+                            // If on match show page, update status in real-time
+                            const matchId = window.location.pathname.match(/^\/matches\/(\d+)/)?.[1];
+                            if (matchId == data.notification.match_id) {
+                                // Update status immediately without page reload
+                                if (window.updateMatchStatusToCompleted) {
+                                    window.updateMatchStatusToCompleted();
+                                } else {
+                                    // Fallback: reload page after short delay
+                                    setTimeout(() => window.location.reload(), 1000);
+                                }
+                                return;
+                            }
+                        }
+                        
                         refreshNotifications();
                     }
                 } catch (e) {
