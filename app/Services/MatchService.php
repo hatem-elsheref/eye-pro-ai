@@ -228,7 +228,7 @@ class MatchService
 
         $chunkDir = 'chunks/user_' . $userId . '/' . $uploadId;
         $finalFileName = $uploadStatus['fileName'];
-        $finalPath = 'Full_Matches/' . $uploadId . '_' . $finalFileName;
+        $finalPath = 'Full_Matches/' . md5($uploadId . '_' . $finalFileName) . '.' . pathinfo($finalFileName, PATHINFO_EXTENSION);
 
         // Always upload to S3 using background job for assembly and upload
         $match = MatchVideo::create([

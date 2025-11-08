@@ -85,6 +85,7 @@ class MatchApiController extends Controller
             'id'      => $match->id,
             'name'    => $match->name,
             'path'    => $match->video_path,
+            'hash'    => pathinfo($match->video_path, PATHINFO_FILENAME),
             'disk'    => $disk,
             'size'    => $match->file_size,
             'url'     => $match->video_url,
