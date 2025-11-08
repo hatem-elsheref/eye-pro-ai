@@ -122,7 +122,7 @@ class MatchApiController extends Controller
 
     /**
      * Store a new prediction from AI model
-     * 
+     *
      * Requires all fields: clip_path, relative_time, prediction_0, prediction_1, first_model_prop
      */
     public function storePrediction(Request $request, $id)
@@ -164,7 +164,7 @@ class MatchApiController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->except(['prediction_0', 'prediction_1']) // Don't log full JSON to avoid huge logs
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed: Missing required fields',
@@ -191,6 +191,8 @@ class MatchApiController extends Controller
                 'message' => 'prediction_1 must be a valid non-empty JSON object/array'
             ], 422);
         }
+
+        $validated['clip_path'] = str_replace(sprintf('s3://%s/', config('filesystems.disks.s3.bucket')), '', $validated['clip_path']);
 
         // All validations passed - create prediction with all required data
         $prediction = Prediction::create([

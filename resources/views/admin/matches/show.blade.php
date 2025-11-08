@@ -126,7 +126,7 @@
                 @if(isset($isExternalVideo) && $isExternalVideo && isset($embedUrl))
                     <!-- YouTube/Vimeo Embed -->
                     <div class="aspect-video w-full">
-                        <iframe 
+                        <iframe
                             id="player"
                             src="{{ $embedUrl }}"
                             class="w-full h-full"
@@ -510,16 +510,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4 class="font-semibold text-gray-900">${translations.predictionNumber.replace(':number', index + 1)}</h4>
                         ${prediction.relative_time ? `<span class="text-xs text-gray-500"><i class="fas fa-clock mr-1"></i>${prediction.relative_time}</span>` : ''}
                     </div>
-                    ${prediction.clip_path ? `<div class="mb-2 text-xs text-gray-600 flex items-center"><i class="fas fa-video mr-1"></i><span>${translations.clip}</span><a href="#" class="clip-path-link ml-2" data-clip-title="${translations.predictionNumber.replace(':number', index + 1)}" data-clip-url="${prediction.url || prediction.clip_path}">${prediction.clip_path}</a></div>` : ''}
+                    ${prediction.clip_path ? `<div class="mb-2 text-xs text-gray-600 flex items-center"><i class="fas fa-video mr-1"></i><span style="15%">${translations.clip}</span><a style="overflow-wrap: anywhere" href="#" class="clip-path-link ml-2" data-clip-title="${translations.predictionNumber.replace(':number', index + 1)}" data-clip-url="${prediction.url || prediction.clip_path}">${prediction.clip_path}</a></div>` : ''}
                     ${prediction.first_model_prop !== null ? `<div class="mb-2 text-xs"><span class="font-medium">${translations.firstModelAccuracy}</span> <span class="text-purple-600">${(prediction.first_model_prop * 100).toFixed(2)}%</span></div>` : ''}
-                    
+
                     ${prediction.prediction_0 ? `
                         <div class="mb-3 p-3 bg-purple-50 rounded border border-purple-200">
                             <div class="font-medium text-xs text-purple-900 mb-2">${translations.model0Prediction}</div>
                             ${renderPredictionData(prediction.prediction_0)}
                         </div>
                     ` : ''}
-                    
+
                     ${prediction.prediction_1 ? `
                         <div class="mb-3 p-3 bg-indigo-50 rounded border border-indigo-200">
                             <div class="font-medium text-xs text-indigo-900 mb-2">${translations.model1Prediction}</div>
@@ -537,17 +537,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper function to render prediction data
     function renderPredictionData(prediction) {
         if (!prediction) return '<div class="text-xs text-gray-500">' + translations.noData + '</div>';
-        
+
         let html = '';
-        
+
         // Check if labels are available (formatted data from backend)
         if (prediction.labels) {
             html += '<div class="text-xs space-y-2">';
-            
+
             // Offence Severity
             if (prediction.labels.offence_severity) {
-                const severityAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][0] 
-                    ? (prediction.acc[0][0] * 100).toFixed(2) + '%' 
+                const severityAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][0]
+                    ? (prediction.acc[0][0] * 100).toFixed(2) + '%'
                     : 'N/A';
                 html += `
                     <div class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
@@ -559,11 +559,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             }
-            
+
             // Action (Reason)
             if (prediction.labels.action) {
-                const actionAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][1] 
-                    ? (prediction.acc[0][1] * 100).toFixed(2) + '%' 
+                const actionAcc = prediction.acc && prediction.acc[0] && prediction.acc[0][1]
+                    ? (prediction.acc[0][1] * 100).toFixed(2) + '%'
                     : 'N/A';
                 html += `
                     <div class="flex justify-between items-center p-2 bg-white rounded border border-gray-200">
@@ -575,34 +575,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             }
-            
+
             html += '</div>';
         } else if (prediction.classes && Array.isArray(prediction.classes[0])) {
             // Fallback: show raw class IDs if labels are not available
             html += '<div class="text-xs space-y-1">';
             prediction.classes[0].forEach((classId, idx) => {
-                const accuracy = prediction.acc && prediction.acc[0] && prediction.acc[0][idx] 
-                    ? (prediction.acc[0][idx] * 100).toFixed(2) + '%' 
+                const accuracy = prediction.acc && prediction.acc[0] && prediction.acc[0][idx]
+                    ? (prediction.acc[0][idx] * 100).toFixed(2) + '%'
                     : 'N/A';
                 html += `<div class="flex justify-between"><span>Class ${classId}:</span><span class="font-semibold">${accuracy}</span></div>`;
             });
             html += '</div>';
         }
-        
+
         return html || '<pre class="text-xs">' + JSON.stringify(prediction, null, 2) + '</pre>';
     }
 
     // Function to fetch predictions from server via AJAX (fallback if WebSocket fails)
     function fetchPredictionsFromServer() {
         const currentMatchId = {{ $match->id ?? 0 }};
-        
+
         // Simply reload the page to get fresh predictions
         // This is a fallback - WebSocket should handle real-time updates
         console.log('Fetching predictions from server (fallback)...');
-        
+
         // Option 1: Reload page (simplest, ensures everything is synced)
         // window.location.reload();
-        
+
         // Option 2: Fetch and parse (more complex but no page reload)
         fetch(`/matches/${currentMatchId}`, {
             headers: {
@@ -620,8 +620,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Merge with existing predictions (avoid duplicates)
                         let updated = false;
                         fetchedPredictions.forEach(pred => {
-                            const exists = allPredictions.some(existing => 
-                                existing.id === pred.id || 
+                            const exists = allPredictions.some(existing =>
+                                existing.id === pred.id ||
                                 (existing.relative_time === pred.relative_time && existing.clip_path === pred.clip_path)
                             );
                             if (!exists) {
@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 updated = true;
                             }
                         });
-                        
+
                         if (updated) {
                             // Re-render with all predictions
                             renderPredictions(allPredictions);
@@ -652,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         // No predictions - render empty state (with status check)
         renderPredictions([]);
-        
+
         // If processing, also set up periodic polling as fallback (every 10 seconds)
         if (matchStatus === 'processing') {
             const pollInterval = setInterval(() => {
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     clearInterval(pollInterval);
                 }
             }, 10000); // Poll every 10 seconds
-            
+
             // Clear interval when page unloads
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollInterval);
@@ -689,11 +689,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 ws.onopen = function() {
                     console.log('WebSocket connected');
                     reconnectAttempts = 0;
-                    
+
                     // Subscribe to private channel
                     const userId = {{ auth()->id() ?? 0 }};
                     const matchId = {{ $match->id ?? 0 }};
-                    
+
                     ws.send(JSON.stringify({
                         type: 'subscribe',
                         userId: userId,
@@ -704,26 +704,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 ws.onmessage = function(event) {
                     try {
                         const data = JSON.parse(event.data);
-                        
+
                         if (data.type === 'subscribed') {
                             console.log('Subscribed to channel:', data.channel);
                         } else if (data.type === 'prediction') {
                             // Received new prediction - add to array and re-render immediately
                             console.log('Received prediction via WebSocket:', data.prediction);
-                            
+
                             // Check if prediction already exists (avoid duplicates)
-                            const exists = allPredictions.some(p => 
-                                p.id === data.prediction.id || 
+                            const exists = allPredictions.some(p =>
+                                p.id === data.prediction.id ||
                                 (p.relative_time === data.prediction.relative_time && p.clip_path === data.prediction.clip_path)
                             );
-                            
+
                             if (!exists) {
                                 allPredictions.push(data.prediction);
                             }
-                            
+
                             // Immediately render predictions - this will hide loading state and show predictions
                             renderPredictions(allPredictions);
-                            
+
                             // Update status badge if this is the first prediction
                             if (allPredictions.length === 1) {
                                 const statusText = document.getElementById('statusText');
@@ -731,17 +731,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                     statusText.textContent = 'Processing';
                                 }
                             }
-                            
+
                             // Keep connection open for more predictions
                         } else if (data.type === 'processing_complete') {
                             // Processing is complete - update status and fetch any remaining predictions
                             console.log('Processing complete via WebSocket (match channel)');
-                            
+
                             // Use the global function to update status
                             if (window.updateMatchStatusToCompleted) {
                                 window.updateMatchStatusToCompleted();
                             }
-                            
+
                             // Don't close connection, keep it open for any late predictions
                         }
                     } catch (error) {
@@ -755,14 +755,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 ws.onclose = function(event) {
                     console.log('WebSocket disconnected', event.code, event.reason);
-                    
+
                     // Don't reconnect if we received the result or intentionally closed
                     if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
                         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 10000); // Exponential backoff, max 10s
-                        
+
                         console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
-                        
+
                         reconnectTimeout = setTimeout(() => {
                             connectWebSocket();
                         }, delay);
@@ -840,15 +840,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusText = document.getElementById('statusText');
     const matchId = {{ $match->id ?? 0 }};
     let currentMatchStatus = '{{ isset($match->status) ? $match->status : "pending" }}';
-    
+
     // Function to update match status to completed (called from notification handler)
     window.updateMatchStatusToCompleted = function() {
         console.log('Updating match status to completed via notification');
-        
+
         // Update status variables
         currentMatchStatus = 'completed';
         matchStatus = 'completed';
-        
+
         // Update status card
         if (statusCard) {
             const iconContainer = statusCard.querySelector('.w-8.h-8');
@@ -858,27 +858,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-green-300 hover:border-green-400 transition-colors';
         }
-        
+
         // Update status text
         if (statusText) {
             statusText.textContent = 'Completed';
         }
-        
+
         // Update video header badge
         const videoBadge = document.querySelector('.px-3.py-1.bg-indigo-100, .px-3.py-1.bg-cyan-100, .px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
         if (videoBadge) {
             videoBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Completed';
             videoBadge.className = 'px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold';
         }
-        
+
         // Hide processing button
         if (processingBtn) {
             processingBtn.style.display = 'none';
         }
-        
+
         // Fetch and render predictions if not already rendered
         fetchPredictionsFromServer();
-        
+
         // Update analysis container if no predictions yet
         const analysisContainer = document.getElementById('analysisLoadingContainer');
         if (analysisContainer && allPredictions.length === 0) {
@@ -890,7 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
         processingBtn.addEventListener('click', function() {
             const isProcessing = currentMatchStatus === 'processing';
             const action = isProcessing ? 'stop' : 'start';
-            const actionUrl = isProcessing 
+            const actionUrl = isProcessing
                 ? `/matches/${matchId}/stop-processing`
                 : `/matches/${matchId}/start-processing`;
 
@@ -916,7 +916,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         processingBtn.className = 'inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700';
                         processingBtn.style.background = ''; // Clear inline style if any
                         processingBtn.innerHTML = '<i class="fas fa-stop text-sm"></i> <span>Stop Processing</span>';
-                        
+
                         // Update status display
                         if (statusCard) {
                             const iconContainer = statusCard.querySelector('.w-8.h-8');
@@ -929,7 +929,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (statusText) {
                             statusText.textContent = 'Processing';
                         }
-                        
+
                         // Update video header badge if exists
                         const videoBadge = document.querySelector('.px-3.py-1.bg-indigo-100, .px-3.py-1.bg-cyan-100, .px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
                         if (videoBadge) {
@@ -987,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         // Processing stopped - hide the button (status is now completed)
                         processingBtn.style.display = 'none';
-                        
+
                         // Update status display to completed
                         if (statusCard) {
                             const iconContainer = statusCard.querySelector('.w-8.h-8');
@@ -1000,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (statusText) {
                             statusText.textContent = 'Completed';
                         }
-                        
+
                         // Update video header badge if exists
                         const videoBadge = document.querySelector('.px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
                         if (videoBadge) {
@@ -1027,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         text: data.message || (action === 'start' ? 'Failed to start processing. Something went wrong.' : 'Failed to stop processing or something went wrong.'),
                         confirmButtonColor: '#ef4444'
                     });
-                    
+
                     // If start failed, restore pending state in analysis container
                     if (action === 'start') {
                         matchStatus = 'pending'; // Reset to pending
@@ -1046,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             `;
                         }
                     }
-                    
+
                     // Restore button
                     processingBtn.innerHTML = originalHTML;
                 }
@@ -1059,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     text: action === 'start' ? 'Failed to start processing. Please try again.' : 'Failed to stop processing. Please try again.',
                     confirmButtonColor: '#ef4444'
                 });
-                
+
                 // If start failed, restore pending state in analysis container
                 if (action === 'start') {
                     matchStatus = 'pending'; // Reset to pending
@@ -1078,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         `;
                     }
                 }
-                
+
                 // Restore button
                 processingBtn.innerHTML = originalHTML;
             })
@@ -1139,23 +1139,23 @@ document.addEventListener('click', function(e) {
         e.preventDefault();
         const clipUrl = e.target.getAttribute('data-clip-url');
         const clipTitle = e.target.getAttribute('data-clip-title');
-        
+
         if (clipUrl) {
             const modal = document.getElementById('clipVideoModal');
             const videoSource = document.getElementById('clipVideoSource');
             const videoPlayer = document.getElementById('clipVideoPlayer');
             const modalTitle = document.getElementById('clipModalTitle');
-            
+
             // Set modal title
             if (clipTitle && modalTitle) {
                 modalTitle.textContent = clipTitle;
             }
-            
+
             // Set video source
             videoSource.src = clipUrl;
             videoPlayer.load();
             modal.classList.remove('hidden');
-            
+
             // Play video when modal opens
             videoPlayer.play().catch(err => {
                 console.log('Auto-play prevented:', err);
