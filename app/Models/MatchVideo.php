@@ -62,6 +62,11 @@ class MatchVideo extends Model
     {
         return $this->hasMany(Prediction::class, 'match_id');
     }
+
+    public function getHashNameAttribute()
+    {
+        return pathinfo($this->video_path, PATHINFO_FILENAME);
+    }
 }
 
 

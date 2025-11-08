@@ -454,7 +454,7 @@ class MatchController extends Controller
             $match->update(['status' => 'processing']);
 
             // Start AI processing
-            $result = $this->aiModelService->startProcessing($match->id);
+            $result = $this->aiModelService->startProcessing($match);
 
             if ($result['success']) {
                 // Send notification

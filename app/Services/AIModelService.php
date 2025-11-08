@@ -19,7 +19,7 @@ class AIModelService
     /**
      * Start processing for a match
      */
-    public function startProcessing(int $matchId): array
+    public function startProcessing($match): array
     {
         if (!$this->isConfigured()) {
             return $this->error('May be [AI_MODEL_ENDPOINT / AI_MODEL_API_KEY] not configured yet.');
@@ -29,17 +29,19 @@ class AIModelService
             $response = Http::timeout(30)
                 ->withHeader('X-API-KEY', $this->api_key)
                 ->post("{$this->endpoint}/start", [
-                    'match_id' => $matchId
+                    'match_id'  => $match->id,
+                    'path'      => $match->video_path,
+                    'hash_name' => $match->hashName,
                 ]);
 
             if ($response->successful()) {
-                Log::info('AI processing started', ['matchId' => $matchId]);
+                Log::info('AI processing started', ['matchId' => $match->id]);
                 return $this->success($response->json());
             }
 
             return $this->error('Failed to start processing', $response->body());
         } catch (\Exception $e) {
-            Log::error('Exception starting AI processing', ['matchId' => $matchId, 'error' => $e->getMessage()]);
+            Log::error('Exception starting AI processing', ['matchId' => $match->id, 'error' => $e->getMessage()]);
             return $this->error('Exception occurred', $e->getMessage());
         }
     }
