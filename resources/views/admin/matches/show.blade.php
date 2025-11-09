@@ -398,8 +398,9 @@ const translations = {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Plyr video player with smaller size
     const video = document.getElementById('player');
+    let player = null; // Make player accessible to other functions
     if (video) {
-        const player = new Plyr(video, {
+        player = new Plyr(video, {
             controls: [
                 'play-large',
                 'play',
@@ -912,6 +913,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     // Update button state
                     if (action === 'start') {
+                        // Play the video player when starting processing
+                        if (player) {
+                            player.play().catch(err => {
+                                console.log('Auto-play prevented or error:', err);
+                                // If autoplay is prevented, try to play after a short delay
+                                setTimeout(() => {
+                                    player.play().catch(e => console.log('Delayed play also prevented:', e));
+                                }, 500);
+                            });
+                        }
+
                         // Change to Stop button with red/danger styling
                         processingBtn.className = 'inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700';
                         processingBtn.style.background = ''; // Clear inline style if any
