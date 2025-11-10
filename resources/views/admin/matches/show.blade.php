@@ -842,6 +842,77 @@ document.addEventListener('DOMContentLoaded', function() {
     const matchId = {{ $match->id ?? 0 }};
     let currentMatchStatus = '{{ isset($match->status) ? $match->status : "pending" }}';
 
+    // Function to update match status to processing (called from notification handler)
+    window.updateMatchStatusToProcessing = function() {
+        console.log('Updating match status to processing via notification');
+
+        // Update status variables
+        currentMatchStatus = 'processing';
+        matchStatus = 'processing';
+
+        // Update status card
+        if (statusCard) {
+            const iconContainer = statusCard.querySelector('.w-8.h-8');
+            if (iconContainer) {
+                iconContainer.className = 'w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center';
+                iconContainer.innerHTML = '<i class="fas fa-spinner fa-spin text-indigo-600 text-xs"></i>';
+            }
+            statusCard.className = 'flex items-center gap-2 p-2.5 bg-white rounded-lg border border-indigo-300 hover:border-indigo-400 transition-colors';
+        }
+
+        // Update status text
+        if (statusText) {
+            statusText.textContent = 'Processing';
+        }
+
+        // Update video header badge
+        const videoBadge = document.querySelector('.px-3.py-1.bg-indigo-100, .px-3.py-1.bg-cyan-100, .px-3.py-1.bg-amber-100, .px-3.py-1.bg-blue-100');
+        if (videoBadge) {
+            videoBadge.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processing';
+            videoBadge.className = 'px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold';
+        }
+
+        // Update processing button if exists
+        if (processingBtn) {
+            processingBtn.className = 'inline-flex items-center justify-center gap-2 px-5 py-2.5 text-white rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 bg-red-600 hover:bg-red-700';
+            processingBtn.style.background = '';
+            processingBtn.innerHTML = '<i class="fas fa-stop text-sm"></i> <span>Stop Processing</span>';
+            processingBtn.style.display = '';
+        }
+
+        // Update analysis container to show processing state
+        const analysisContainer = document.getElementById('analysisLoadingContainer');
+        if (analysisContainer) {
+            analysisContainer.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="h-8 w-8 bg-purple-200 rounded-lg animate-pulse"></div>
+                        <div class="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                        <div class="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                    </div>
+                    <div class="mt-6">
+                        <div class="h-32 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg border-2 border-dashed border-purple-200 flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line text-3xl text-purple-300 mb-2"></i>
+                                <p class="text-sm text-purple-400 font-medium">Analyzing match data...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center gap-2 pt-4">
+                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                        <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+                        <span class="ml-2 text-sm text-gray-500 font-medium">{{ __('admin.processing_analysis') }}</span>
+                    </div>
+                </div>
+            `;
+        }
+    };
+
     // Function to update match status to completed (called from notification handler)
     window.updateMatchStatusToCompleted = function() {
         console.log('Updating match status to completed via notification');
@@ -990,12 +1061,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             text: 'Match has been sent to AI model. Processing is now in progress.',
                             timer: 3000,
                             showConfirmButton: false
-                        }).then(() => {
-                            // Refresh page after 1 second to ensure all data is synced
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
                         });
+                        // Don't reload page - let notification handler update UI dynamically to avoid interrupting video playback
                     } else {
                         // Processing stopped - hide the button (status is now completed)
                         processingBtn.style.display = 'none';

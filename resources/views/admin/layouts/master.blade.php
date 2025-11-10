@@ -849,6 +849,20 @@
                             }
                         }
                         
+                        // Handle match processing started notification
+                        if (data.notification.type === 'match_processing_started' && data.notification.match_id) {
+                            // If on match show page, update status in real-time without reloading
+                            const matchId = window.location.pathname.match(/^\/matches\/(\d+)/)?.[1];
+                            if (matchId == data.notification.match_id) {
+                                // Update status immediately without page reload to avoid interrupting video playback
+                                if (window.updateMatchStatusToProcessing) {
+                                    window.updateMatchStatusToProcessing();
+                                }
+                                // Don't reload - UI is already updated by the button click handler
+                                return;
+                            }
+                        }
+                        
                         // Handle match analysis complete notification
                         if (data.notification.type === 'match_analysis_complete' && data.notification.match_id) {
                             // If on match show page, update status in real-time
